@@ -518,6 +518,11 @@ app.get('/api/admin/logs', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Serve logo
+app.get('/logo.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'assets/logo.png'));
+});
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
