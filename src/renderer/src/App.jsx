@@ -79,7 +79,7 @@ export default function App() {
                     marginBottom: '20px'
                 }}>
                     <img
-                        src="/api/payslips/../assets/logo.png"
+                        src="/logo.png"
                         alt="EurosHub Logo"
                         style={{
                             width: '80px',
