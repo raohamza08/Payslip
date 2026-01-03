@@ -32,6 +32,7 @@ export default function PasswordConfirm({ onConfirm, onCancel, email, title = "C
                             placeholder="Master password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="current-password"
                             autoFocus
                             required
                         />
