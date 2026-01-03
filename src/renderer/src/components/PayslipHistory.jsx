@@ -182,7 +182,7 @@ export default function PayslipHistory() {
                                 <td>{p.employee_name}</td>
                                 <td>{p.pay_period_start}</td>
                                 <td>{p.net_pay.toFixed(2)}</td>
-                                <td>{p.email_sent_at ? '✅ Sent' : 'Draft'}</td>
+                                <td>{p.email_sent_at ? 'Sent' : 'Draft'}</td>
                                 <td className="flex-row">
                                     <button className="btn btn-secondary" onClick={() => handleOpen(p.id)}>View PDF</button>
                                     <button className="btn btn-primary" onClick={() => handleSend(p.id)} disabled={loading}>

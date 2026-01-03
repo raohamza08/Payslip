@@ -33,7 +33,7 @@ export default function Login({ onLogin }) {
     return (
         <div className="auth-container">
             <div className="login-box">
-                <div className="login-title">Payslip Manager</div>
+                <div className="login-title">Payslips</div>
                 <p style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
                     {isSignup ? 'Create your account' : 'Sign in to your account'}
                 </p>

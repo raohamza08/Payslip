@@ -66,7 +66,7 @@ export default function AttendanceReport() {
                         ))}
                     </select>
                     <button className="btn btn-primary" onClick={handleExport} style={{ marginLeft: 10 }}>
-                        📊 Export to Excel
+                        Export to Excel
                     </button>
                 </div>
             </div>

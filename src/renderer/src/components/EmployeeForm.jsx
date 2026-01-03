@@ -38,7 +38,7 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
                         </div>
                         <div className="form-group">
                             <label>Employee ID</label>
-                            <input name="employee_id" value={form.employee_id || ''} onChange={handleChange} placeholder="e.g., EMP001" required />
+                            <input name="employee_id" value={form.employee_id || ''} onChange={handleChange} placeholder="e.g., EH0001" required />
                         </div>
                         <div className="form-group">
                             <label>Job Title</label>
@@ -75,10 +75,10 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
                         <div className="form-group">
                             <label>Currency</label>
                             <select name="currency" value={form.currency} onChange={handleChange}>
-                                <option>USD</option>
+                                <option>PKR</option>
                                 <option>EUR</option>
                                 <option>GBP</option>
-                                <option>PKR</option>
+                                <option>USD</option>
                                 <option>INR</option>
                             </select>
                         </div>

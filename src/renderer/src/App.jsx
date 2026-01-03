@@ -73,22 +73,22 @@ export default function App() {
         <div className="app-container">
             <div className="sidebar">
                 <h2>EurosHub</h2>
-                <NavItem id="dashboard" label="Dashboard" icon="📊" />
-                <NavItem id="employees" label="Employees" icon="👥" />
-                <NavItem id="attendance" label="Attendance" icon="📅" />
-                <NavItem id="generate" label="Generate Payslip" icon="📝" />
-                <NavItem id="history" label="Payslip History" icon="📜" />
-                <NavItem id="bulk" label="Bulk Operations" icon="📦" />
-                <NavItem id="reports" label="Reports" icon="📈" />
-                <NavItem id="company" label="Company Profile" icon="🏢" />
+                <NavItem id="dashboard" label="Dashboard" />
+                <NavItem id="employees" label="Employees" />
+                <NavItem id="attendance" label="Attendance" />
+                <NavItem id="generate" label="Generate Payslip" />
+                <NavItem id="history" label="Payslip History" />
+                <NavItem id="bulk" label="Bulk Operations" />
+                <NavItem id="reports" label="Reports" />
+                <NavItem id="company" label="Company Profile" />
                 {user?.role === 'super_admin' && (
                     <>
-                        <NavItem id="whitelist" label="Whitelist" icon="🔒" />
-                        <NavItem id="logs" label="Activity Logs" icon="📜" />
+                        <NavItem id="whitelist" label="Whitelist" />
+                        <NavItem id="logs" label="Activity Logs" />
                     </>
                 )}
                 <div className="spacer"></div>
-                <NavItem id="settings" label="Settings" icon="⚙️" />
+                <NavItem id="settings" label="Settings" />
                 <div className="nav-item" onClick={() => { setAuth(false); setUser(null); api.setUser(null); }} style={{ marginTop: 10, background: 'rgba(255,255,255,0.1)' }}>
                     <span style={{ marginRight: 10 }}>🚪</span> Logout
                 </div>
