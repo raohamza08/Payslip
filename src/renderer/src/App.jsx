@@ -72,7 +72,25 @@ export default function App() {
     return (
         <div className="app-container">
             <div className="sidebar">
-                <h2>EurosHub</h2>
+                <div style={{
+                    textAlign: 'center',
+                    padding: '20px 0 10px 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    marginBottom: '20px'
+                }}>
+                    <img
+                        src="/api/payslips/../assets/logo.png"
+                        alt="EurosHub Logo"
+                        style={{
+                            width: '80px',
+                            height: '80px',
+                            objectFit: 'contain',
+                            marginBottom: '10px',
+                            filter: 'brightness(0) invert(1)'
+                        }}
+                    />
+                    <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '600' }}>EurosHub</h2>
+                </div>
                 <NavItem id="dashboard" label="Dashboard" />
                 <NavItem id="employees" label="Employees" />
                 <NavItem id="attendance" label="Attendance" />

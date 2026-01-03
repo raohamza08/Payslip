@@ -2,7 +2,7 @@
   --primary: #0f172a;
   --primary-light: #1e293b;
   --accent: #17a2b8;
-  --accent-hover: #138496;
+  --accent-hover: #17a2b8;
   --text: #334155;
   --text-light: #94a3b8;
   --bg: #f8fafc;
@@ -61,7 +61,6 @@ body {
   margin-bottom: 30px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--accent);
 }
 
 .nav-item {
@@ -99,7 +98,17 @@ h1 {
   margin-top: 0;
   font-size: 24px;
   margin-bottom: 20px;
-  color: var(--primary);
+  color: var(--accent);
+}
+
+h2 {
+  color: var(--accent);
+  font-size: 20px;
+}
+
+h3 {
+  color: var(--accent);
+  font-size: 18px;
 }
 
 /* Forms */
@@ -266,13 +275,21 @@ tr:hover {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal {
-  background: white;
+  background: var(--white);
+  color: var(--text);
   padding: 24px;
   border-radius: 8px;
   width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal h3 {
+  margin-top: 0;
+  color: var(--accent);
 }

@@ -76,41 +76,41 @@ export default function Settings() {
     };
 
     const predefinedColors = [
+        // Professional Blues
+        { name: 'Ocean Blue', value: '#0077B6' },
+        { name: 'Corporate Blue', value: '#1E3A8A' },
+        { name: 'Sky Blue', value: '#0EA5E9' },
+        { name: 'Navy', value: '#1E40AF' },
+
+        // Professional Teals & Cyans
         { name: 'Teal', value: '#17a2b8' },
-        { name: 'Blue', value: '#007bff' },
-        { name: 'Purple', value: '#6f42c1' },
-        { name: 'Green', value: '#28a745' },
-        { name: 'Orange', value: '#fd7e14' },
-        { name: 'Red', value: '#dc3545' },
+        { name: 'Cyan', value: '#06B6D4' },
+        { name: 'Turquoise', value: '#14B8A6' },
 
-        // Neutrals
-        { name: 'Dark Gray', value: '#343a40' },
-        { name: 'Gray', value: '#6c757d' },
-        { name: 'Light Gray', value: '#ced4da' },
-        { name: 'Black', value: '#000000' },
-        { name: 'White', value: '#ffffff' },
+        // Professional Greens
+        { name: 'Forest Green', value: '#059669' },
+        { name: 'Emerald', value: '#10B981' },
+        { name: 'Sage', value: '#22C55E' },
 
-        // Blues & Cyans
-        { name: 'Navy', value: '#001f3f' },
-        { name: 'Sky Blue', value: '#5bc0eb' },
-        { name: 'Cyan', value: '#17a2b8' },
-        { name: 'Steel Blue', value: '#4682b4' },
+        // Professional Purples
+        { name: 'Deep Purple', value: '#7C3AED' },
+        { name: 'Violet', value: '#8B5CF6' },
+        { name: 'Indigo', value: '#6366F1' },
 
-        // Greens
-        { name: 'Dark Green', value: '#1e7e34' },
-        { name: 'Mint', value: '#20c997' },
-        { name: 'Olive', value: '#6b8e23' },
+        // Professional Grays
+        { name: 'Charcoal', value: '#374151' },
+        { name: 'Slate', value: '#475569' },
+        { name: 'Steel', value: '#64748B' },
 
-        // Purples & Pinks
-        { name: 'Indigo', value: '#6610f2' },
-        { name: 'Magenta', value: '#e83e8c' },
-        { name: 'Lavender', value: '#b497d6' },
+        // Warm Professional Tones
+        { name: 'Amber', value: '#F59E0B' },
+        { name: 'Bronze', value: '#D97706' },
+        { name: 'Rust', value: '#EA580C' },
 
-        // Warm tones
-        { name: 'Amber', value: '#ffc107' },
-        { name: 'Gold', value: '#ffd700' },
-        { name: 'Coral', value: '#ff6f61' },
-        { name: 'Brown', value: '#795548' }
+        // Sophisticated Neutrals
+        { name: 'Graphite', value: '#1F2937' },
+        { name: 'Onyx', value: '#111827' },
+        { name: 'Pearl', value: '#F3F4F6' }
     ];
 
     return (
@@ -233,28 +233,73 @@ export default function Settings() {
 
                     <div>
                         <h3>Accent Color</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '15px', marginTop: '15px' }}>
-                            {predefinedColors.map(color => (
-                                <div
-                                    key={color.value}
-                                    onClick={() => handleColorChange(color.value)}
+                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
+                            Choose a color that represents your brand
+                        </p>
+                        <div className="form-group" style={{ maxWidth: '400px' }}>
+                            <label>Select Color</label>
+                            <div style={{ position: 'relative' }}>
+                                <select
+                                    value={accentColor}
+                                    onChange={(e) => handleColorChange(e.target.value)}
                                     style={{
-                                        padding: '15px',
-                                        background: color.value,
-                                        color: '#fff',
-                                        borderRadius: '10px',
+                                        width: '100%',
+                                        padding: '12px 45px 12px 45px',
+                                        fontSize: '15px',
+                                        border: '2px solid #e0e0e0',
+                                        borderRadius: '8px',
+                                        background: '#fff',
                                         cursor: 'pointer',
-                                        textAlign: 'center',
-                                        fontWeight: 'bold',
-                                        border: accentColor === color.value ? '4px solid #000' : '4px solid transparent',
-                                        transition: 'all 0.3s',
-                                        transform: accentColor === color.value ? 'scale(1.05)' : 'scale(1)'
+                                        appearance: 'none',
+                                        fontWeight: '500'
                                     }}
                                 >
-                                    {color.name}
-                                    {accentColor === color.value && <div style={{ marginTop: '5px' }}>✓</div>}
-                                </div>
-                            ))}
+                                    {predefinedColors.map(color => (
+                                        <option key={color.value} value={color.value}>
+                                            {color.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {/* Color preview swatch */}
+                                <div style={{
+                                    position: 'absolute',
+                                    left: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: '24px',
+                                    height: '24px',
+                                    borderRadius: '4px',
+                                    background: accentColor,
+                                    border: '2px solid #fff',
+                                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+                                    pointerEvents: 'none'
+                                }}></div>
+                                {/* Dropdown arrow */}
+                                <div style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    pointerEvents: 'none',
+                                    fontSize: '12px',
+                                    color: '#666'
+                                }}>▼</div>
+                            </div>
+                        </div>
+                        {/* Color preview card */}
+                        <div style={{
+                            marginTop: '20px',
+                            padding: '20px',
+                            background: accentColor,
+                            color: '#fff',
+                            borderRadius: '12px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        }}>
+                            <h4 style={{ margin: '0 0 8px 0' }}>Preview</h4>
+                            <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
+                                This is how your accent color will look
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -340,11 +385,12 @@ export default function Settings() {
                     }}>
                         <div style={{
                             padding: '25px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #0EA5E9 0%, #0077B6 100%)',
                             color: '#fff',
                             borderRadius: '12px',
                             cursor: 'pointer',
                             transition: 'transform 0.3s',
+                            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.2)'
                         }}
                             onClick={() => window.location.href = 'mailto:hamzabadar.euroshub@gmail.com?subject=Payslip Manager Support'}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
@@ -359,11 +405,12 @@ export default function Settings() {
 
                         <div style={{
                             padding: '25px',
-                            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                             color: '#fff',
                             borderRadius: '12px',
                             cursor: 'pointer',
                             transition: 'transform 0.3s',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
                         }}
                             onClick={() => window.open('https://wa.me/923078445045', '_blank')}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
