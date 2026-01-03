@@ -3,7 +3,7 @@ import api from '../api';
 import PDFViewer from './PDFViewer';
 import PasswordConfirm from './PasswordConfirm';
 
-export default function PayslipHistory() {
+export default function PayslipHistory({ user }) {
     const [payslips, setPayslips] = useState([]);
     const [filteredPayslips, setFilteredPayslips] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -204,6 +204,7 @@ export default function PayslipHistory() {
 
             {showPasswordConfirm && (
                 <PasswordConfirm
+                    email={user?.email}
                     onConfirm={() => {
                         setShowPasswordConfirm(false);
                         if (pendingAction) pendingAction();

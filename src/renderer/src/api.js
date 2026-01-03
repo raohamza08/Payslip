@@ -44,13 +44,22 @@ const api = {
         return data;
     },
     confirmAction: async (email, password) => {
-        const res = await fetch(`${API_BASE}/auth/confirm`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        return data.success;
+        try {
+            const res = await fetch(`${API_BASE}/auth/confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                console.warn('Password confirmation failed:', data.error || res.statusText);
+                return false;
+            }
+            return data.success;
+        } catch (error) {
+            console.error('Password confirmation error:', error);
+            return false;
+        }
     },
 
     // Whitelist

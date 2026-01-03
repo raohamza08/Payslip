@@ -133,11 +133,11 @@ export default function App() {
 
                 {view === 'attendance' && <Attendance />}
 
-                {view === 'generate' && <PayslipGenerator onComplete={() => setView('history')} />}
+                {view === 'generate' && <PayslipGenerator onComplete={() => setView('history')} user={user} />}
 
-                {view === 'history' && <PayslipHistory />}
+                {view === 'history' && <PayslipHistory user={user} />}
 
-                {view === 'bulk' && <PayslipHistory />}
+                {view === 'bulk' && <PayslipHistory user={user} />}
 
                 {view === 'reports' && <AttendanceReport />}
 

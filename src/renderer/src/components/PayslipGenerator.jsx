@@ -3,7 +3,7 @@ import { numberToWords as numToWords } from '../utils/numToWords';
 import PasswordConfirm from './PasswordConfirm';
 import api from '../api';
 
-export default function PayslipGenerator({ onComplete }) {
+export default function PayslipGenerator({ onComplete, user }) {
     const [employees, setEmployees] = useState([]);
     const [selectedEmp, setSelectedEmp] = useState('');
     const [showConfirm, setShowConfirm] = useState(false);
@@ -190,8 +190,9 @@ export default function PayslipGenerator({ onComplete }) {
 
             {showConfirm && (
                 <PasswordConfirm
+                    email={user?.email}
                     onConfirm={confirmGenerate}
-                    onCancel={() => setShowPasswordConfirm(false)}
+                    onCancel={() => setShowConfirm(false)}
                     title="Confirm Generation"
                     message="Please enter password to generate this payslip."
                 />

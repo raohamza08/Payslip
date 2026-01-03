@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../api';
 
 export default function PasswordConfirm({ onConfirm, onCancel, email, title = "Confirm Password", message = "Please enter your password to proceed." }) {
     const [password, setPassword] = useState('');
@@ -15,7 +16,7 @@ export default function PasswordConfirm({ onConfirm, onCancel, email, title = "C
                 setError('Incorrect password');
             }
         } catch (err) {
-            setError('Verification failed');
+            setError(err.message || 'Verification failed');
         }
     };
 
@@ -45,6 +46,3 @@ export default function PasswordConfirm({ onConfirm, onCancel, email, title = "C
         </div>
     );
 }
-
-// Note: I need to import api here, but since this is a new file I'll add the import
-import api from '../api';
