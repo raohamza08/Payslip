@@ -1,0 +1,3 @@
+{"key":"admin_password_hash","value":"$2a$10$FmumK8r/3vEOrEWm4kSO2eMlmoFSIQ2UXlOeIz7e8mbYvj839dzMK","_id":"Gi4wjthLpy5igvLS"}
+{"key":"smtp_config","value":{"host":"smtp.gmail.com","port":587,"secure":false,"auth":{"user":"hamzabadar.euroshub@gmail.com","pass":"hamza3363"},"from":""},"_id":"cjsd8Pf3O3M8FFBl"}
+{"key":"admin_password_hash","value":"$2a$10$FmumK8r/3vEOrEWm4kSO2eMlmoFSIQ2UXlOeIz7e8mbYvj839dzMK","_id":"Gi4wjthLpy5igvLS","company_name":"EurosHub","company_address":"Office 509, Fifth Floor, Kohistan Tower Saddar, Rawalpindi","company_email":"","company_phone":"+923000369622","company_website":"www.euroshub.com","tax_id":"00000000000000000","registration_number":"0000000000000"}

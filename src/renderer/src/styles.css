@@ -1,0 +1,278 @@
+:root {
+  --primary: #0f172a;
+  --primary-light: #1e293b;
+  --accent: #17a2b8;
+  --accent-hover: #138496;
+  --text: #334155;
+  --text-light: #94a3b8;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --success: #10b981;
+}
+
+/* Dark Theme */
+body.dark {
+  --primary: #1e293b;
+  --primary-light: #334155;
+  --text: #e2e8f0;
+  --text-light: #94a3b8;
+  --bg: #0f172a;
+  --white: #1e293b;
+  --border: #334155;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+.app-container {
+  display: flex;
+  height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.nav-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  transition: background 0.2s;
+  color: #e2e8f0;
+}
+
+.nav-item:hover {
+  background-color: var(--primary-light);
+  color: #ffffff;
+}
+
+.nav-item.active {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: var(--bg);
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--primary);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: var(--white);
+}
+
+.flex-row {
+  display: flex;
+  gap: 15px;
+}
+
+.flex-end {
+  justify-content: flex-end;
+}
+
+/* Tables */
+.table-container {
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* Login Screen */
+.auth-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--primary);
+}
+
+.login-box {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.login-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: var(--primary);
+}
+
+.error-msg {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Grid for Form */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
