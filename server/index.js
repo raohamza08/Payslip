@@ -52,6 +52,26 @@ app.get('/api/auth/is-setup', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PDF Config Routes
+app.get('/api/config/pdf', (req, res) => {
+    try {
+        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
+        if (fs.existsSync(settingsPath)) {
+            res.json(JSON.parse(fs.readFileSync(settingsPath, 'utf8')));
+        } else {
+            res.json({});
+        }
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/config/pdf', (req, res) => {
+    try {
+        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
+        fs.writeFileSync(settingsPath, JSON.stringify(req.body, null, 4));
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/auth/setup', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -310,9 +330,12 @@ app.post('/api/payslip/generate', async (req, res) => {
 app.get('/api/payslips/:filename/download', async (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(PDF_DIR, filename);
+    const disposition = req.query.inline === 'true' ? 'inline' : 'attachment';
 
     if (fs.existsSync(filePath)) {
-        return res.download(filePath);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+        return res.sendFile(filePath);
     }
 
     // Try fetching from Supabase Storage
@@ -324,7 +347,7 @@ app.get('/api/payslips/:filename/download', async (req, res) => {
         const buffer = Buffer.from(arrayBuffer);
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
         res.send(buffer);
     } catch (e) {
         res.status(404).json({ error: "Payslip not found" });
@@ -529,6 +552,25 @@ app.listen(PORT, () => {
 // PDF Generation Function
 function generatePDF(data, filePath) {
     return new Promise((resolve, reject) => {
+        // Load settings
+        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
+        let settings = {
+            headerColor: '#17a2b8',
+            textColor: '#333333',
+            tableHeaderBg: '#17a2b8',
+            tableHeaderColor: '#ffffff',
+            companyName: 'EurosHub',
+            companySubtitle: 'Payroll Department',
+            accentColor: '#17a2b8'
+        };
+
+        try {
+            if (fs.existsSync(settingsPath)) {
+                const raw = fs.readFileSync(settingsPath, 'utf8');
+                settings = { ...settings, ...JSON.parse(raw) };
+            }
+        } catch (e) { console.warn('Failed to load PDF settings:', e); }
+
         const printer = new PdfPrinter(fonts);
 
         // Load logo
@@ -552,8 +594,8 @@ function generatePDF(data, filePath) {
                         logoImage ? { image: logoImage, width: 70, margin: [0, 0, 0, 10] } : { text: '' },
                         {
                             stack: [
-                                { text: 'EurosHub', style: 'companyName', alignment: 'right' },
-                                { text: 'Payroll Department', style: 'subtitle', alignment: 'right' },
+                                { text: settings.companyName, style: 'companyName', alignment: 'right' },
+                                { text: settings.companySubtitle, style: 'subtitle', alignment: 'right' },
                                 { text: 'SALARY SLIP', style: 'docTitle', alignment: 'right', margin: [0, 5, 0, 0] }
                             ]
                         }
@@ -562,7 +604,7 @@ function generatePDF(data, filePath) {
                 },
 
                 // Divider
-                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: '#17a2b8' }], margin: [0, 0, 0, 20] },
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: settings.headerColor }], margin: [0, 0, 0, 20] },
 
                 // Employee & Period Info
                 {
@@ -571,22 +613,22 @@ function generatePDF(data, filePath) {
                             width: '50%',
                             stack: [
                                 { text: 'EMPLOYEE INFORMATION', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: '#000' }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: '#000' }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: '#000' }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: '#000' }] }
+                                { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }] }
                             ]
                         },
                         {
                             width: '50%',
                             stack: [
                                 { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                { text: [{ text: 'Pay Period: ', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: '#000' }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Issue Date: ', bold: true, color: '#555' }, { text: data.issue_date, color: '#000' }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Payment Method: ', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: '#000' }], margin: [0, 0, 0, 5] },
-                                ...(data.employee.bank_name ? [{ text: [{ text: 'Bank: ', bold: true, color: '#555' }, { text: data.employee.bank_name, color: '#000' }], margin: [0, 0, 0, 5] }] : []),
-                                ...(data.employee.account_number ? [{ text: [{ text: 'Account: ', bold: true, color: '#555' }, { text: data.employee.account_number, color: '#000' }], margin: [0, 0, 0, 5] }] : []),
-                                { text: [{ text: 'Frequency: ', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: '#000' }] }
+                                { text: [{ text: 'Pay Period: ', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Issue Date: ', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Payment Method: ', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                ...(data.employee.bank_name ? [{ text: [{ text: 'Bank: ', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
+                                ...(data.employee.account_number ? [{ text: [{ text: 'Account: ', bold: true, color: '#555' }, { text: data.employee.account_number, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
+                                { text: [{ text: 'Frequency: ', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }] }
                             ]
                         }
                     ],
@@ -604,10 +646,10 @@ function generatePDF(data, filePath) {
                                 { text: '', border: [false, false, false, false] },
                                 { text: 'DEDUCTIONS', style: 'tableHeader', colSpan: 2, alignment: 'left' }, {}
                             ],
-                            ...buildEarningsDeductionsRows(data.earnings, data.deductions),
+                            ...buildEarningsDeductionsRows(data.earnings, data.deductions, settings),
                             [
-                                { text: 'GROSS PAY', bold: true, fillColor: '#f0f9ff', color: '#17a2b8', fontSize: 11 },
-                                { text: (data.currency || 'USD') + ' ' + data.gross_pay.toFixed(2), bold: true, fillColor: '#f0f9ff', color: '#17a2b8', fontSize: 11, alignment: 'right' },
+                                { text: 'GROSS PAY', bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11 },
+                                { text: (data.currency || 'USD') + ' ' + data.gross_pay.toFixed(2), bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11, alignment: 'right' },
                                 { text: '', border: [false, false, false, false] },
                                 { text: 'TOTAL DEDUCTIONS', bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11 },
                                 { text: (data.currency || 'USD') + ' ' + data.total_deductions.toFixed(2), bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11, alignment: 'right' }
@@ -617,7 +659,7 @@ function generatePDF(data, filePath) {
                     layout: {
                         hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
                         vLineWidth: () => 0,
-                        hLineColor: (i) => (i === 0 || i === 1) ? '#17a2b8' : '#e0e0e0',
+                        hLineColor: (i) => (i === 0 || i === 1) ? settings.tableHeaderBg : '#e0e0e0',
                         paddingLeft: () => 10,
                         paddingRight: () => 10,
                         paddingTop: () => 8,
@@ -656,7 +698,6 @@ function generatePDF(data, filePath) {
                         }
                     ]
                 } : {},
-
                 // Notes Section
                 data.notes ? {
                     stack: [
@@ -671,13 +712,13 @@ function generatePDF(data, filePath) {
                 { text: '© 2026 EurosHub. All rights reserved.', style: 'footer', alignment: 'center', margin: [0, 5, 0, 0] }
             ],
             styles: {
-                companyName: { fontSize: 22, bold: true, color: '#17a2b8' },
+                companyName: { fontSize: 22, bold: true, color: settings.headerColor },
                 subtitle: { fontSize: 10, color: '#666', italics: true },
                 docTitle: { fontSize: 14, bold: true, color: '#333' },
-                sectionHeader: { fontSize: 11, bold: true, color: '#17a2b8', decoration: 'underline' },
-                tableHeader: { fontSize: 10, bold: true, fillColor: '#17a2b8', color: '#ffffff' },
-                netPayLabel: { fontSize: 16, bold: true, color: '#17a2b8' },
-                netPayAmount: { fontSize: 20, bold: true, color: '#17a2b8', alignment: 'right' },
+                sectionHeader: { fontSize: 11, bold: true, color: settings.headerColor, decoration: 'underline' },
+                tableHeader: { fontSize: 10, bold: true, fillColor: settings.tableHeaderBg, color: settings.tableHeaderColor },
+                netPayLabel: { fontSize: 16, bold: true, color: settings.accentColor },
+                netPayAmount: { fontSize: 20, bold: true, color: settings.accentColor, alignment: 'right' },
                 netPayWords: { fontSize: 10, italics: true, color: '#666' },
                 footer: { fontSize: 8, color: '#888' }
             },
@@ -696,20 +737,21 @@ function generatePDF(data, filePath) {
     });
 }
 
-function buildEarningsDeductionsRows(earnings, deductions) {
+function buildEarningsDeductionsRows(earnings, deductions, settings) {
     const rows = [];
     const maxRows = Math.max(earnings.length, deductions.length);
+    const textColor = settings?.textColor || '#333';
 
     for (let i = 0; i < maxRows; i++) {
         const earn = earnings[i] || { name: '', amount: 0 };
         const ded = deductions[i] || { name: '', amount: 0 };
 
         rows.push([
-            { text: earn.name || '', color: '#333' },
-            { text: earn.name ? (typeof earn.amount === 'number' ? earn.amount.toFixed(2) : earn.amount) : '', alignment: 'right', color: '#333' },
+            { text: earn.name || '', color: textColor },
+            { text: earn.name ? (typeof earn.amount === 'number' ? earn.amount.toFixed(2) : earn.amount) : '', alignment: 'right', color: textColor },
             { text: '', border: [false, false, false, false] },
-            { text: ded.name || '', color: '#333' },
-            { text: ded.name ? (typeof ded.amount === 'number' ? ded.amount.toFixed(2) : ded.amount) : '', alignment: 'right', color: '#333' }
+            { text: ded.name || '', color: textColor },
+            { text: ded.name ? (typeof ded.amount === 'number' ? ded.amount.toFixed(2) : ded.amount) : '', alignment: 'right', color: textColor }
         ]);
     }
 

@@ -10,8 +10,20 @@ export default function Settings() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
 
+    // PDF Settings State
+    const [pdfSettings, setPdfSettings] = useState({
+        headerColor: '#17a2b8',
+        textColor: '#333333',
+        tableHeaderBg: '#17a2b8',
+        tableHeaderColor: '#ffffff',
+        companyName: 'EurosHub',
+        companySubtitle: 'Payroll Department',
+        accentColor: '#17a2b8'
+    });
+
     // Apply saved theme and color on mount
     React.useEffect(() => {
+        loadPdfSettings();
         document.body.className = theme;
         document.documentElement.style.setProperty('--accent', accentColor);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
@@ -23,6 +35,24 @@ export default function Settings() {
         const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
         const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
         return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    };
+
+    const loadPdfSettings = async () => {
+        try {
+            const config = await api.getPdfConfig();
+            if (config && Object.keys(config).length > 0) {
+                setPdfSettings(prev => ({ ...prev, ...config }));
+            }
+        } catch (e) { console.error('Failed to load PDF settings', e); }
+    };
+
+    const handlePdfSave = async (e) => {
+        e.preventDefault();
+        try {
+            await api.savePdfConfig(pdfSettings);
+            setMessage('PDF Settings saved successfully!');
+            setTimeout(() => setMessage(''), 3000);
+        } catch (e) { setMessage('Error saving PDF settings: ' + e.message); }
     };
 
     const handleThemeChange = (newTheme) => {
@@ -77,6 +107,7 @@ export default function Settings() {
 
     const predefinedColors = [
         // Professional Blues
+        { name: 'EurosHub', value: '#0FB8AF' },
         { name: 'Ocean Blue', value: '#0077B6' },
         { name: 'Corporate Blue', value: '#1E3A8A' },
         { name: 'Sky Blue', value: '#0EA5E9' },
@@ -171,6 +202,22 @@ export default function Settings() {
                     }}
                 >
                     Need Support?
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('pdf')}
+                    style={{
+                        padding: '12px 24px',
+                        border: 'none',
+                        background: activeTab === 'pdf' ? accentColor : 'transparent',
+                        color: activeTab === 'pdf' ? '#fff' : '#666',
+                        cursor: 'pointer',
+                        borderRadius: '8px 8px 0 0',
+                        fontWeight: activeTab === 'pdf' ? 'bold' : 'normal',
+                        transition: 'all 0.3s'
+                    }}
+                >
+                    PDF Customization
                 </button>
             </div>
 
@@ -405,7 +452,7 @@ export default function Settings() {
 
                         <div style={{
                             padding: '25px',
-                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            background: 'linear-gradient(135deg, #0FB8AF 0%, #0c246dff 100%)',
                             color: '#fff',
                             borderRadius: '12px',
                             cursor: 'pointer',
@@ -439,6 +486,142 @@ export default function Settings() {
                             <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EurosHub</p>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* PDF Customization Tab */}
+            {activeTab === 'pdf' && (
+                <div className="card">
+                    <h2 style={{ marginTop: 0 }}>PDF Customization</h2>
+                    <p style={{ color: '#666', marginBottom: '25px' }}>
+                        Customize how your payslips look. These settings will apply to all future generated payslips.
+                    </p>
+
+                    <form onSubmit={handlePdfSave}>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Company Name (Header)</label>
+                                <input
+                                    type="text"
+                                    value={pdfSettings.companyName}
+                                    onChange={(e) => setPdfSettings({ ...pdfSettings, companyName: e.target.value })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Subtitle (Department/Tagline)</label>
+                                <input
+                                    type="text"
+                                    value={pdfSettings.companySubtitle}
+                                    onChange={(e) => setPdfSettings({ ...pdfSettings, companySubtitle: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <h3>Colors</h3>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Header & Brand Color</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="color"
+                                        value={pdfSettings.headerColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, headerColor: e.target.value })}
+                                        style={{ width: '50px', padding: '0', height: '40px' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={pdfSettings.headerColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, headerColor: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Accent Color (Totals)</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="color"
+                                        value={pdfSettings.accentColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, accentColor: e.target.value })}
+                                        style={{ width: '50px', padding: '0', height: '40px' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={pdfSettings.accentColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, accentColor: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Table Header Background</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="color"
+                                        value={pdfSettings.tableHeaderBg}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, tableHeaderBg: e.target.value })}
+                                        style={{ width: '50px', padding: '0', height: '40px' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={pdfSettings.tableHeaderBg}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, tableHeaderBg: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Table Header Text</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="color"
+                                        value={pdfSettings.tableHeaderColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, tableHeaderColor: e.target.value })}
+                                        style={{ width: '50px', padding: '0', height: '40px' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={pdfSettings.tableHeaderColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, tableHeaderColor: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>General Text Color</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="color"
+                                        value={pdfSettings.textColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, textColor: e.target.value })}
+                                        style={{ width: '50px', padding: '0', height: '40px' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={pdfSettings.textColor}
+                                        onChange={(e) => setPdfSettings({ ...pdfSettings, textColor: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setPdfSettings({
+                                    headerColor: '#0FB8AF',
+                                    textColor: '#333333',
+                                    tableHeaderBg: '#0FB8AF',
+                                    tableHeaderColor: '#ffffff',
+                                    companyName: 'EurosHub',
+                                    companySubtitle: 'Payroll Department',
+                                    accentColor: '#0FB8AF'
+                                })}
+                            >
+                                Reset to Defaults
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                Save PDF Settings
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

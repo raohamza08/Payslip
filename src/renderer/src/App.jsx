@@ -85,8 +85,7 @@ export default function App() {
                             width: '80px',
                             height: '80px',
                             objectFit: 'contain',
-                            marginBottom: '10px',
-                            filter: 'brightness(0) invert(1)'
+                            marginBottom: '10px'
                         }}
                     />
                     <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '600' }}>EurosHub</h2>

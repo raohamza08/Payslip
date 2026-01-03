@@ -38,7 +38,7 @@ export default function PDFViewer({ pdfUrl, onClose }) {
                 </div>
             </div>
             <iframe
-                src={pdfUrl}
+                src={`${pdfUrl}?inline=true`}
                 style={{
                     flex: 1,
                     border: 'none',

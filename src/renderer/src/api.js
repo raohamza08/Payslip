@@ -173,6 +173,21 @@ const api = {
         });
         return await res.json();
     },
+    getPdfConfig: async () => {
+        const res = await fetch(`${API_BASE}/config/pdf`);
+        return await res.json();
+    },
+    savePdfConfig: async (config) => {
+        const res = await fetch(`${API_BASE}/config/pdf`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-email': currentUserEmail || ''
+            },
+            body: JSON.stringify(config)
+        });
+        return await res.json();
+    },
     sendPayslipEmail: async (payslipId) => {
         const res = await fetch(`${API_BASE}/email/send`, {
             method: 'POST',

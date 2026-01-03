@@ -28,10 +28,10 @@ export default function AdminLogs() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'SUCCESS': return '#28a745';
-            case 'FAIL': return '#dc3545';
-            case 'ERROR': return '#ffc107';
-            default: return '#6c757d';
+            case 'SUCCESS': return '#045617ff';
+            case 'FAIL': return '#710610ff';
+            case 'ERROR': return '#a07801ff';
+            default: return '#506374ff';
         }
     };
 
