@@ -223,6 +223,50 @@ const api = {
         return await res.json();
     },
 
+    // Expenses
+    getExpenses: async (filters = {}) => {
+        const query = new URLSearchParams(filters).toString();
+        const res = await fetch(`${API_BASE}/expenses?${query}`);
+        return await res.json();
+    },
+    saveExpense: async (expense) => {
+        const res = await fetch(`${API_BASE}/expenses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            body: JSON.stringify(expense)
+        });
+        return await res.json();
+    },
+    updateExpense: async (id, expense) => {
+        const res = await fetch(`${API_BASE}/expenses/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            body: JSON.stringify(expense)
+        });
+        return await res.json();
+    },
+    deleteExpense: async (id) => {
+        const res = await fetch(`${API_BASE}/expenses/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-user-email': currentUserEmail || '' }
+        });
+        return await res.json();
+    },
+
+    // Increments
+    getIncrements: async (employeeId) => {
+        const res = await fetch(`${API_BASE}/employees/${employeeId}/increments`);
+        return await res.json();
+    },
+    addIncrement: async (employeeId, increment) => {
+        const res = await fetch(`${API_BASE}/employees/${employeeId}/increments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            body: JSON.stringify(increment)
+        });
+        return await res.json();
+    },
+
     // Admin
     getAdminLogs: async () => {
         const res = await fetch(`${API_BASE}/admin/logs`, {

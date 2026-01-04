@@ -32,6 +32,47 @@ export default function PayslipGenerator({ onComplete, user }) {
         }
     }, [selectedEmp, data.pay_period_start, data.pay_period_end]);
 
+    // Pro-rating & Salary Auto-fill
+    useEffect(() => {
+        if (selectedEmp && data.pay_period_start) {
+            const emp = employees.find(e => e.id === selectedEmp);
+            if (emp) {
+                // Default Base
+                let salary = Number(emp.monthly_salary) || 0;
+                let autoNote = '';
+
+                // Pro-rating Logic
+                if (emp.joining_date) {
+                    const joinDate = new Date(emp.joining_date);
+                    const pStart = new Date(data.pay_period_start);
+
+                    // Check if Joined in this Month
+                    if (joinDate.getMonth() === pStart.getMonth() && joinDate.getFullYear() === pStart.getFullYear()) {
+                        const daysInMonth = new Date(pStart.getFullYear(), pStart.getMonth() + 1, 0).getDate();
+                        const joinDay = joinDate.getDate();
+                        // Only if joined after 1st
+                        if (joinDay > 1) {
+                            const workedDays = daysInMonth - (joinDay - 1);
+                            salary = Math.round((salary / daysInMonth) * workedDays);
+                            autoNote = `[Pro-rated: Joined ${emp.joining_date}, ${workedDays}/${daysInMonth} days]`;
+                        }
+                    }
+                }
+
+                // Update Basic Salary
+                setEarnings(prev => {
+                    const next = [...prev];
+                    const idx = next.findIndex(item => item.name === 'Basic Salary');
+                    if (idx > -1) next[idx].amount = salary;
+                    else next.unshift({ name: 'Basic Salary', amount: salary });
+                    return next;
+                });
+
+                if (autoNote) setData(d => ({ ...d, notes: autoNote }));
+            }
+        }
+    }, [selectedEmp, data.pay_period_start, employees]);
+
     const calculateAttendance = async () => {
         try {
             // Get all attendance for this employee

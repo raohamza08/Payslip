@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 
+import { exportToCSV } from '../utils/exportToCSV';
+
 export default function EmployeeList({ onEdit }) {
     const [employees, setEmployees] = useState([]);
 
@@ -24,7 +26,10 @@ export default function EmployeeList({ onEdit }) {
         <div>
             <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h1>Employees</h1>
-                <button className="btn btn-primary" onClick={() => onEdit({})}>+ Add Employee</button>
+                <div>
+                    <button className="btn btn-secondary" style={{ marginRight: '10px' }} onClick={() => exportToCSV(employees, 'employees_list')}>Export to CSV</button>
+                    <button className="btn btn-primary" onClick={() => onEdit({})}>+ Add Employee</button>
+                </div>
             </div>
 
             <div className="table-container">

@@ -1,0 +1,21 @@
+-- Run these commands in the Supabase SQL Editor to update your employees table
+
+ALTER TABLE employees
+ADD COLUMN IF NOT EXISTS monthly_salary NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS joining_date DATE,
+ADD COLUMN IF NOT EXISTS leaving_date DATE,
+ADD COLUMN IF NOT EXISTS probation_end_date DATE,
+ADD COLUMN IF NOT EXISTS father_name TEXT,
+ADD COLUMN IF NOT EXISTS religion TEXT,
+ADD COLUMN IF NOT EXISTS cnic TEXT,
+ADD COLUMN IF NOT EXISTS dob DATE,
+ADD COLUMN IF NOT EXISTS blood_group TEXT,
+ADD COLUMN IF NOT EXISTS gender TEXT,
+ADD COLUMN IF NOT EXISTS personal_email TEXT,
+ADD COLUMN IF NOT EXISTS contact_number TEXT,
+ADD COLUMN IF NOT EXISTS home_contact TEXT,
+ADD COLUMN IF NOT EXISTS present_address TEXT,
+ADD COLUMN IF NOT EXISTS permanent_address TEXT,
+ADD COLUMN IF NOT EXISTS office_number TEXT,
+ADD COLUMN IF NOT EXISTS shift_start TIME,
+ADD COLUMN IF NOT EXISTS shift_end TIME;

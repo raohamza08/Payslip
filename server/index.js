@@ -8,6 +8,7 @@ const PdfPrinter = require('pdfmake');
 const fs = require('fs');
 const os = require('os');
 const supabase = require('./supabase');
+const localDb = require('./localDb');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -247,12 +248,77 @@ app.delete('/api/employees/:id', async (req, res) => {
         const { data: emp } = await supabase.from('employees').select('name').eq('id', req.params.id).single();
         const { error } = await supabase.from('employees').delete().eq('id', req.params.id);
         if (error) throw error;
+
+        // Also cleanup local data
+        await localDb.employeeExtensions.remove({ employee_id: req.params.id }, { multi: true });
+        await localDb.increments.remove({ employee_id: req.params.id }, { multi: true });
+
         await logActivity(userEmail, 'DELETE_EMPLOYEE', 'SUCCESS', `Deleted employee: ${emp?.name || req.params.id}`, req);
         res.json({ success: true });
     } catch (e) {
         await logActivity(req.headers['x-user-email'] || 'unknown', 'DELETE_EMPLOYEE', 'ERROR', `Failed to delete employee ${req.params.id}: ${e.message}`, req);
         res.status(500).json({ error: e.message });
     }
+});
+
+// === MODULE 1: COMPANY EXPENSES ===
+app.get('/api/expenses', async (req, res) => {
+    try {
+        const { start, end, category } = req.query;
+        let query = {};
+        if (start && end) {
+            query.expense_date = { $gte: start, $lte: end };
+        }
+        if (category) {
+            query.category = category;
+        }
+        const expenses = await localDb.expenses.find(query).sort({ expense_date: -1 });
+        res.json(expenses);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/expenses', async (req, res) => {
+    try {
+        const expense = { ...req.body, created_at: new Date() };
+        const newDoc = await localDb.expenses.insert(expense);
+        res.json(newDoc);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/expenses/:id', async (req, res) => {
+    try {
+        const { _id, ...updateData } = req.body;
+        updateData.updated_at = new Date();
+        await localDb.expenses.update({ _id: req.params.id }, { $set: updateData });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/expenses/:id', async (req, res) => {
+    try {
+        await localDb.expenses.remove({ _id: req.params.id }, {});
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// === MODULE 3: INCREMENTS ===
+app.get('/api/employees/:id/increments', async (req, res) => {
+    try {
+        const increments = await localDb.increments.find({ employee_id: req.params.id }).sort({ effective_date: -1 });
+        res.json(increments);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/employees/:id/increments', async (req, res) => {
+    try {
+        const increment = {
+            ...req.body,
+            employee_id: req.params.id,
+            created_at: new Date()
+        };
+        const newDoc = await localDb.increments.insert(increment);
+        res.json(newDoc);
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Payslip Routes
@@ -616,7 +682,8 @@ function generatePDF(data, filePath) {
                                 { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
                                 { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
                                 { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }] }
+                                { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                { text: [{ text: 'Joining Date: ', bold: true, color: '#555' }, { text: data.employee.joining_date || 'N/A', color: settings.textColor }] }
                             ]
                         },
                         {

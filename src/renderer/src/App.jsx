@@ -12,6 +12,7 @@ import CompanyProfile from './components/CompanyProfile';
 import Whitelist from './components/Whitelist';
 import AdminLogs from './components/AdminLogs';
 import PasswordConfirm from './components/PasswordConfirm';
+import Expenses from './components/Expenses';
 import api from './api';
 
 export default function App() {
@@ -97,6 +98,7 @@ export default function App() {
                 <NavItem id="history" label="Payslip History" />
                 <NavItem id="bulk" label="Bulk Operations" />
                 <NavItem id="reports" label="Reports" />
+                <NavItem id="expenses" label="Expenses" />
                 <NavItem id="company" label="Company Profile" />
                 {user?.role === 'super_admin' && (
                     <>
@@ -157,6 +159,8 @@ export default function App() {
                 {view === 'bulk' && <PayslipHistory user={user} />}
 
                 {view === 'reports' && <AttendanceReport />}
+
+                {view === 'expenses' && <Expenses />}
 
                 {view === 'company' && <CompanyProfile />}
 
