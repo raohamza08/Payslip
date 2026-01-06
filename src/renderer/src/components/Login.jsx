@@ -44,7 +44,7 @@ export default function Login({ onLogin }) {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="your@email.com"
+                            placeholder="name@euroshub.com"
                             autoComplete="username"
                             required
                         />

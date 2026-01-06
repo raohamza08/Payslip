@@ -4,7 +4,7 @@ import api from '../api';
 export default function Settings() {
     const [activeTab, setActiveTab] = useState('appearance');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-    const [accentColor, setAccentColor] = useState(localStorage.getItem('accentColor') || '#17a2b8');
+    const [accentColor, setAccentColor] = useState(localStorage.getItem('accentColor') || '#0FB8AF');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -418,7 +418,7 @@ export default function Settings() {
 
                     <div style={{ marginBottom: '25px' }}>
                         <h3>Need Help?</h3>
-                        <p style={{ color: '#666', lineHeight: '1.6' }}>
+                        <p style={{ color: '#500303ff', lineHeight: '1.6' }}>
                             If you're experiencing any issues or have questions about the Payslip Manager,
                             we're here to help!
                         </p>
@@ -480,9 +480,9 @@ export default function Settings() {
                     }}>
                         <h3 style={{ marginTop: 0 }}>📋 System Information</h3>
                         <div style={{ fontSize: '14px', color: '#666' }}>
-                            <p><strong>Version:</strong> 1.0.0</p>
-                            <p><strong>Database:</strong> NeDB (Local)</p>
-                            <p><strong>Email Provider:</strong> Gmail SMTP</p>
+                            <p><strong>Version:</strong> 1.2.1</p>
+                            <p><strong>Database:</strong> Supabase (Global)</p>
+                            <p><strong>Email Provider:</strong> Gmail SMTP Server</p>
                             <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EurosHub</p>
                         </div>
                     </div>

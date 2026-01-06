@@ -12,7 +12,7 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true
         },
-        title: "Payslip Manager"
+        title: "EurosHub Payslips"
     });
 
     if (process.env.VITE_DEV_SERVER_URL) {

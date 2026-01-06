@@ -13,6 +13,8 @@ import Whitelist from './components/Whitelist';
 import AdminLogs from './components/AdminLogs';
 import PasswordConfirm from './components/PasswordConfirm';
 import Expenses from './components/Expenses';
+import PayrollGrid from './components/PayrollGrid';
+import EmailComposer from './components/EmailComposer';
 import api from './api';
 
 export default function App() {
@@ -26,7 +28,15 @@ export default function App() {
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
     const [pendingView, setPendingView] = useState(null);
 
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     useEffect(() => {
+        // Apply theme and color on boot
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
+        document.body.className = savedTheme;
+        document.documentElement.style.setProperty('--accent', savedAccent);
+
         checkSetup();
     }, []);
 
@@ -47,6 +57,7 @@ export default function App() {
         } else {
             setView(id);
         }
+        if (window.innerWidth <= 768) setSidebarOpen(false);
     };
 
     const NavItem = ({ id, label, icon }) => (
@@ -70,9 +81,23 @@ export default function App() {
         }} />;
     }
 
+
+
     return (
         <div className="app-container">
-            <div className="sidebar">
+            <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <span style={{ fontSize: '24px' }}>☰</span>
+            </button>
+
+            {/* Overlay for mobile when sidebar is open */}
+            {sidebarOpen && (
+                <div
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }}
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div style={{
                     textAlign: 'center',
                     padding: '20px 0 10px 0',
@@ -94,7 +119,9 @@ export default function App() {
                 <NavItem id="dashboard" label="Dashboard" />
                 <NavItem id="employees" label="Employees" />
                 <NavItem id="attendance" label="Attendance" />
-                <NavItem id="generate" label="Generate Payslip" />
+                <NavItem id="payroll" label="All Payslips" />
+                <NavItem id="email" label="Compose Email" />
+                <NavItem id="generate" label="Single Payslip" />
                 <NavItem id="history" label="Payslip History" />
                 <NavItem id="bulk" label="Bulk Operations" />
                 <NavItem id="reports" label="Reports" />
@@ -153,6 +180,10 @@ export default function App() {
                 {view === 'attendance' && <Attendance />}
 
                 {view === 'generate' && <PayslipGenerator onComplete={() => setView('history')} user={user} />}
+
+                {view === 'payroll' && <PayrollGrid user={user} onNavigate={setView} />}
+
+                {view === 'email' && <EmailComposer user={user} />}
 
                 {view === 'history' && <PayslipHistory user={user} />}
 

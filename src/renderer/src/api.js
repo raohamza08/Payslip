@@ -116,7 +116,7 @@ const api = {
     },
 
     // Payslips
-    generatePayslip: async (data, employee) => {
+    generatePayslip: async (data, employee, silent = false) => {
         const payload = { ...data, employee };
         const res = await fetch(`${API_BASE}/payslip/generate`, {
             method: 'POST',
@@ -128,7 +128,7 @@ const api = {
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error);
-        if (result.url) window.open(result.url, '_blank');
+        if (result.url && !silent) window.open(result.url, '_blank');
         return result;
     },
     getPayslips: async () => {
@@ -157,6 +157,16 @@ const api = {
             body: JSON.stringify(config)
         });
         return await res.json();
+    },
+    sendCustomEmail: async (to, subject, html) => {
+        const res = await fetch(`${API_BASE}/email/custom`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            body: JSON.stringify({ to, subject, html })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        return data.success;
     },
     getConfig: async () => {
         const res = await fetch(`${API_BASE}/config`);
@@ -201,6 +211,43 @@ const api = {
         if (!res.ok) throw new Error(data.error);
         return data.success;
     },
+    downloadBulkPayslips: async (payslipIds, filename = 'payslips.zip') => {
+        const res = await fetch(`${API_BASE}/payslips/bulk-zip`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-email': currentUserEmail || ''
+            },
+            body: JSON.stringify({ payslipIds })
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Failed to download ZIP');
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    },
+    // Payroll Defaults
+    getPayrollDefaults: async () => {
+        const res = await fetch(`${API_BASE}/payroll/defaults`);
+        return await res.json();
+    },
+    savePayrollDefaults: async (defaults) => {
+        const res = await fetch(`${API_BASE}/payroll/defaults`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            body: JSON.stringify({ defaults })
+        });
+        return await res.json();
+    },
+
     // Attendance
     getAttendance: async (date) => {
         const query = date ? `?date=${date}` : '';

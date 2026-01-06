@@ -4,6 +4,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
+const archiver = require('archiver');
 const PdfPrinter = require('pdfmake');
 const fs = require('fs');
 const os = require('os');
@@ -224,6 +225,13 @@ app.post('/api/employees', async (req, res) => {
     try {
         const emp = req.body;
         const userEmail = req.headers['x-user-email'] || 'unknown';
+
+        // Sanitize date fields: Postgres rejects empty strings for DATE
+        const dateFields = ['joining_date', 'leaving_date', 'probation_end_date', 'dob'];
+        dateFields.forEach(field => {
+            if (emp[field] === '') emp[field] = null;
+        });
+
         if (emp.id) {
             const { error } = await supabase.from('employees').update(emp).eq('id', emp.id);
             if (error) throw error;
@@ -511,6 +519,34 @@ app.post('/api/email/send', async (req, res) => {
     }
 });
 
+app.post('/api/email/custom', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        const { to, subject, html } = req.body;
+        const smtpConfig = {
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: 'hamzabadar.euroshub@gmail.com',
+                pass: 'cajq tdba zjln iwrj'
+            }
+        };
+        const transporter = nodemailer.createTransport(smtpConfig);
+        await transporter.sendMail({
+            from: '"EurosHub" <hamzabadar.euroshub@gmail.com>',
+            to,
+            subject,
+            html
+        });
+        await logActivity(userEmail, 'SEND_CUSTOM_EMAIL', 'SUCCESS', `Sent email to ${to}`, req);
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[EMAIL] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Config Routes
 app.get('/api/config', async (req, res) => {
     try {
@@ -531,6 +567,74 @@ app.post('/api/config', async (req, res) => {
         await logActivity(userEmail, 'UPDATE_CONFIG', 'ERROR', `Failed to update system configuration: ${e.message}`, req);
         res.status(500).json({ error: e.message });
     }
+});
+
+// Payroll Defaults Routes
+app.get('/api/payroll/defaults', async (req, res) => {
+    try {
+        const extensions = await localDb.employeeExtensions.find({});
+        const defaults = {};
+        extensions.forEach(ext => {
+            if (ext.payroll_defaults) defaults[ext.employee_id] = ext.payroll_defaults;
+        });
+        res.json(defaults);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/payslips/bulk-zip', async (req, res) => {
+    const { payslipIds } = req.body;
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+
+    try {
+        const { data: payslips, error } = await supabase.from('payslips').select('*').in('id', payslipIds);
+        if (error) throw error;
+
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        res.attachment(`Payslips_${new Date().toISOString().slice(0, 10)}.zip`);
+        archive.pipe(res);
+
+        for (const ps of payslips) {
+            const fileName = path.basename(ps.pdf_path);
+            const localPath = path.join(PDF_DIR, fileName);
+
+            // Check if exists locally, if not download from Supabase
+            if (!fs.existsSync(localPath)) {
+                const { data, error: dlError } = await supabase.storage.from('payslips').download(fileName);
+                if (!dlError && data) {
+                    const arrayBuffer = await data.arrayBuffer();
+                    fs.writeFileSync(localPath, Buffer.from(arrayBuffer));
+                }
+            }
+
+            if (fs.existsSync(localPath)) {
+                // Determine a nice name for the file in ZIP: EmployeeName_MonthYear.pdf
+                const employeeName = ps.employee_name || 'Payslip';
+                const safeName = `${employeeName.replace(/\s+/g, '_')}_${ps.pay_period_start}.pdf`;
+                archive.file(localPath, { name: safeName });
+            }
+        }
+
+        await archive.finalize();
+        await logActivity(userEmail, 'BULK_DOWNLOAD_ZIP', 'SUCCESS', `Downloaded ZIP for ${payslipIds.length} payslips`, req);
+    } catch (e) {
+        console.error('[ZIP_ERROR]', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/payroll/defaults', async (req, res) => {
+    // Expects body: { defaults: { empId: { earnings: [], deductions: [] }, ... } }
+    try {
+        const { defaults } = req.body;
+        for (const [empId, defs] of Object.entries(defaults)) {
+            await localDb.employeeExtensions.update(
+                { employee_id: empId },
+                { $set: { employee_id: empId, payroll_defaults: defs } },
+                { upsert: true }
+            );
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Attendance Routes
