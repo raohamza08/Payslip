@@ -169,7 +169,7 @@ export default function PayslipHistory({ user }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredPayslips.map(p => (
+                        {Array.isArray(filteredPayslips) && filteredPayslips.map(p => (
                             <tr key={p.id}>
                                 <td>
                                     <input

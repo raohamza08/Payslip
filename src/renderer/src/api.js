@@ -5,56 +5,59 @@ let currentUserEmail = null;
 const api = {
     setUser: (email) => { currentUserEmail = email; },
 
+    // Integrated Fetch Helper
+    fetchJson: async (url, options = {}) => {
+        const headers = options.headers || {};
+        if (currentUserEmail) {
+            headers['x-user-email'] = currentUserEmail;
+        }
+
+        const res = await fetch(url, { ...options, headers });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || data.message || `Server Error (${res.status})`);
+        }
+        return data;
+    },
+
     // Auth
     isSetup: async () => {
-        const res = await fetch(`${API_BASE}/auth/is-setup`);
-        const data = await res.json();
+        const data = await api.fetchJson(`${API_BASE}/auth/is-setup`);
         return data.isSetup;
     },
     setup: async (email, password) => {
-        const res = await fetch(`${API_BASE}/auth/setup`, {
+        const data = await api.fetchJson(`${API_BASE}/auth/setup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         if (data.success) currentUserEmail = email;
         return data.success;
     },
     signup: async (email, password) => {
-        const res = await fetch(`${API_BASE}/auth/signup`, {
+        const data = await api.fetchJson(`${API_BASE}/auth/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         return data.success;
     },
     login: async (email, password) => {
-        const res = await fetch(`${API_BASE}/auth/login`, {
+        const data = await api.fetchJson(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         if (data.success) currentUserEmail = email;
         return data;
     },
     confirmAction: async (email, password) => {
         try {
-            const res = await fetch(`${API_BASE}/auth/confirm`, {
+            const data = await api.fetchJson(`${API_BASE}/auth/confirm`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            const data = await res.json();
-            if (!res.ok) {
-                console.warn('Password confirmation failed:', data.error || res.statusText);
-                return false;
-            }
             return data.success;
         } catch (error) {
             console.error('Password confirmation error:', error);
@@ -64,79 +67,57 @@ const api = {
 
     // Whitelist
     getWhitelist: async () => {
-        const res = await fetch(`${API_BASE}/whitelist`, {
-            headers: { 'x-user-email': currentUserEmail || '' }
-        });
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/whitelist`);
     },
     addToWhitelist: async (email) => {
-        const res = await fetch(`${API_BASE}/whitelist`, {
+        return await api.fetchJson(`${API_BASE}/whitelist`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
         });
-        return await res.json();
     },
     deleteFromWhitelist: async (id) => {
-        const res = await fetch(`${API_BASE}/whitelist/${id}`, {
-            method: 'DELETE',
-            headers: { 'x-user-email': currentUserEmail || '' }
+        return await api.fetchJson(`${API_BASE}/whitelist/${id}`, {
+            method: 'DELETE'
         });
-        return await res.json();
     },
 
     // Employees
     getEmployees: async () => {
-        const res = await fetch(`${API_BASE}/employees`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/employees`);
     },
     saveEmployee: async (emp) => {
-        const res = await fetch(`${API_BASE}/employees`, {
+        const data = await api.fetchJson(`${API_BASE}/employees`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emp)
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         return data.id;
     },
     deleteEmployee: async (id) => {
-        const res = await fetch(`${API_BASE}/employees/${id}`, {
-            method: 'DELETE',
-            headers: { 'x-user-email': currentUserEmail || '' }
+        const data = await api.fetchJson(`${API_BASE}/employees/${id}`, {
+            method: 'DELETE'
         });
-        const data = await res.json();
         return data.success;
     },
 
     // Payslips
     generatePayslip: async (data, employee, silent = false) => {
         const payload = { ...data, employee };
-        const res = await fetch(`${API_BASE}/payslip/generate`, {
+        const result = await api.fetchJson(`${API_BASE}/payslip/generate`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error);
         if (result.url && !silent) window.open(result.url, '_blank');
         return result;
     },
     getPayslips: async () => {
-        const res = await fetch(`${API_BASE}/payslips`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/payslips`);
     },
     openPayslip: async (id) => {
-        const payslip = (await api.getPayslips()).find(p => p.id === id);
+        const payslips = await api.getPayslips();
+        const payslip = Array.isArray(payslips) ? payslips.find(p => p.id === id) : null;
         if (payslip && payslip.pdf_path) {
             window.open(`${API_BASE}/payslips/${payslip.pdf_path}/download`, '_blank');
         }
@@ -144,71 +125,49 @@ const api = {
 
     // Config / Email
     getSmtpConfig: async () => {
-        const res = await fetch(`${API_BASE}/config/smtp`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/config/smtp`);
     },
     saveSmtpConfig: async (config) => {
-        const res = await fetch(`${API_BASE}/config/smtp`, {
+        return await api.fetchJson(`${API_BASE}/config/smtp`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         });
-        return await res.json();
     },
     sendCustomEmail: async (to, subject, html) => {
-        const res = await fetch(`${API_BASE}/email/custom`, {
+        const data = await api.fetchJson(`${API_BASE}/email/custom`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ to, subject, html })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         return data.success;
     },
     getConfig: async () => {
-        const res = await fetch(`${API_BASE}/config`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/config`);
     },
     saveConfig: async (config) => {
-        const res = await fetch(`${API_BASE}/config`, {
+        return await api.fetchJson(`${API_BASE}/config`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         });
-        return await res.json();
     },
     getPdfConfig: async () => {
-        const res = await fetch(`${API_BASE}/config/pdf`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/config/pdf`);
     },
     savePdfConfig: async (config) => {
-        const res = await fetch(`${API_BASE}/config/pdf`, {
+        return await api.fetchJson(`${API_BASE}/config/pdf`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         });
-        return await res.json();
     },
     sendPayslipEmail: async (payslipId) => {
-        const res = await fetch(`${API_BASE}/email/send`, {
+        const data = await api.fetchJson(`${API_BASE}/email/send`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ payslipId })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
         return data.success;
     },
     downloadBulkPayslips: async (payslipIds, filename = 'payslips.zip') => {
@@ -222,7 +181,7 @@ const api = {
         });
         if (!res.ok) {
             const error = await res.json();
-            throw new Error(error.message || 'Failed to download ZIP');
+            throw new Error(error.error || error.message || 'Failed to download ZIP');
         }
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -236,90 +195,72 @@ const api = {
     },
     // Payroll Defaults
     getPayrollDefaults: async () => {
-        const res = await fetch(`${API_BASE}/payroll/defaults`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/payroll/defaults`);
     },
     savePayrollDefaults: async (defaults) => {
-        const res = await fetch(`${API_BASE}/payroll/defaults`, {
+        return await api.fetchJson(`${API_BASE}/payroll/defaults`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ defaults })
         });
-        return await res.json();
     },
 
     // Attendance
     getAttendance: async (date) => {
         const query = date ? `?date=${date}` : '';
-        const res = await fetch(`${API_BASE}/attendance${query}`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/attendance${query}`);
     },
     markAttendance: async (data) => {
-        const res = await fetch(`${API_BASE}/attendance/mark`, {
+        return await api.fetchJson(`${API_BASE}/attendance/mark`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-email': currentUserEmail || ''
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        return await res.json();
     },
     getAttendanceReport: async (month, year) => {
-        const res = await fetch(`${API_BASE}/attendance/report?month=${month}&year=${year}`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/attendance/report?month=${month}&year=${year}`);
     },
 
     // Expenses
     getExpenses: async (filters = {}) => {
         const query = new URLSearchParams(filters).toString();
-        const res = await fetch(`${API_BASE}/expenses?${query}`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/expenses?${query}`);
     },
     saveExpense: async (expense) => {
-        const res = await fetch(`${API_BASE}/expenses`, {
+        return await api.fetchJson(`${API_BASE}/expenses`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(expense)
         });
-        return await res.json();
     },
     updateExpense: async (id, expense) => {
-        const res = await fetch(`${API_BASE}/expenses/${id}`, {
+        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(expense)
         });
-        return await res.json();
     },
     deleteExpense: async (id) => {
-        const res = await fetch(`${API_BASE}/expenses/${id}`, {
-            method: 'DELETE',
-            headers: { 'x-user-email': currentUserEmail || '' }
+        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
+            method: 'DELETE'
         });
-        return await res.json();
     },
 
     // Increments
     getIncrements: async (employeeId) => {
-        const res = await fetch(`${API_BASE}/employees/${employeeId}/increments`);
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`);
     },
     addIncrement: async (employeeId, increment) => {
-        const res = await fetch(`${API_BASE}/employees/${employeeId}/increments`, {
+        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': currentUserEmail || '' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(increment)
         });
-        return await res.json();
     },
 
     // Admin
     getAdminLogs: async () => {
-        const res = await fetch(`${API_BASE}/admin/logs`, {
-            headers: { 'x-user-email': currentUserEmail || '' }
-        });
-        return await res.json();
+        return await api.fetchJson(`${API_BASE}/admin/logs`);
     }
 };
 

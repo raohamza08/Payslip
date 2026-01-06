@@ -24,8 +24,11 @@ export default function Expenses() {
         setLoading(true);
         try {
             const data = await api.getExpenses(filters);
-            setExpenses(data);
-        } catch (e) { console.error(e); }
+            setExpenses(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            setExpenses([]);
+        }
         setLoading(false);
     };
 
@@ -43,7 +46,7 @@ export default function Expenses() {
     };
 
     // Calculations
-    const totalAmount = expenses.reduce((sum, ex) => sum + Number(ex.amount), 0);
+    const totalAmount = Array.isArray(expenses) ? expenses.reduce((sum, ex) => sum + (Number(ex.amount) || 0), 0) : 0;
 
     return (
         <div>
@@ -98,7 +101,7 @@ export default function Expenses() {
                         </tr>
                     </thead>
                     <tbody>
-                        {expenses.map(ex => (
+                        {Array.isArray(expenses) && expenses.map(ex => (
                             <tr key={ex._id}>
                                 <td>{ex.expense_date}</td>
                                 <td>
@@ -114,7 +117,7 @@ export default function Expenses() {
                                 </td>
                             </tr>
                         ))}
-                        {expenses.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No expenses found</td></tr>}
+                        {(!expenses || expenses.length === 0) && <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No expenses found</td></tr>}
                     </tbody>
                 </table>
             </div>

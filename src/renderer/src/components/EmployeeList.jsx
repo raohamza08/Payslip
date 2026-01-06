@@ -45,7 +45,7 @@ export default function EmployeeList({ onEdit }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {employees.map(emp => (
+                        {Array.isArray(employees) && employees.map(emp => (
                             <tr key={emp.id}>
                                 <td>{emp.name}</td>
                                 <td>{emp.email}</td>

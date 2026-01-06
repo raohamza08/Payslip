@@ -15,9 +15,10 @@ export default function AttendanceReport() {
         setLoading(true);
         try {
             const data = await api.getAttendanceReport(month, year);
-            setReport(data);
+            setReport(Array.isArray(data) ? data : []);
         } catch (e) {
             console.error(e);
+            setReport([]);
         } finally {
             setLoading(false);
         }
@@ -27,9 +28,10 @@ export default function AttendanceReport() {
         if (report.length === 0) return alert('No data to export');
 
         const headers = ['Employee ID', 'Name', 'Present', 'Absent', 'Leave', 'Total Days'];
+        const reportData = Array.isArray(report) ? report : [];
         const csvContent = [
             headers.join(','),
-            ...report.map(row => [
+            ...reportData.map(row => [
                 row.employee_id || row.id,
                 `"${row.name}"`,
                 row.present,
@@ -84,7 +86,7 @@ export default function AttendanceReport() {
                         </tr>
                     </thead>
                     <tbody>
-                        {report.map(row => (
+                        {Array.isArray(report) && report.map(row => (
                             <tr key={row.id}>
                                 <td>{row.employee_id || row.id.substring(0, 8)}</td>
                                 <td>{row.name}</td>

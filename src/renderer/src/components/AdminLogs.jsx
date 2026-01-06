@@ -70,7 +70,7 @@ export default function AdminLogs() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredLogs.map(log => (
+                        {Array.isArray(filteredLogs) && filteredLogs.map(log => (
                             <tr key={log.id}>
                                 <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                                     {new Date(log.created_at).toLocaleString()}

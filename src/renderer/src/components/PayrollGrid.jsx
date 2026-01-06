@@ -23,23 +23,28 @@ export default function PayrollGrid({ onNavigate }) {
         setLoading(true);
         try {
             const emps = await api.getEmployees();
+            if (!Array.isArray(emps)) throw new Error('Could not load employees list');
+
             const activeEmps = emps.filter(e => e.status === 'Active');
-            const defs = await api.getPayrollDefaults();
+            const defs = await api.getPayrollDefaults() || {};
 
             const data = {};
             activeEmps.forEach(emp => {
                 const def = defs[emp.id] || {};
-                let earnings = def.earnings ? [...def.earnings] : [];
+                let earnings = Array.isArray(def.earnings) ? [...def.earnings] : [];
                 if (!earnings.some(e => e.name === 'Basic Salary')) {
                     earnings.unshift({ name: 'Basic Salary', amount: Number(emp.monthly_salary) || 0 });
                 }
-                let deductions = def.deductions ? [...def.deductions] : [];
+                let deductions = Array.isArray(def.deductions) ? [...def.deductions] : [];
                 data[emp.id] = { earnings, deductions };
             });
 
             setEmployees(activeEmps);
             setGridData(data);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            alert("Error loading payroll data: " + e.message);
+        }
         setLoading(false);
     };
 
@@ -77,8 +82,11 @@ export default function PayrollGrid({ onNavigate }) {
     const removeModalItem = (idx) => setModalData(modalData.filter((_, i) => i !== idx));
 
     const calculateNet = (financials) => {
-        const gross = financials.earnings.reduce((s, x) => s + Number(x.amount), 0);
-        const totalDed = financials.deductions.reduce((s, x) => s + Number(x.amount), 0);
+        if (!financials) return { gross: 0, totalDed: 0, net: 0 };
+        const earnings = Array.isArray(financials.earnings) ? financials.earnings : [];
+        const deductions = Array.isArray(financials.deductions) ? financials.deductions : [];
+        const gross = earnings.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+        const totalDed = deductions.reduce((s, x) => s + (Number(x.amount) || 0), 0);
         return { gross, totalDed, net: gross - totalDed };
     };
 

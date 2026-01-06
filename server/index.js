@@ -9,7 +9,6 @@ const PdfPrinter = require('pdfmake');
 const fs = require('fs');
 const os = require('os');
 const supabase = require('./supabase');
-const localDb = require('./localDb');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -257,9 +256,7 @@ app.delete('/api/employees/:id', async (req, res) => {
         const { error } = await supabase.from('employees').delete().eq('id', req.params.id);
         if (error) throw error;
 
-        // Also cleanup local data
-        await localDb.employeeExtensions.remove({ employee_id: req.params.id }, { multi: true });
-        await localDb.increments.remove({ employee_id: req.params.id }, { multi: true });
+        // Supabase foreign keys with ON DELETE CASCADE will handle the rest (increments, payroll_defaults)
 
         await logActivity(userEmail, 'DELETE_EMPLOYEE', 'SUCCESS', `Deleted employee: ${emp?.name || req.params.id}`, req);
         res.json({ success: true });
@@ -273,38 +270,57 @@ app.delete('/api/employees/:id', async (req, res) => {
 app.get('/api/expenses', async (req, res) => {
     try {
         const { start, end, category } = req.query;
-        let query = {};
+        let query = supabase.from('expenses').select('*');
+
         if (start && end) {
-            query.expense_date = { $gte: start, $lte: end };
+            query = query.gte('expense_date', start).lte('expense_date', end);
         }
         if (category) {
-            query.category = category;
+            query = query.eq('category', category);
         }
-        const expenses = await localDb.expenses.find(query).sort({ expense_date: -1 });
+
+        const { data, error } = await query.order('expense_date', { ascending: false });
+        if (error) throw error;
+
+        // Map id to _id for frontend compatibility if needed, or just return data
+        const expenses = data.map(ex => ({ ...ex, _id: ex.id }));
         res.json(expenses);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/expenses', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
-        const expense = { ...req.body, created_at: new Date() };
-        const newDoc = await localDb.expenses.insert(expense);
-        res.json(newDoc);
+        const expense = { ...req.body };
+        delete expense._id; // Ensure we don't send existing local temp ID
+
+        const { data, error } = await supabase.from('expenses').insert(expense).select().single();
+        if (error) throw error;
+
+        await logActivity(userEmail, 'CREATE_EXPENSE', 'SUCCESS', `Created expense: ${expense.title}`, req);
+        res.json({ ...data, _id: data.id });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.put('/api/expenses/:id', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
         const { _id, ...updateData } = req.body;
-        updateData.updated_at = new Date();
-        await localDb.expenses.update({ _id: req.params.id }, { $set: updateData });
-        res.json({ success: true });
+        const { data, error } = await supabase.from('expenses').update(updateData).eq('id', req.params.id).select().single();
+        if (error) throw error;
+
+        await logActivity(userEmail, 'UPDATE_EXPENSE', 'SUCCESS', `Updated expense: ${updateData.title}`, req);
+        res.json({ success: true, ...data, _id: data.id });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.delete('/api/expenses/:id', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
-        await localDb.expenses.remove({ _id: req.params.id }, {});
+        const { error } = await supabase.from('expenses').delete().eq('id', req.params.id);
+        if (error) throw error;
+
+        await logActivity(userEmail, 'DELETE_EXPENSE', 'SUCCESS', `Deleted expense ID: ${req.params.id}`, req);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -312,20 +328,24 @@ app.delete('/api/expenses/:id', async (req, res) => {
 // === MODULE 3: INCREMENTS ===
 app.get('/api/employees/:id/increments', async (req, res) => {
     try {
-        const increments = await localDb.increments.find({ employee_id: req.params.id }).sort({ effective_date: -1 });
-        res.json(increments);
+        const { data, error } = await supabase.from('increments').select('*').eq('employee_id', req.params.id).order('effective_date', { ascending: false });
+        if (error) throw error;
+        res.json(data);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/employees/:id/increments', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
         const increment = {
             ...req.body,
-            employee_id: req.params.id,
-            created_at: new Date()
+            employee_id: req.params.id
         };
-        const newDoc = await localDb.increments.insert(increment);
-        res.json(newDoc);
+        const { data, error } = await supabase.from('increments').insert(increment).select().single();
+        if (error) throw error;
+
+        await logActivity(userEmail, 'ADD_INCREMENT', 'SUCCESS', `Added increment for employee ${req.params.id}`, req);
+        res.json(data);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -572,10 +592,15 @@ app.post('/api/config', async (req, res) => {
 // Payroll Defaults Routes
 app.get('/api/payroll/defaults', async (req, res) => {
     try {
-        const extensions = await localDb.employeeExtensions.find({});
+        const { data, error } = await supabase.from('payroll_defaults').select('*');
+        if (error) throw error;
+
         const defaults = {};
-        extensions.forEach(ext => {
-            if (ext.payroll_defaults) defaults[ext.employee_id] = ext.payroll_defaults;
+        data.forEach(row => {
+            defaults[row.employee_id] = {
+                earnings: row.earnings || [],
+                deductions: row.deductions || []
+            };
         });
         res.json(defaults);
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -624,15 +649,23 @@ app.post('/api/payslips/bulk-zip', async (req, res) => {
 
 app.post('/api/payroll/defaults', async (req, res) => {
     // Expects body: { defaults: { empId: { earnings: [], deductions: [] }, ... } }
+    const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
         const { defaults } = req.body;
         for (const [empId, defs] of Object.entries(defaults)) {
-            await localDb.employeeExtensions.update(
-                { employee_id: empId },
-                { $set: { employee_id: empId, payroll_defaults: defs } },
-                { upsert: true }
-            );
+            const { error } = await supabase.from('payroll_defaults').upsert({
+                employee_id: empId,
+                earnings: defs.earnings,
+                deductions: defs.deductions,
+                updated_at: new Date()
+            }, { onConflict: 'employee_id' });
+
+            if (error) {
+                console.error(`[PAYROLL_DEFAULTS] Failed for ${empId}:`, error);
+                throw error;
+            }
         }
+        await logActivity(userEmail, 'UPDATE_PAYROLL_DEFAULTS', 'SUCCESS', 'Bulk updated payroll defaults', req);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
