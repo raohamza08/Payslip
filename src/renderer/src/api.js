@@ -394,6 +394,16 @@ const api = {
     getPayrollDefaults: async () => {
         return await api.fetchJson(`${API_BASE}/payroll/defaults`);
     },
+    getPdfConfig: async () => {
+        return await api.fetchJson(`${API_BASE}/config/pdf`);
+    },
+    savePdfConfig: async (config) => {
+        return await api.fetchJson(`${API_BASE}/config/pdf`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+    },
     savePayrollDefaults: async (defaults) => {
         return await api.fetchJson(`${API_BASE}/payroll/defaults`, {
             method: 'POST',

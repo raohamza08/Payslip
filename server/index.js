@@ -1687,43 +1687,67 @@ app.post('/api/documents/upload', async (req, res) => {
         const docFile = req.files.file;
 
         const fileName = `${Date.now()}_${docFile.name}`;
-        const uploadPath = path.join(__dirname, '../uploads/documents', fileName);
 
-        docFile.mv(uploadPath, async (err) => {
-            if (err) return res.status(500).send(err);
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(fileName, docFile.data, {
+                contentType: docFile.mimetype,
+                upsert: false
+            });
 
-            try {
-                const { data, error } = await supabase.from('documents').insert({
-                    employee_id,
-                    name,
-                    file_path: fileName,
-                    file_type: docFile.mimetype,
-                    uploaded_by: uploadedBy
-                }).select().single();
+        if (uploadError) throw new Error(`Storage Upload Failed: ${uploadError.message}`);
 
-                if (error) throw error;
+        // DB Insert
+        const { data, error } = await supabase.from('documents').insert({
+            employee_id,
+            name,
+            file_path: fileName,
+            file_type: docFile.mimetype,
+            uploaded_by: uploadedBy
+        }).select().single();
 
-                // Notify Employee
-                const { data: emp } = await supabase.from('employees').select('email').eq('id', employee_id).single();
-                if (emp) {
-                    await createNotification({
-                        target_user_id: emp.email,
-                        title: 'New Document Uploaded',
-                        message: `A new document "${name}" has been uploaded to your profile.`,
-                        type: 'document',
-                        link: '/portal'
-                    });
-                }
+        if (error) throw error;
 
-                res.json(data);
-            } catch (dbError) {
-                console.error('[DOC UPLOAD DB ERROR]', dbError);
-                res.status(500).json({ error: dbError.message });
-            }
-        });
+        // Notify Employee
+        const { data: emp } = await supabase.from('employees').select('email').eq('id', employee_id).single();
+        if (emp) {
+            await createNotification({
+                target_user_id: emp.email,
+                title: 'New Document Uploaded',
+                message: `A new document "${name}" has been uploaded to your profile.`,
+                type: 'document',
+                link: '/portal'
+            });
+        }
+
+        res.json(data);
     } catch (e) {
-        console.error('[DOC UPLOAD OUTER ERROR]', e);
+        console.error('[DOC UPLOAD ERROR]', e);
         res.status(500).json({ error: e.message });
+    }
+});
+
+// Dynamic Download Handler (Fallback for Supabase Storage)
+app.get('/uploads/documents/:filename', async (req, res) => {
+    const { filename } = req.params;
+    try {
+        // Double check local existence
+        const localPath = path.join(__dirname, '../uploads/documents', filename);
+        if (fs.existsSync(localPath)) {
+            return res.sendFile(localPath);
+        }
+
+        // Download from Supabase
+        const { data, error } = await supabase.storage.from('documents').download(filename);
+        if (error || !data) return res.status(404).send('Document not found');
+
+        const buffer = Buffer.from(await data.arrayBuffer());
+        res.setHeader('Content-Type', data.type);
+        res.send(buffer);
+    } catch (e) {
+        console.error('[DOC DOWNLOAD ERROR]', e);
+        res.status(500).send('Error retrieving document');
     }
 });
 
