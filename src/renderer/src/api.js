@@ -361,6 +361,13 @@ const api = {
         });
         return data.success;
     },
+    sendCustomEmail: async (to, subject, html) => {
+        return await api.fetchJson(`${API_BASE}/email/custom`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject, html })
+        });
+    },
     downloadBulkPayslips: async (payslipIds, filename = 'payslips.zip') => {
         const res = await fetch(`${API_BASE}/payslips/bulk-zip`, {
             method: 'POST',

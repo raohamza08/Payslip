@@ -146,7 +146,7 @@ export default function PayslipGenerator({ onComplete, user }) {
 
     return (
         <div>
-            <h1>Generate Payslip</h1>
+            <h1>Create Single Payslip</h1>
 
             <div className="card">
                 <div className="grid-2">

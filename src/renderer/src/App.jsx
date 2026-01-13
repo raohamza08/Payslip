@@ -181,6 +181,7 @@ export default function App() {
                         <div className="nav-group">PAYROLL & HR</div>
                         <NavItem id="employees" label="Employees" />
                         <NavItem id="payroll" label="Payroll Grid" />
+                        <NavItem id="single-payslip" label="Create Single Payslip" />
                         <NavItem id="admin-leaves" label="Leave Requests" />
                         <NavItem id="assets" label="Asset Management" />
 
@@ -190,6 +191,7 @@ export default function App() {
                         <NavItem id="expenses" label="Expenses" />
                         <NavItem id="performance" label="KPIs & Reviews" />
                         <NavItem id="warnings" label="Discipline" />
+                        <NavItem id="email" label="Broadcast Emails" />
 
                         {user.role === 'super_admin' && (
                             <>
@@ -252,12 +254,14 @@ export default function App() {
                             {view === 'employees' && editingEmp && <EmployeeForm employee={editingEmp.id ? editingEmp : null} onSave={() => setEditingEmp(null)} onCancel={() => setEditingEmp(null)} />}
                             {view === 'attendance' && <Attendance />}
                             {view === 'payroll' && <PayrollGrid user={user} onNavigate={setView} />}
+                            {view === 'single-payslip' && <PayslipGenerator user={user} onComplete={() => setView('history')} />}
                             {view === 'history' && <PayslipHistory user={user} />}
                             {view === 'reports' && <AttendanceReport />}
                             {view === 'expenses' && <Expenses />}
                             {view === 'performance' && <PerformanceReviews user={user} />}
                             {view === 'assets' && <AssetManagement />}
                             {view === 'warnings' && <Discipline />}
+                            {view === 'email' && <EmailComposer />}
 
                             {view === 'user-management' && (user.role === 'super_admin' ? <UserManagement /> : <div className="p-20">Access Denied</div>)}
                             {view === 'whitelist' && (user.role === 'super_admin' ? <Whitelist /> : <div className="p-20">Access Denied</div>)}
