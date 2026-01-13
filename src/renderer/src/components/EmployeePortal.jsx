@@ -39,7 +39,7 @@ export default function EmployeePortal({ user }) {
     const { profile, leaves, recentPayslips, warnings, assets, recentPerformance } = data;
 
     return (
-        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ padding: '20px' }}>
             <div className="flex-row flex-between portal-header" style={{ marginBottom: '30px', alignItems: 'center' }}>
                 <div>
                     <h1 style={{ marginBottom: '5px' }}>Welcome, {profile.name}</h1>
@@ -73,7 +73,11 @@ export default function EmployeePortal({ user }) {
             </nav>
 
             {activeTab === 'dashboard' && (
-                <div className="grid-3" style={{ gap: '20px' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '20px'
+                }}>
                     <div className="card shadow">
                         <h3>Attendance & Sitting</h3>
                         <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--accent)', margin: '15px 0' }}>
@@ -134,7 +138,7 @@ export default function EmployeePortal({ user }) {
                         </table>
                     </div>
 
-                    <div className="card shadow">
+                    <div className="card shadow" style={{ gridRow: 'span 2' }}>
                         <h3>Warnings & Alerts</h3>
                         {warnings.length === 0 ? (
                             <p style={{ padding: '20px', textAlign: 'center', color: 'var(--success)' }}>No active warnings</p>
