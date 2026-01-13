@@ -155,12 +155,12 @@ export default function App() {
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <img src="/logo.png" alt="Logo" style={{ width: '60px', marginBottom: '10px' }} />
-                    <h2>EuroShub</h2>
+                    <h2>EurosHub</h2>
                 </div>
 
                 {isEmployee ? (
                     <>
-                        <NavItem id="portal" label="EuroShub Portal" />
+                        <NavItem id="portal" label="EurosHub Portal" />
                         <NavItem id="my-leaves" label="My Leaves" />
                         <NavItem id="my-performance" label="My Performance" />
                         <NavItem id="my-payslips" label="My Payslips" />
