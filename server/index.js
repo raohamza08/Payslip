@@ -20,9 +20,15 @@ app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
 app.use(express.static(path.join(__dirname, '../dist')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 const PDF_DIR = path.join(os.tmpdir(), 'payslips_generated');
 if (!fs.existsSync(PDF_DIR)) fs.mkdirSync(PDF_DIR, { recursive: true });
+
+const UPLOADS_DIR = path.join(__dirname, '../uploads');
+const DOCS_DIR = path.join(UPLOADS_DIR, 'documents');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+if (!fs.existsSync(DOCS_DIR)) fs.mkdirSync(DOCS_DIR);
 
 const fonts = {
     Helvetica: {
