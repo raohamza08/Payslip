@@ -86,15 +86,21 @@ export default function IncrementManager({ employee, onClose }) {
                 </thead>
                 <tbody>
                     {increments.map(inc => (
-                        <tr key={inc._id}>
+                        <tr key={inc.id || inc._id}>
                             <td>{inc.effective_date}</td>
-                            <td>{Number(inc.old_salary).toLocaleString()}</td>
-                            <td><span className="badge badge-success">+{inc.increment_percentage}%</span></td>
-                            <td style={{ fontWeight: 'bold' }}>{Number(inc.new_salary).toLocaleString()}</td>
-                            <td>{inc.reason}</td>
+                            <td>{Number(inc.old_salary || 0).toLocaleString()}</td>
+                            <td>
+                                {inc.increment_percentage ? (
+                                    <span className="badge badge-success">+{inc.increment_percentage}%</span>
+                                ) : (
+                                    <span style={{ color: 'green' }}>+{Number(inc.amount || 0).toLocaleString()}</span>
+                                )}
+                            </td>
+                            <td style={{ fontWeight: 'bold' }}>{Number(inc.new_salary || (inc.old_salary + inc.amount) || 0).toLocaleString()}</td>
+                            <td>{inc.description || inc.reason || '-'}</td>
                         </tr>
                     ))}
-                    {increments.length === 0 && <tr><td colSpan="5">No history yet.</td></tr>}
+                    {increments.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No history found.</td></tr>}
                 </tbody>
             </table>
         </div>

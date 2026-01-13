@@ -9,12 +9,16 @@ const PdfPrinter = require('pdfmake');
 const fs = require('fs');
 const os = require('os');
 const supabase = require('./supabase');
+// Local NeDB fallback removed - Using Supabase only
+
+const fileUpload = require('express-fileupload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload());
 app.use(express.static(path.join(__dirname, '../dist')));
 
 const PDF_DIR = path.join(os.tmpdir(), 'payslips_generated');
@@ -45,10 +49,28 @@ async function logActivity(user_email, action, status, details = '', req = null)
     }
 }
 
+// Notification Helper
+async function createNotification({ user_id, target_user_id, title, message, type, link }) {
+    try {
+        // user_id is optional (specific user), target_user_id can be role or email/ID
+        await supabase.from('notifications').insert({
+            user_id,
+            target_user_id,
+            title,
+            message,
+            type,
+            link
+        });
+    } catch (e) {
+        console.error('[NOTIF ERROR]', e);
+    }
+}
+
 // Auth Routes
 app.get('/api/auth/is-setup', async (req, res) => {
     try {
-        const { data } = await supabase.from('config').select('is_setup').eq('id', 1).single();
+        const { data, error } = await supabase.from('config').select('is_setup').eq('id', 1).maybeSingle();
+        if (error && error.code !== 'PGRST116') throw error;
         res.json({ isSetup: data?.is_setup || false });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -76,19 +98,31 @@ app.post('/api/config/pdf', (req, res) => {
 app.post('/api/auth/setup', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const { data: config } = await supabase.from('config').select('is_setup').eq('id', 1).single();
-        if (config?.is_setup) return res.status(400).json({ error: "Already setup" });
+        const { data: config, error: configError } = await supabase.from('config').select('is_setup').eq('id', 1).maybeSingle();
+
+        if (config?.is_setup) {
+            return res.status(400).json({ error: "System already setup" });
+        }
 
         const hash = await bcrypt.hash(password, 10);
         // Create Super Admin User
-        await supabase.from('users').insert({
+        const { error: userError } = await supabase.from('users').insert({
             email,
             password_hash: hash,
             role: 'super_admin'
         });
+        if (userError) throw userError;
+
+        // Also whitelist the admin
+        await supabase.from('whitelist').upsert({ email }, { onConflict: 'email' });
 
         // Mark as setup
-        await supabase.from('config').update({ is_setup: true, master_password_hash: hash }).eq('id', 1);
+        const { error: configErr } = await supabase.from('config').upsert({
+            id: 1,
+            is_setup: true,
+            master_password_hash: hash
+        });
+        if (configErr) throw configErr;
 
         await logActivity(email, 'INITIAL_SETUP', 'SUCCESS', 'System initialized and super admin created', req);
         res.json({ success: true });
@@ -215,9 +249,20 @@ app.delete('/api/whitelist/:id', async (req, res) => {
 app.get('/api/employees', async (req, res) => {
     try {
         const { data, error } = await supabase.from('employees').select('*').order('name');
+
         if (error) throw error;
-        res.json(data);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        const { data: extensions } = await supabase.from('employee_extensions').select('*');
+        const extMap = (extensions || []).reduce((acc, ext) => ({ ...acc, [ext.employee_id]: ext }), {});
+
+        const mergedEmployees = (data || []).map(emp => ({
+            ...emp,
+            ...(extMap[emp.id] || {})
+        }));
+        res.json(mergedEmployees);
+    } catch (e) {
+        console.error('[EMPLOYEES] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.post('/api/employees', async (req, res) => {
@@ -280,12 +325,16 @@ app.get('/api/expenses', async (req, res) => {
         }
 
         const { data, error } = await query.order('expense_date', { ascending: false });
+
         if (error) throw error;
 
-        // Map id to _id for frontend compatibility if needed, or just return data
-        const expenses = data.map(ex => ({ ...ex, _id: ex.id }));
+        // Map id to _id for frontend compatibility
+        const expenses = (data || []).map(ex => ({ ...ex, _id: ex.id }));
         res.json(expenses);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) {
+        console.error('[EXPENSES] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.post('/api/expenses', async (req, res) => {
@@ -309,6 +358,20 @@ app.put('/api/expenses/:id', async (req, res) => {
         const { data, error } = await supabase.from('expenses').update(updateData).eq('id', req.params.id).select().single();
         if (error) throw error;
 
+        // Notify Employee
+        if (updateData.status && data.employee_id) {
+            const { data: emp } = await supabase.from('employees').select('email').eq('id', data.employee_id).single();
+            if (emp) {
+                await createNotification({
+                    target_user_id: emp.email,
+                    title: 'Expense Request Update',
+                    message: `Your expense request "${data.title}" has been updated to "${updateData.status}".`,
+                    type: 'expense',
+                    link: '/portal'
+                });
+            }
+        }
+
         await logActivity(userEmail, 'UPDATE_EXPENSE', 'SUCCESS', `Updated expense: ${updateData.title}`, req);
         res.json({ success: true, ...data, _id: data.id });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -329,17 +392,24 @@ app.delete('/api/expenses/:id', async (req, res) => {
 app.get('/api/employees/:id/increments', async (req, res) => {
     try {
         const { data, error } = await supabase.from('increments').select('*').eq('employee_id', req.params.id).order('effective_date', { ascending: false });
+
         if (error) throw error;
-        res.json(data);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        res.json(data || []);
+    } catch (e) {
+        console.error('[INCREMENTS] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.post('/api/employees/:id/increments', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
+        const { increment_amount, reason, effective_date } = req.body;
         const increment = {
-            ...req.body,
-            employee_id: req.params.id
+            employee_id: req.params.id,
+            amount: Number(increment_amount),
+            description: reason,
+            effective_date
         };
         const { data, error } = await supabase.from('increments').insert(increment).select().single();
         if (error) throw error;
@@ -350,21 +420,68 @@ app.post('/api/employees/:id/increments', async (req, res) => {
 });
 
 // Payslip Routes
+// Payslip Routes
 app.get('/api/payslips', async (req, res) => {
+    const userEmail = req.headers['x-user-email'];
     try {
-        const { data: payslips, error: pError } = await supabase.from('payslips').select('*').order('created_at', { ascending: false });
-        if (pError) throw pError;
-        const { data: employees, error: eError } = await supabase.from('employees').select('id, name, email');
-        if (eError) throw eError;
+        // Check user role
+        let isAdmin = false;
+        let employeeId = null;
 
-        const empMap = new Map(employees.map(e => [e.id, e]));
-        const result = payslips.map(p => ({
+        if (userEmail) {
+            // Check role in Supabase
+            const { data: user } = await supabase.from('users').select('role').eq('email', userEmail).single();
+            if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+                isAdmin = true;
+            } else {
+                // Get employee ID for current user
+                // Try Supabase first
+                const { data: emp } = await supabase.from('employees').select('id').eq('email', userEmail).single();
+                if (emp) {
+                    employeeId = emp.id;
+                } else {
+                    // No fallback
+                }
+            }
+        }
+
+        // --- Supabase Fetch ---
+        let query = supabase.from('payslips').select('*').order('created_at', { ascending: false });
+        if (!isAdmin && employeeId) {
+            query = query.eq('employee_id', employeeId);
+        } else if (!isAdmin && !employeeId) {
+            // Employee but no ID found => return empty
+            return res.json([]);
+        }
+
+        const { data: payslips, error: pError } = await query;
+
+        let finalPayslips = [];
+        let empMap = {};
+
+        if (payslips && payslips.length > 0) {
+            finalPayslips = payslips;
+            // Fetch employees for mapping names
+            const { data: employees } = await supabase.from('employees').select('id, name, email');
+            if (employees) {
+                empMap = employees.reduce((acc, e) => ({ ...acc, [e.id]: e }), {});
+            }
+        } else {
+            // Supabase empty, return empty
+            finalPayslips = [];
+            empMap = {};
+        }
+
+        const result = finalPayslips.map(p => ({
             ...p,
-            employee_name: empMap.get(p.employee_id)?.name || 'Unknown',
-            employee_email: empMap.get(p.employee_id)?.email || ''
+            employee_name: empMap[p.employee_id]?.name || 'Unknown',
+            employee_email: empMap[p.employee_id]?.email || ''
         }));
         res.json(result);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) {
+        console.error('[PAYSLIPS] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.post('/api/payslip/generate', async (req, res) => {
@@ -731,8 +848,587 @@ app.get('/api/attendance/report', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// --- 1. PORTAL DASHBOARD ---
+app.get('/api/portal/dashboard', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        // Try Supabase first
+        const { data: emp, error: empError } = await supabase.from('employees').select('*').eq('email', userEmail).single();
+
+        let profile = emp;
+        let dashboardData = {
+            leaves: [],
+            recentPayslips: [],
+            warnings: [],
+            assets: [],
+            recentPerformance: null
+        };
+
+        // If Supabase works and found employee
+        if (profile && !empError) {
+            const [leaves, payslips, warnings, assets, performance, performanceHistory] = await Promise.all([
+                supabase.from('leave_requests').select('*').eq('employee_id', emp.id),
+                supabase.from('payslips').select('*').eq('employee_id', emp.id).order('created_at', { ascending: false }).limit(5),
+                supabase.from('warnings').select('*').eq('employee_id', emp.id),
+                supabase.from('assets').select('*').eq('assigned_to', emp.id),
+                supabase.from('performance_reviews').select('*').eq('employee_id', emp.id).order('created_at', { ascending: false }).limit(1),
+                supabase.from('performance_reviews').select('*').eq('employee_id', emp.id).order('review_date', { ascending: true })
+            ]);
+
+            dashboardData = {
+                leaves: leaves.data || [],
+                recentPayslips: payslips.data || [],
+                warnings: warnings.data || [],
+                assets: assets.data || [],
+                recentPerformance: performance.data ? performance.data[0] : null,
+                performanceHistory: performanceHistory.data || []
+            };
+        } else {
+            // If no profile found in Supabase
+            return res.status(404).json({ error: "Employee profile not found in Supabase" });
+        }
+
+        res.json({
+            profile,
+            ...dashboardData
+        });
+    } catch (e) {
+        console.error('[PORTAL] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- 2. LEAVE MANAGEMENT ---
+app.get('/api/leaves', async (req, res) => {
+    try {
+        const userEmail = req.headers['x-user-email'];
+        const { employee_id } = req.query;
+
+        // Check user role
+        let userRole = 'employee';
+        if (userEmail) {
+            const { data: user } = await supabase.from('users').select('role').eq('email', userEmail).single();
+            if (user) userRole = user.role;
+        }
+
+        const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+        let query = supabase.from('leave_requests').select('*, employees!leave_requests_employee_id_fkey(name)');
+
+        // If not admin and specific employee_id not requested, default to own leaves
+        if (!isAdmin) {
+            // Get employee_id from user's email
+            const { data: emp } = await supabase.from('employees').select('id').eq('email', userEmail).single();
+            if (emp) {
+                query = query.eq('employee_id', emp.id);
+            } else {
+                // If no employee profile link, return empty (or handle gracefully)
+                query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // Force empty
+            }
+        } else {
+            // Admin is viewing. If specific employee_id requested (filtering), apply it.
+            if (employee_id) {
+                query = query.eq('employee_id', employee_id);
+            }
+            // Otherwise return all (no filter applied)
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        console.error('[LEAVES] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/leaves/request', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        let leaveData = { ...req.body };
+
+        // Auto-resolve employee_id from logged-in user if not provided
+        if (!leaveData.employee_id && userEmail) {
+            // Try Supabase first
+            const { data: emp } = await supabase.from('employees').select('id').eq('email', userEmail).single();
+            if (emp) {
+                leaveData.employee_id = emp.id;
+            }
+        }
+
+        // Sanitize dates for Postgres
+        ['start_date', 'end_date'].forEach(f => {
+            if (leaveData[f]) leaveData[f] = leaveData[f].split('T')[0];
+            if (leaveData[f] === '') leaveData[f] = null;
+        });
+
+        // Try Supabase first, but catch schema errors
+        const { data, error } = await supabase.from('leave_requests').insert(leaveData).select().single();
+
+        if (error) throw error;
+
+        await logActivity(userEmail, 'LEAVE_REQUEST', 'SUCCESS', `Requested ${leaveData.leave_type} leave from ${leaveData.start_date}`, req);
+
+        // Notify Admins
+        await createNotification({
+            target_user_id: 'admin',
+            title: 'New Leave Request',
+            message: `${userEmail} requested ${leaveData.leave_type} leave.`,
+            type: 'leave',
+            link: '/leaves'
+        });
+
+        return res.json(data);
+    } catch (e) {
+        console.error('[LEAVES] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/leaves/:id/status', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        const { status, comment } = req.body;
+
+        // Try Supabase first
+        let supabaseSuccess = false;
+        let data = null;
+        try {
+            const result = await supabase.from('leave_requests').update({ status, comment }).eq('id', req.params.id).select().single();
+            if (!result.error && result.data) {
+                data = result.data;
+                supabaseSuccess = true;
+            }
+        } catch (sbError) {
+            console.log('[LEAVES] Supabase update failed, attempting local...');
+        }
+
+        if (supabaseSuccess) {
+            await logActivity(userEmail, 'LEAVE_STATUS_UPDATE', 'SUCCESS', `Leave ${req.params.id} marked as ${status}`, req);
+
+            // Notify Employee
+            const { data: leaveReq } = await supabase.from('leave_requests').select('*, employees(email)').eq('id', req.params.id).single();
+            if (leaveReq && leaveReq.employees) {
+                await createNotification({
+                    target_user_id: leaveReq.employees.email,
+                    title: `Leave Request ${status}`,
+                    message: `Your leave request for ${leaveReq.leave_type} has been ${status.toLowerCase()}.${comment ? ' Comment: ' + comment : ''}`,
+                    type: 'leave',
+                    link: '/portal'
+                });
+            }
+
+            return res.json(data);
+        } else {
+            return res.status(500).json({ error: "Failed to update leave status in Supabase" });
+        }
+
+    } catch (e) {
+        console.error('[LEAVES] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- 3. PERFORMANCE ---
+app.get('/api/performance', async (req, res) => {
+    try {
+        const { employee_id } = req.query;
+        let query = supabase.from('performance_reviews').select('*, employees!performance_reviews_employee_id_fkey(name)');
+        if (employee_id) query = query.eq('employee_id', employee_id);
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/performance', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        const reviewData = req.body;
+        // Sanitize ratings to numbers for DB
+        ['quality_rating', 'speed_rating', 'initiative_rating', 'teamwork_rating', 'attendance_rating', 'final_rating'].forEach(f => {
+            if (reviewData[f] !== undefined && reviewData[f] !== null) {
+                reviewData[f] = Number(reviewData[f]);
+            }
+        });
+
+        // Sanitize date
+        if (reviewData.review_date) {
+            reviewData.review_date = reviewData.review_date.split('T')[0];
+        }
+        if (reviewData.review_date === '') reviewData.review_date = null;
+
+        const { error } = await supabase.from('performance_reviews').insert(reviewData);
+        if (error) throw error;
+
+        await logActivity(userEmail, 'ADD_PERFORMANCE_REVIEW', 'SUCCESS', `Review added for ${reviewData.employee_id}`, req);
+
+        // Notify Employee
+        const { data: emp } = await supabase.from('employees').select('email').eq('id', reviewData.employee_id).single();
+        if (emp) {
+            await createNotification({
+                target_user_id: emp.email,
+                title: 'New Performance Review',
+                message: `Your KPI rating for period ${reviewData.period} has been published.`,
+                type: 'performance',
+                link: '/portal'
+            });
+        }
+
+        res.json({ success: true });
+
+    } catch (e) {
+        console.error('[PERFORMANCE] Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- 4. WARNINGS (DISCIPLINE) ---
+app.get('/api/warnings', async (req, res) => {
+    try {
+        const { employee_id } = req.query;
+        let query = supabase.from('warnings').select('*').order('created_at', { ascending: false });
+        if (employee_id) query = query.eq('employee_id', employee_id);
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// --- 4. TICKETS ---
+app.get('/api/tickets', async (req, res) => {
+    try {
+        const { employee_id } = req.query;
+        let query = supabase.from('tickets').select('*, employees(name)');
+        if (employee_id) query = query.eq('employee_id', employee_id);
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/tickets', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('tickets').insert(req.body).select().single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/tickets/:id/resolve', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('tickets').update({ status: 'Resolved', admin_notes: req.body.notes }).eq('id', req.params.id).select().single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/assets', async (req, res) => {
+    try {
+        const { assigned_to } = req.query;
+        // Specify the foreign key relationship to avoid ambiguity
+        let query = supabase.from('assets').select('*, employees!assets_assigned_to_fkey(name)');
+        if (assigned_to) query = query.eq('assigned_to', assigned_to);
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/assets', async (req, res) => {
+    try {
+        const assetData = req.body;
+        ['purchase_date', 'assigned_date', 'return_date'].forEach(f => {
+            if (assetData[f] === '') assetData[f] = null;
+        });
+
+        const { data, error } = await supabase.from('assets').insert(assetData).select().single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/assets/:id', async (req, res) => {
+    try {
+        const assetData = req.body;
+        ['purchase_date', 'assigned_date', 'return_date'].forEach(f => {
+            if (assetData[f] === '') assetData[f] = null;
+        });
+
+        // Remove virtual fields if any before updating
+        delete assetData.employees;
+
+        const { data, error } = await supabase.from('assets').update(assetData).eq('id', req.params.id).select().single();
+        if (error) throw error;
+
+        // Notify Employee if assigned
+        if (data.assigned_to && data.status === 'Assigned') {
+            const { data: emp } = await supabase.from('employees').select('email').eq('id', data.assigned_to).single();
+            if (emp) {
+                await createNotification({
+                    target_user_id: emp.email,
+                    title: 'Asset Assigned',
+                    message: `New asset "${data.name}" has been assigned to you.`,
+                    type: 'asset',
+                    link: '/portal'
+                });
+            }
+        }
+
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/assets/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('assets').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- 6. WARNINGS ---
+app.get('/api/warnings', async (req, res) => {
+    try {
+        const { employee_id } = req.query;
+        let query = supabase.from('warnings').select('*, employees!warnings_employee_id_fkey(name)');
+        if (employee_id) query = query.eq('employee_id', employee_id);
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/warnings', async (req, res) => {
+    try {
+        const warningData = req.body;
+        // Map severity to level if level is missing (for DB compatibility)
+        if (warningData.severity && !warningData.level) {
+            warningData.level = warningData.severity;
+        }
+        if (warningData.date === '') warningData.date = null;
+        const { data, error } = await supabase.from('warnings').insert(warningData).select().single();
+        if (error) throw error;
+
+        // Notify Employee
+        const { data: emp } = await supabase.from('employees').select('email').eq('id', warningData.employee_id).single();
+        if (emp) {
+            await createNotification({
+                target_user_id: emp.email,
+                title: 'Disciplinary Warning',
+                message: `A ${warningData.level} severity warning has been issued to you.`,
+                type: 'warning',
+                link: '/portal'
+            });
+        }
+
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/warnings/:id/explanation', async (req, res) => {
+    try {
+        const { explanation } = req.body;
+        const userEmail = req.headers['x-user-email'] || 'unknown';
+        const { data, error } = await supabase.from('warnings')
+            .update({ explanation, explanation_date: new Date() })
+            .eq('id', req.params.id)
+            .select('*, employees(name)')
+            .single();
+
+        if (error) throw error;
+
+        // Notify Admins
+        await createNotification({
+            target_user_id: 'admin',
+            title: 'Warning Explanation Submitted',
+            message: `${data.employees.name} submitted an explanation for their warning.`,
+            type: 'warning',
+            link: '/discipline'
+        });
+
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const userEmail = req.headers['x-user-email'] || 'unknown';
+        // Fetch notifications for specific user or general admin
+        const { data, error } = await supabase.from('notifications')
+            .select('*')
+            .or(`target_user_id.eq."${userEmail}",target_user_id.eq.admin`)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        console.error('[NOTIF GET ERROR]', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+    try {
+        const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+
+// --- 8. HOLIDAYS ---
+app.get('/api/holidays', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('holidays').select('*').order('holiday_date');
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/holidays', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('holidays').insert(req.body).select().single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- 9. BIOMETRIC SYNC & SITTING HOURS ---
+app.post('/api/biometric/sync', async (req, res) => {
+    try {
+        const { logs, direction } = req.body;
+        // logs is an array: [{ deviceUserId, timestamp, ... }]
+        const formattedLogs = logs.map(l => ({
+            biometric_id: l.deviceUserId,
+            direction,
+            timestamp: l.recordTime,
+            device_ip: req.ip
+        }));
+
+        const { data, error } = await supabase.from('biometric_logs').upsert(formattedLogs, { onConflict: ['biometric_id', 'timestamp'] });
+        if (error) throw error;
+        res.json({ success: true, count: formattedLogs.length });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/attendance/report', async (req, res) => {
+    try {
+        const { month, year } = req.query;
+        const { data: employees } = await supabase.from('employees').select('id, name, biometric_id');
+
+        const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+
+        const report = await Promise.all(employees.map(async emp => {
+            let present = 0;
+            if (emp.biometric_id) {
+                const { data: logs } = await supabase.from('biometric_logs')
+                    .select('timestamp')
+                    .eq('biometric_id', emp.biometric_id)
+                    .gte('timestamp', startDate)
+                    .lte('timestamp', endDate);
+
+                // Count unique days with logs
+                const uniqueDays = new Set((logs || []).map(l => new Date(l.timestamp).toISOString().split('T')[0]));
+                present = uniqueDays.size;
+            }
+
+            const { data: approvedLeaves } = await supabase.from('leave_requests')
+                .select('days_count')
+                .eq('employee_id', emp.id)
+                .eq('status', 'Approved')
+                .gte('start_date', startDate)
+                .lte('end_date', endDate);
+
+            const leave = (approvedLeaves || []).reduce((acc, l) => acc + (Number(l.days_count) || 0), 0);
+            const total = 30; // Approximation or actual days in month
+            const absent = Math.max(0, total - present - leave);
+
+            return {
+                id: emp.id,
+                name: emp.name,
+                present,
+                leave: leave || 0,
+                absent,
+                total
+            };
+        }));
+
+        res.json(report);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/attendance/sitting-hours', async (req, res) => {
+    try {
+        const { employee_id, month, year } = req.query;
+        const { data: emp } = await supabase.from('employees').select('biometric_id').eq('id', employee_id).single();
+        if (!emp || !emp.biometric_id) return res.json([]);
+
+        const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+
+        const { data: logs, error } = await supabase.from('biometric_logs')
+            .select('*')
+            .eq('biometric_id', emp.biometric_id)
+            .gte('timestamp', startDate)
+            .lte('timestamp', endDate)
+            .order('timestamp', { ascending: true });
+
+        if (error) throw error;
+
+        // Group by day and calculate diff between first IN and last OUT
+        const dayMap = {};
+        logs.forEach(log => {
+            const day = new Date(log.timestamp).toISOString().split('T')[0];
+            if (!dayMap[day]) dayMap[day] = { in: null, out: null };
+            if (log.direction === 'IN' && (!dayMap[day].in || new Date(log.timestamp) < new Date(dayMap[day].in))) {
+                dayMap[day].in = log.timestamp;
+            }
+            if (log.direction === 'OUT' && (!dayMap[day].out || new Date(log.timestamp) > new Date(dayMap[day].out))) {
+                dayMap[day].out = log.timestamp;
+            }
+        });
+
+        const result = Object.entries(dayMap).map(([day, times]) => {
+            let hours = 0;
+            if (times.in && times.out) {
+                hours = (new Date(times.out) - new Date(times.in)) / (1000 * 60 * 60);
+            }
+            return { day, hours: hours > 0 ? hours.toFixed(2) : 0, in: times.in, out: times.out };
+        });
+
+        res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- 10. ONBOARDING ---
+app.get('/api/onboarding/submissions', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('onboarding_submissions').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/onboarding/submit', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('onboarding_submissions').insert(req.body).select().single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Admin Logs Route
 app.get('/api/admin/logs', async (req, res) => {
+
     try {
         const { data, error } = await supabase
             .from('logs')
@@ -743,6 +1439,79 @@ app.get('/api/admin/logs', async (req, res) => {
         res.json(data);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// --- 11. DOCUMENTS ---
+app.post('/api/documents/upload', async (req, res) => {
+    try {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
+        }
+
+        const { employee_id, name } = req.body;
+        const uploadedBy = req.headers['x-user-email'] || 'admin';
+        const docFile = req.files.file;
+
+        const fileName = `${Date.now()}_${docFile.name}`;
+        const uploadPath = path.join(__dirname, '../uploads/documents', fileName);
+
+        docFile.mv(uploadPath, async (err) => {
+            if (err) return res.status(500).send(err);
+
+            try {
+                const { data, error } = await supabase.from('documents').insert({
+                    employee_id,
+                    name,
+                    file_path: fileName,
+                    file_type: docFile.mimetype,
+                    uploaded_by: uploadedBy
+                }).select().single();
+
+                if (error) throw error;
+
+                // Notify Employee
+                const { data: emp } = await supabase.from('employees').select('email').eq('id', employee_id).single();
+                if (emp) {
+                    await createNotification({
+                        target_user_id: emp.email,
+                        title: 'New Document Uploaded',
+                        message: `A new document "${name}" has been uploaded to your profile.`,
+                        type: 'document',
+                        link: '/portal'
+                    });
+                }
+
+                res.json(data);
+            } catch (dbError) {
+                console.error('[DOC UPLOAD DB ERROR]', dbError);
+                res.status(500).json({ error: dbError.message });
+            }
+        });
+    } catch (e) {
+        console.error('[DOC UPLOAD OUTER ERROR]', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/documents/:employee_id', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('documents')
+            .select('*')
+            .eq('employee_id', req.params.employee_id)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/documents/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('documents').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));

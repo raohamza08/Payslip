@@ -4,6 +4,7 @@ let currentUserEmail = null;
 
 const api = {
     setUser: (email) => { currentUserEmail = email; },
+    getUserEmail: () => currentUserEmail,
 
     // Integrated Fetch Helper
     fetchJson: async (url, options = {}) => {
@@ -13,7 +14,14 @@ const api = {
         }
 
         const res = await fetch(url, { ...options, headers });
-        const data = await res.json();
+        let data = {};
+        try {
+            data = await res.json();
+        } catch (e) {
+            // Success responses might not always be JSON
+            if (res.ok) return { success: true };
+        }
+
         if (!res.ok) {
             throw new Error(data.error || data.message || `Server Error (${res.status})`);
         }
@@ -52,20 +60,234 @@ const api = {
         return data;
     },
     confirmAction: async (email, password) => {
-        try {
-            const data = await api.fetchJson(`${API_BASE}/auth/confirm`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            return data.success;
-        } catch (error) {
-            console.error('Password confirmation error:', error);
-            return false;
-        }
+        const data = await api.fetchJson(`${API_BASE}/auth/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        return data.success;
     },
 
-    // Whitelist
+    // Employees
+    getEmployees: async () => {
+        return await api.fetchJson(`${API_BASE}/employees`);
+    },
+    saveEmployee: async (emp) => {
+        const data = await api.fetchJson(`${API_BASE}/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(emp)
+        });
+        return data.id;
+    },
+    deleteEmployee: async (id) => {
+        return await api.fetchJson(`${API_BASE}/employees/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // --- FINANCIALS & EXPENSES ---
+    getExpenses: async (filters = {}) => {
+        const params = new URLSearchParams(filters).toString();
+        return await api.fetchJson(`${API_BASE}/expenses?${params}`);
+    },
+    saveExpense: async (expense) => {
+        return await api.fetchJson(`${API_BASE}/expenses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(expense)
+        });
+    },
+    updateExpense: async (id, expense) => {
+        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(expense)
+        });
+    },
+    deleteExpense: async (id) => {
+        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // --- SALARY & INCREMENTS ---
+    getIncrements: async (employeeId) => {
+        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`);
+    },
+    addIncrement: async (employeeId, incrementData) => {
+        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(incrementData)
+        });
+    },
+
+    // --- NEW MODULES APIs ---
+
+    // 1. Employee Portal / Self-Service
+    getPortalDashboard: async () => {
+        return await api.fetchJson(`${API_BASE}/portal/dashboard`);
+    },
+
+    // 2. Leave Management
+    getLeaves: async (employeeId = null) => {
+        const query = employeeId ? `?employee_id=${employeeId}` : '';
+        return await api.fetchJson(`${API_BASE}/leaves${query}`);
+    },
+    requestLeave: async (leaveData) => {
+        return await api.fetchJson(`${API_BASE}/leaves/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(leaveData)
+        });
+    },
+    updateLeaveStatus: async (id, status, comment) => {
+        return await api.fetchJson(`${API_BASE}/leaves/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status, comment })
+        });
+    },
+
+    // 3. Performance & KPIs
+    getPerformance: async (employeeId) => {
+        return await api.fetchJson(`${API_BASE}/performance?employee_id=${employeeId}`);
+    },
+    saveReview: async (reviewData) => {
+        return await api.fetchJson(`${API_BASE}/performance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reviewData)
+        });
+    },
+
+    // 4. Tickets (Issues/Complaints)
+    getTickets: async (employeeId = null) => {
+        const query = employeeId ? `?employee_id=${employeeId}` : '';
+        return await api.fetchJson(`${API_BASE}/tickets${query}`);
+    },
+    createTicket: async (ticketData) => {
+        return await api.fetchJson(`${API_BASE}/tickets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ticketData)
+        });
+    },
+    resolveTicket: async (id, notes) => {
+        return await api.fetchJson(`${API_BASE}/tickets/${id}/resolve`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes })
+        });
+    },
+
+    // 5. Assets
+    getAssets: async (employeeId = null) => {
+        const query = employeeId ? `?assigned_to=${employeeId}` : '';
+        return await api.fetchJson(`${API_BASE}/assets${query}`);
+    },
+    saveAsset: async (assetData) => {
+        return await api.fetchJson(`${API_BASE}/assets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(assetData)
+        });
+    },
+
+    // 6. Warnings
+    getWarnings: async (employeeId = null) => {
+        const query = employeeId ? `?employee_id=${employeeId}` : '';
+        return await api.fetchJson(`${API_BASE}/warnings${query}`);
+    },
+    issueWarning: async (warningData) => {
+        return await api.fetchJson(`${API_BASE}/warnings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(warningData)
+        });
+    },
+    submitWarningExplanation: async (id, explanation) => {
+        return await api.fetchJson(`${API_BASE}/warnings/${id}/explanation`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ explanation })
+        });
+    },
+
+    // 7. Notifications
+    getNotifications: async () => {
+        return await api.fetchJson(`${API_BASE}/notifications`);
+    },
+    markNotificationRead: async (id) => {
+        return await api.fetchJson(`${API_BASE}/notifications/${id}/read`, {
+            method: 'PUT'
+        });
+    },
+
+    // 7. Documents
+    getDocuments: async (employeeId) => {
+        return await api.fetchJson(`${API_BASE}/documents/${employeeId}`);
+    },
+    uploadDocument: async (employeeId, name, file) => {
+        const formData = new FormData();
+        formData.append('employee_id', employeeId);
+        formData.append('name', name);
+        formData.append('file', file);
+
+        const response = await fetch(`${API_BASE}/documents/upload`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'x-user-email': api.userEmail || ''
+            }
+        });
+        if (!response.ok) throw new Error(await response.text());
+        return await response.json();
+    },
+    // 8. Holidays
+    getHolidays: async () => {
+        return await api.fetchJson(`${API_BASE}/holidays`);
+    },
+    saveHoliday: async (holiday) => {
+        return await api.fetchJson(`${API_BASE}/holidays`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(holiday)
+        });
+    },
+
+    // 9. Biometric
+    syncBiometricLogs: async (logs, direction) => {
+        return await api.fetchJson(`${API_BASE}/biometric/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logs, direction })
+        });
+    },
+    getSittingHours: async (employeeId, month, year) => {
+        return await api.fetchJson(`${API_BASE}/attendance/sitting-hours?employee_id=${employeeId}&month=${month}&year=${year}`);
+    },
+
+    // Onboarding
+    getAttendanceReport: async (month, year) => {
+        return await api.fetchJson(`${API_BASE}/attendance/report?month=${month}&year=${year}`);
+    },
+    getOnboardingSubmissions: async () => {
+        return await api.fetchJson(`${API_BASE}/onboarding/submissions`);
+    },
+    submitOnboarding: async (formData) => {
+        return await api.fetchJson(`${API_BASE}/onboarding/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+    },
+
+    // --- ADMIN & SYSTEM ---
+    getAdminLogs: async () => {
+        return await api.fetchJson(`${API_BASE}/admin/logs`);
+    },
     getWhitelist: async () => {
         return await api.fetchJson(`${API_BASE}/whitelist`);
     },
@@ -82,26 +304,11 @@ const api = {
         });
     },
 
-    // Employees
-    getEmployees: async () => {
-        return await api.fetchJson(`${API_BASE}/employees`);
+    // Original Payslip Methods (Extended)
+    getPayslips: async (employeeId = null) => {
+        const query = employeeId ? `?employee_id=${employeeId}` : '';
+        return await api.fetchJson(`${API_BASE}/payslips${query}`);
     },
-    saveEmployee: async (emp) => {
-        const data = await api.fetchJson(`${API_BASE}/employees`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(emp)
-        });
-        return data.id;
-    },
-    deleteEmployee: async (id) => {
-        const data = await api.fetchJson(`${API_BASE}/employees/${id}`, {
-            method: 'DELETE'
-        });
-        return data.success;
-    },
-
-    // Payslips
     generatePayslip: async (data, employee, silent = false) => {
         const payload = { ...data, employee };
         const result = await api.fetchJson(`${API_BASE}/payslip/generate`, {
@@ -111,56 +318,6 @@ const api = {
         });
         if (result.url && !silent) window.open(result.url, '_blank');
         return result;
-    },
-    getPayslips: async () => {
-        return await api.fetchJson(`${API_BASE}/payslips`);
-    },
-    openPayslip: async (id) => {
-        const payslips = await api.getPayslips();
-        const payslip = Array.isArray(payslips) ? payslips.find(p => p.id === id) : null;
-        if (payslip && payslip.pdf_path) {
-            window.open(`${API_BASE}/payslips/${payslip.pdf_path}/download`, '_blank');
-        }
-    },
-
-    // Config / Email
-    getSmtpConfig: async () => {
-        return await api.fetchJson(`${API_BASE}/config/smtp`);
-    },
-    saveSmtpConfig: async (config) => {
-        return await api.fetchJson(`${API_BASE}/config/smtp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-    },
-    sendCustomEmail: async (to, subject, html) => {
-        const data = await api.fetchJson(`${API_BASE}/email/custom`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to, subject, html })
-        });
-        return data.success;
-    },
-    getConfig: async () => {
-        return await api.fetchJson(`${API_BASE}/config`);
-    },
-    saveConfig: async (config) => {
-        return await api.fetchJson(`${API_BASE}/config`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-    },
-    getPdfConfig: async () => {
-        return await api.fetchJson(`${API_BASE}/config/pdf`);
-    },
-    savePdfConfig: async (config) => {
-        return await api.fetchJson(`${API_BASE}/config/pdf`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
     },
     sendPayslipEmail: async (payslipId) => {
         const data = await api.fetchJson(`${API_BASE}/email/send`, {
@@ -193,7 +350,6 @@ const api = {
         a.remove();
         window.URL.revokeObjectURL(url);
     },
-    // Payroll Defaults
     getPayrollDefaults: async () => {
         return await api.fetchJson(`${API_BASE}/payroll/defaults`);
     },
@@ -204,8 +360,6 @@ const api = {
             body: JSON.stringify({ defaults })
         });
     },
-
-    // Attendance
     getAttendance: async (date) => {
         const query = date ? `?date=${date}` : '';
         return await api.fetchJson(`${API_BASE}/attendance${query}`);
@@ -216,51 +370,6 @@ const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-    },
-    getAttendanceReport: async (month, year) => {
-        return await api.fetchJson(`${API_BASE}/attendance/report?month=${month}&year=${year}`);
-    },
-
-    // Expenses
-    getExpenses: async (filters = {}) => {
-        const query = new URLSearchParams(filters).toString();
-        return await api.fetchJson(`${API_BASE}/expenses?${query}`);
-    },
-    saveExpense: async (expense) => {
-        return await api.fetchJson(`${API_BASE}/expenses`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(expense)
-        });
-    },
-    updateExpense: async (id, expense) => {
-        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(expense)
-        });
-    },
-    deleteExpense: async (id) => {
-        return await api.fetchJson(`${API_BASE}/expenses/${id}`, {
-            method: 'DELETE'
-        });
-    },
-
-    // Increments
-    getIncrements: async (employeeId) => {
-        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`);
-    },
-    addIncrement: async (employeeId, increment) => {
-        return await api.fetchJson(`${API_BASE}/employees/${employeeId}/increments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(increment)
-        });
-    },
-
-    // Admin
-    getAdminLogs: async () => {
-        return await api.fetchJson(`${API_BASE}/admin/logs`);
     }
 };
 

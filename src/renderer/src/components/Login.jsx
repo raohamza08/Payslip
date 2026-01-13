@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../api';
 
 export default function Login({ onLogin }) {
-    const [isSignup, setIsSignup] = useState(false);
+    const [isSignup, setIsSignup] = useState(window.location.pathname === '/signup');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');

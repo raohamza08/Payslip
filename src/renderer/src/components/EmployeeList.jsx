@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 
 import { exportToCSV } from '../utils/exportToCSV';
+import DocumentManager from './DocumentManager';
 
 export default function EmployeeList({ onEdit }) {
     const [employees, setEmployees] = useState([]);
+    const [selectedForDocs, setSelectedForDocs] = useState(null);
 
     useEffect(() => {
         load();
@@ -60,14 +62,22 @@ export default function EmployeeList({ onEdit }) {
                                 }}>{emp.status}</span></td>
                                 <td>
                                     <button className="btn btn-secondary" style={{ padding: '5px 10px', marginRight: 5 }} onClick={() => onEdit(emp)}>Edit</button>
+                                    <button className="btn btn-primary" style={{ padding: '5px 10px', marginRight: 5 }} onClick={() => setSelectedForDocs(emp)}>Docs</button>
                                     <button className="btn btn-danger" style={{ padding: '5px 10px' }} onClick={() => handleDelete(emp.id)}>X</button>
                                 </td>
                             </tr>
                         ))}
-                        {employees.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center' }}>No employees found.</td></tr>}
+                        {employees.length === 0 && <tr><td colSpan="7" style={{ textAlign: 'center' }}>No employees found.</td></tr>}
                     </tbody>
                 </table>
             </div>
+
+            {selectedForDocs && (
+                <DocumentManager
+                    employee={selectedForDocs}
+                    onClose={() => setSelectedForDocs(null)}
+                />
+            )}
         </div>
     );
 }

@@ -26,6 +26,8 @@ export default function PasswordConfirm({ onConfirm, onCancel, email, title = "C
                 <h3 style={{ marginTop: 0 }}>{title}</h3>
                 <p>{message}</p>
                 <form onSubmit={handleSubmit}>
+                    {/* Hidden username field for accessibility/autofill */}
+                    <input type="text" name="email" value={email} readOnly style={{ display: 'none' }} autoComplete="username" />
                     <div className="form-group">
                         <input
                             type="password"

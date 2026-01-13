@@ -185,9 +185,11 @@ export default function PayslipHistory({ user }) {
                                 <td>{p.email_sent_at ? 'Sent' : 'Draft'}</td>
                                 <td className="flex-row">
                                     <button className="btn btn-secondary" onClick={() => handleOpen(p.id)}>View PDF</button>
-                                    <button className="btn btn-primary" onClick={() => handleSend(p.id)} disabled={loading}>
-                                        {p.email_sent_at ? 'Resend' : 'Email'}
-                                    </button>
+                                    {user?.role === 'super_admin' && (
+                                        <button className="btn btn-primary" onClick={() => handleSend(p.id)} disabled={loading}>
+                                            {p.email_sent_at ? 'Resend' : 'Email'}
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}

@@ -1,0 +1,13 @@
+{
+    "name": "euroshub-biometric-agent",
+    "version": "1.0.0",
+    "description": "Bridge between local ZKTeco devices and EurosHub Cloud",
+    "main": "sync_agent.js",
+    "scripts": {
+        "start": "node sync_agent.js"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.7",
+        "node-zklib": "^2.0.3"
+    }
+}

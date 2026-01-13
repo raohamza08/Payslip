@@ -15,10 +15,17 @@ import PasswordConfirm from './components/PasswordConfirm';
 import Expenses from './components/Expenses';
 import PayrollGrid from './components/PayrollGrid';
 import EmailComposer from './components/EmailComposer';
+import EmployeePortal from './components/EmployeePortal';
+import LeaveManagement from './components/LeaveManagement';
+import PerformanceReviews from './components/PerformanceReviews';
+import AssetManagement from './components/AssetManagement';
+import Discipline from './components/Discipline';
+import MyPerformance from './components/MyPerformance';
+import NotificationPanel from './components/NotificationPanel';
 import api from './api';
 
 export default function App() {
-    const [auth, setAuth] = useState(false); // authorized
+    const [auth, setAuth] = useState(false);
     const [user, setUser] = useState(null);
     const [needsSetup, setNeedsSetup] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -30,28 +37,36 @@ export default function App() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    const [pathname, setPathname] = useState(window.location.pathname.toLowerCase());
+
     useEffect(() => {
-        // Apply theme and color on boot
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
         document.body.className = savedTheme;
         document.documentElement.style.setProperty('--accent', savedAccent);
-
         checkSetup();
+
+        const handlePathChange = () => setPathname(window.location.pathname.toLowerCase());
+        window.addEventListener('popstate', handlePathChange);
+        const interval = setInterval(handlePathChange, 500);
+
+        return () => {
+            window.removeEventListener('popstate', handlePathChange);
+            clearInterval(interval);
+        };
     }, []);
 
     const checkSetup = async () => {
         try {
             const isSetup = await api.isSetup();
             setNeedsSetup(!isSetup);
-        } catch (e) {
-            console.error("Failed to check setup", e);
-        }
+        } catch (e) { console.error("Failed to check setup", e); }
         setLoading(false);
     };
 
     const handleNavClick = (id) => {
-        if (id === 'attendance' || id === 'reports' || id === 'bulk') {
+        const protectedViews = ['attendance', 'reports', 'bulk', 'admin-leaves', 'assets', 'warnings'];
+        if (protectedViews.includes(id)) {
             setPendingView(id);
             setShowPasswordConfirm(true);
         } else {
@@ -62,26 +77,32 @@ export default function App() {
 
     const NavItem = ({ id, label, icon }) => (
         <div className={`nav-item ${view === id ? 'active' : ''}`} onClick={() => handleNavClick(id)}>
-            <span style={{ marginRight: 10 }}>{icon}</span>
+            <span style={{ marginRight: 10 }}>{icon || '•'}</span>
             {label}
         </div>
     );
 
-    if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
+    if (loading) return <div className="loading-screen">Loading...</div>;
 
-    if (needsSetup) {
-        return <Setup onSetupComplete={() => { setNeedsSetup(false); }} />;
-    }
+    const isLoginPath = pathname.includes('/login');
+    const isSignupPath = pathname.includes('/signup');
 
-    if (!auth) {
+    if (!auth || isLoginPath || isSignupPath) {
+        if (needsSetup && !isLoginPath && !isSignupPath) {
+            return <Setup onSetupComplete={() => setNeedsSetup(false)} />;
+        }
         return <Login onLogin={(u) => {
             setUser(u);
             setAuth(true);
+            setNeedsSetup(false);
             api.setUser(u.email);
+            if (u.role !== 'super_admin') setView('portal');
+            window.history.pushState({}, '', '/');
+            setPathname('/');
         }} />;
     }
 
-
+    const isEmployee = user.role !== 'super_admin';
 
     return (
         <div className="app-container">
@@ -89,131 +110,145 @@ export default function App() {
                 <span style={{ fontSize: '24px' }}>☰</span>
             </button>
 
-            {/* Overlay for mobile when sidebar is open */}
-            {sidebarOpen && (
-                <div
-                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }}
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div style={{
-                    textAlign: 'center',
-                    padding: '20px 0 10px 0',
-                    borderBottom: '1px solid rgba(255,255,255,0.1)',
-                    marginBottom: '20px'
-                }}>
-                    <img
-                        src="/logo.png"
-                        alt="EurosHub Logo"
-                        style={{
-                            width: '80px',
-                            height: '80px',
-                            objectFit: 'contain',
-                            marginBottom: '10px'
-                        }}
-                    />
-                    <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '600' }}>EurosHub</h2>
+                <div className="sidebar-header">
+                    <img src="/logo.png" alt="Logo" style={{ width: '60px', marginBottom: '10px' }} />
+                    <h2>EurosHub</h2>
                 </div>
-                <NavItem id="dashboard" label="Dashboard" />
-                <NavItem id="employees" label="Employees" />
-                <NavItem id="attendance" label="Attendance" />
-                <NavItem id="payroll" label="All Payslips" />
-                <NavItem id="email" label="Compose Email" />
-                <NavItem id="generate" label="Single Payslip" />
-                <NavItem id="history" label="Payslip History" />
-                <NavItem id="bulk" label="Bulk Operations" />
-                <NavItem id="reports" label="Reports" />
-                <NavItem id="expenses" label="Expenses" />
-                <NavItem id="company" label="Company Profile" />
-                {user?.role === 'super_admin' && (
+
+                {isEmployee ? (
                     <>
-                        <NavItem id="whitelist" label="Whitelist" />
-                        <NavItem id="logs" label="Activity Logs" />
+                        <NavItem id="portal" label="My Portal" icon="🏠" />
+                        <NavItem id="my-leaves" label="My Leaves" icon="📅" />
+                        <NavItem id="my-performance" label="My Performance" icon="⭐" />
+                        <NavItem id="my-payslips" label="My Payslips" icon="📜" />
+                    </>
+                ) : (
+                    <>
+                        <NavItem id="dashboard" label={user.role === 'super_admin' ? 'Super Admin' : 'HR Dashboard'} icon="📊" />
+                        <div className="nav-group">PAYROLL & HR</div>
+                        <NavItem id="employees" label="Employees" icon="👥" />
+                        <NavItem id="payroll" label="Payroll Grid" icon="💰" />
+                        <NavItem id="admin-leaves" label="Leave Requests" icon="📅" />
+                        <NavItem id="assets" label="Asset Management" icon="💻" />
+
+                        <div className="nav-group">OPERATIONS</div>
+                        <NavItem id="attendance" label="Attendance" icon="🕒" />
+                        <NavItem id="reports" label="Reports & KPIs" icon="📈" />
+                        <NavItem id="expenses" label="Expenses" icon="💸" />
+                        <NavItem id="performance" label="KPIs & Reviews" icon="⭐" />
+                        <NavItem id="warnings" label="Discipline" icon="⚠️" />
+
+                        {user.role === 'super_admin' && (
+                            <>
+                                <div className="nav-group">SYSTEM (Super Admin)</div>
+                                <NavItem id="whitelist" label="Whitelist" icon="🔒" />
+                                <NavItem id="logs" label="Activity Logs" icon="📋" />
+                            </>
+                        )}
                     </>
                 )}
+
                 <div className="spacer"></div>
-                <NavItem id="settings" label="Settings" />
-                <div className="nav-item" onClick={() => { setAuth(false); setUser(null); api.setUser(null); }} style={{ marginTop: 10, background: 'rgba(255,255,255,0.1)' }}>
+                <NavItem id="settings" label="Settings" icon="⚙️" />
+                <div className="nav-item logout" onClick={() => { setAuth(false); setUser(null); api.setUser(null); }}>
                     <span style={{ marginRight: 10 }}>🚪</span> Logout
                 </div>
             </div>
 
             <div className="main-content">
-                {view === 'dashboard' && (
-                    <div>
-                        <h1>Dashboard</h1>
-                        <div className="grid-2">
-                            <div className="card" onClick={() => setView('generate')} style={{ cursor: 'pointer' }}>
-                                <h3>Create New Payslip</h3>
-                                <p>Generate PDF for this month</p>
+                {/* TOP BAR */}
+                <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '15px 25px', background: 'white', borderBottom: '1px solid #eee',
+                    marginBottom: '10px'
+                }}>
+                    <h2 style={{ margin: 0, textTransform: 'capitalize' }}>
+                        {view.replace('-', ' ')}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <NotificationPanel />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{user.name || user.email}</div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>{user.role.replace('_', ' ')}</div>
                             </div>
-                            <div className="card" onClick={() => setView('employees')} style={{ cursor: 'pointer' }}>
-                                <h3>Manage Employees</h3>
-                                <p>Add or Edit staff details</p>
-                            </div>
-                            <div className="card" onClick={() => handleNavClick('attendance')} style={{ cursor: 'pointer' }}>
-                                <h3>Attendance</h3>
-                                <p>Mark daily attendance and leaves</p>
-                            </div>
-                            <div className="card" onClick={() => handleNavClick('reports')} style={{ cursor: 'pointer' }}>
-                                <h3>Reports</h3>
-                                <p>Monthly payroll and attendance summaries</p>
+                            <div style={{
+                                width: '35px', height: '35px', borderRadius: '50%', background: 'var(--accent)',
+                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontWeight: 'bold'
+                            }}>
+                                {(user.name || user.email)[0].toUpperCase()}
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
 
-                {view === 'employees' && !editingEmp && (
-                    <EmployeeList onEdit={(emp) => setEditingEmp(emp)} />
-                )}
+                <div className="view-container" style={{ padding: '10px 25px' }}>
+                    {isEmployee ? (
+                        <>
+                            {view === 'portal' && <EmployeePortal user={user} />}
+                            {view === 'my-leaves' && <LeaveManagement user={user} />}
+                            {view === 'my-performance' && <MyPerformance user={user} />}
+                            {view === 'my-payslips' && <PayslipHistory user={user} />}
+                            {view === 'settings' && <Settings user={user} />}
+                        </>
+                    ) : (
+                        <>
+                            {view === 'dashboard' && <AdminDashboard onNav={handleNavClick} />}
+                            {view === 'employees' && !editingEmp && <EmployeeList onEdit={setEditingEmp} />}
+                            {view === 'employees' && editingEmp && <EmployeeForm employee={editingEmp.id ? editingEmp : null} onSave={() => setEditingEmp(null)} onCancel={() => setEditingEmp(null)} />}
+                            {view === 'attendance' && <Attendance />}
+                            {view === 'payroll' && <PayrollGrid user={user} onNavigate={setView} />}
+                            {view === 'history' && <PayslipHistory user={user} />}
+                            {view === 'reports' && <AttendanceReport />}
+                            {view === 'expenses' && <Expenses />}
+                            {view === 'performance' && <PerformanceReviews user={user} />}
+                            {view === 'assets' && <AssetManagement />}
+                            {view === 'warnings' && <Discipline />}
 
-                {view === 'employees' && editingEmp && (
-                    <EmployeeForm
-                        employee={editingEmp.id ? editingEmp : null}
-                        onSave={() => { setEditingEmp(null); }}
-                        onCancel={() => setEditingEmp(null)}
-                    />
-                )}
+                            {view === 'whitelist' && (user.role === 'super_admin' ? <Whitelist /> : <div className="p-20">Access Denied</div>)}
+                            {view === 'logs' && (user.role === 'super_admin' ? <AdminLogs /> : <div className="p-20">Access Denied</div>)}
 
-                {view === 'attendance' && <Attendance />}
-
-                {view === 'generate' && <PayslipGenerator onComplete={() => setView('history')} user={user} />}
-
-                {view === 'payroll' && <PayrollGrid user={user} onNavigate={setView} />}
-
-                {view === 'email' && <EmailComposer user={user} />}
-
-                {view === 'history' && <PayslipHistory user={user} />}
-
-                {view === 'bulk' && <PayslipHistory user={user} />}
-
-                {view === 'reports' && <AttendanceReport />}
-
-                {view === 'expenses' && <Expenses />}
-
-                {view === 'company' && <CompanyProfile />}
-
-                {view === 'whitelist' && user?.role === 'super_admin' && <Whitelist />}
-
-                {view === 'logs' && user?.role === 'super_admin' && <AdminLogs />}
-
-                {view === 'settings' && <Settings />}
+                            {view === 'settings' && <Settings />}
+                            {view === 'admin-leaves' && <LeaveManagement user={user} />}
+                        </>
+                    )}
+                </div>
             </div>
 
             {showPasswordConfirm && (
                 <PasswordConfirm
                     email={user?.email}
-                    onConfirm={() => {
-                        setView(pendingView);
-                        setShowPasswordConfirm(false);
-                    }}
+                    onConfirm={() => { setView(pendingView); setShowPasswordConfirm(false); }}
                     onCancel={() => setShowPasswordConfirm(false)}
-                    title="Authorized Access"
-                    message="Please enter master password to access this module."
+                    title="Security Access"
+                    message="Please enter Admin PIN to continue."
                 />
             )}
+        </div>
+    );
+}
+
+function AdminDashboard({ onNav }) {
+    return (
+        <div style={{ padding: '10px' }}>
+            <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
+                <div className="card shadow clickable" onClick={() => onNav('payroll')}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>💰 Run Payroll</h3>
+                    <p style={{ color: '#666', fontSize: '14px' }}>Process salaries for current month</p>
+                </div>
+                <div className="card shadow clickable" onClick={() => onNav('admin-leaves')}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>📅 Pending Leaves</h3>
+                    <p style={{ color: '#666', fontSize: '14px' }}>New requests waiting for approval</p>
+                </div>
+                <div className="card shadow clickable" onClick={() => onNav('attendance')}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>🕒 Daily Attendance</h3>
+                    <p style={{ color: '#666', fontSize: '14px' }}>View today's check-ins</p>
+                </div>
+            </div>
         </div>
     );
 }

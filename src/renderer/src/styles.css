@@ -145,7 +145,16 @@ h3 {
 .nav-item.active {
   background: var(--accent);
   color: var(--white);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 184, 175, 0.3);
+}
+
+.nav-group {
+  padding: 20px 16px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .spacer {
@@ -335,6 +344,26 @@ tr:hover td {
   gap: 1.5rem;
 }
 
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .flex-row {
   display: flex;
   gap: 1rem;
@@ -502,4 +531,87 @@ tr:hover td {
   background: var(--danger-bg);
   padding: 10px;
   border-radius: 6px;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.pending {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badge.approved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.badge.rejected {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.badge.open {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.badge.resolved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+/* Helpers */
+.clickable {
+  cursor: pointer;
+}
+
+.shadow {
+  box-shadow: var(--shadow);
+}
+
+.shadow:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.border {
+  border: 1px solid var(--border);
+}
+
+.p-20 {
+  padding: 20px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+.sidebar-header {
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
 }
