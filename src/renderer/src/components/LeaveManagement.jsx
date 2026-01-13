@@ -92,15 +92,36 @@ export default function LeaveManagement({ user }) {
         }
     };
 
+    const [showRejectionModal, setShowRejectionModal] = useState(false);
+    const [rejectionId, setRejectionId] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+
     const handleStatusUpdate = async (id, status) => {
-        if (!confirm(`Are you sure you want to ${status.toLowerCase()} this leave request?`)) return;
+        if (status === 'Rejected') {
+            setRejectionId(id);
+            setRejectionReason('');
+            setShowRejectionModal(true);
+            return;
+        }
+
         try {
-            const comment = status === 'Rejected' ? prompt('Reason for rejection (optional):') : '';
-            await api.updateLeaveStatus(id, status, comment || '');
-            alert(`Leave request ${status.toLowerCase()} successfully!`);
+            await api.updateLeaveStatus(id, status, '');
+            window.toast && window.toast(`Leave request ${status.toLowerCase()} successfully!`, 'success');
             loadLeaves();
         } catch (e) {
-            alert(e.message);
+            window.toast && window.toast(e.message, 'error');
+        }
+    };
+
+    const confirmRejection = async (e) => {
+        e.preventDefault();
+        try {
+            await api.updateLeaveStatus(rejectionId, 'Rejected', rejectionReason);
+            window.toast && window.toast('Leave request rejected', 'success');
+            setShowRejectionModal(false);
+            loadLeaves();
+        } catch (e) {
+            window.toast && window.toast(e.message, 'error');
         }
     };
 
@@ -388,6 +409,39 @@ export default function LeaveManagement({ user }) {
                                 </>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rejection Modal */}
+            {showRejectionModal && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '500px' }}>
+                        <h3>Reject Leave Request</h3>
+                        <p style={{ color: '#666', marginBottom: '15px' }}>
+                            Please provide a reason for rejecting this request. This will be visible to the employee.
+                        </p>
+                        <form onSubmit={confirmRejection}>
+                            <div className="form-group">
+                                <label>Reason (Optional)</label>
+                                <textarea
+                                    className="form-control"
+                                    rows="3"
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    placeholder="e.g. Inufficient leave balance / Critical project deadline"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowRejectionModal(false)}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-danger">
+                                    Confirm Rejection
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
