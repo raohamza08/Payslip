@@ -39,6 +39,26 @@ const fonts = {
     }
 };
 
+// Ensure Storage Buckets
+(async function ensureBuckets() {
+    try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        if (error) {
+            console.error('[INIT] Failed to list buckets:', error.message);
+            return;
+        }
+        if (!buckets.find(b => b.name === 'documents')) {
+            console.log('[INIT] Creating "documents" bucket...');
+            const { error: createError } = await supabase.storage.createBucket('documents', {
+                public: false // Restricted, we serve via proxy
+            });
+            if (createError) console.error('[INIT] Failed to create bucket:', createError.message);
+        }
+    } catch (e) {
+        console.error('[INIT] Bucket check failed:', e.message);
+    }
+})();
+
 // Logging Helper
 async function logActivity(user_email, action, status, details = '', req = null) {
     try {
