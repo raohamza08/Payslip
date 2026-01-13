@@ -105,10 +105,11 @@ app.post('/api/auth/setup', async (req, res) => {
         }
 
         const hash = await bcrypt.hash(password, 10);
-        // Create Super Admin User
+        // Create Super Admin User with master password
         const { error: userError } = await supabase.from('users').insert({
             email,
             password_hash: hash,
+            master_password_hash: hash, // Same password for both initially
             role: 'super_admin'
         });
         if (userError) throw userError;
@@ -134,10 +135,10 @@ app.post('/api/auth/setup', async (req, res) => {
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, masterPassword } = req.body;
 
-        // 1. Check Whitelist
-        const { data: whitelisted } = await supabase.from('whitelist').select('email').eq('email', email).single();
+        // 1. Check Whitelist and get assigned role
+        const { data: whitelisted } = await supabase.from('whitelist').select('email, role').eq('email', email).single();
         if (!whitelisted) {
             await logActivity(email, 'SIGNUP_ATTEMPT', 'FAIL', 'Email not whitelisted', req);
             return res.status(403).json({ error: "Email not whitelisted. Contact admin." });
@@ -150,18 +151,46 @@ app.post('/api/auth/signup', async (req, res) => {
             return res.status(400).json({ error: "User already registered." });
         }
 
-        // 3. Create User
-        const hash = await bcrypt.hash(password, 10);
-        await supabase.from('users').insert({
-            email,
-            password_hash: hash,
-            role: 'employee'
-        });
+        // 3. Validate master password for admin users
+        const assignedRole = whitelisted.role || 'employee';
+        if ((assignedRole === 'admin' || assignedRole === 'super_admin') && !masterPassword) {
+            return res.status(400).json({ error: "Master password is required for admin accounts." });
+        }
 
-        await logActivity(email, 'SIGNUP_SUCCESS', 'SUCCESS', 'New user registered', req);
-        res.json({ success: true });
+        // 4. Create User
+        const passwordHash = await bcrypt.hash(password, 10);
+        const userInsert = {
+            email,
+            password_hash: passwordHash,
+            role: assignedRole
+        };
+
+        // Add master password hash for admin users
+        if (assignedRole === 'admin' || assignedRole === 'super_admin') {
+            userInsert.master_password_hash = await bcrypt.hash(masterPassword, 10);
+        }
+
+        await supabase.from('users').insert(userInsert);
+
+        await logActivity(email, 'SIGNUP_SUCCESS', 'SUCCESS', `New ${assignedRole} registered`, req);
+        res.json({ success: true, role: assignedRole });
     } catch (e) {
         await logActivity(req.body.email || 'unknown', 'SIGNUP_ATTEMPT', 'ERROR', `Signup failed: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/auth/check-role', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const { data: whitelisted } = await supabase.from('whitelist').select('role').eq('email', email).maybeSingle();
+
+        if (whitelisted) {
+            res.json({ exists: true, role: whitelisted.role });
+        } else {
+            res.json({ exists: false });
+        }
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
@@ -193,23 +222,150 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/confirm', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const { data: user } = await supabase.from('users').select('password_hash').eq('email', email).single();
+        const { data: user } = await supabase.from('users').select('role, master_password_hash').eq('email', email).single();
         if (!user) {
             await logActivity(email, 'CONFIRM_PASSWORD', 'FAIL', 'User not found for confirmation', req);
             return res.status(401).json({ success: false });
         }
-        const match = await bcrypt.compare(password, user.password_hash);
-        if (match) {
-            await logActivity(email, 'CONFIRM_PASSWORD', 'SUCCESS', 'Password confirmed', req);
+
+        // For admin users, verify against master password
+        if (user.role === 'admin' || user.role === 'super_admin') {
+            if (!user.master_password_hash) {
+                await logActivity(email, 'CONFIRM_PASSWORD', 'FAIL', 'Master password not set', req);
+                return res.status(401).json({ success: false, error: 'Master password not configured' });
+            }
+            const match = await bcrypt.compare(password, user.master_password_hash);
+            if (match) {
+                await logActivity(email, 'CONFIRM_PASSWORD', 'SUCCESS', 'Master password confirmed', req);
+            } else {
+                await logActivity(email, 'CONFIRM_PASSWORD', 'FAIL', 'Incorrect master password', req);
+            }
+            res.json({ success: match });
         } else {
-            await logActivity(email, 'CONFIRM_PASSWORD', 'FAIL', 'Incorrect password for confirmation', req);
+            // Employees shouldn't be accessing protected sections
+            await logActivity(email, 'CONFIRM_PASSWORD', 'FAIL', 'Employee attempted to access protected section', req);
+            res.status(403).json({ success: false, error: 'Access denied' });
         }
-        res.json({ success: match });
     } catch (e) {
         await logActivity(req.body.email || 'unknown', 'CONFIRM_PASSWORD', 'ERROR', `Confirmation failed: ${e.message}`, req);
         res.status(500).json({ error: e.message });
     }
 });
+
+app.post('/api/auth/change-password', async (req, res) => {
+    try {
+        const { email, currentPassword, newPassword } = req.body;
+
+        // 1. Verify user exists and current password is correct
+        const { data: user } = await supabase.from('users').select('password_hash').eq('email', email).single();
+        if (!user) {
+            await logActivity(email, 'CHANGE_PASSWORD', 'FAIL', 'User not found', req);
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const match = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!match) {
+            await logActivity(email, 'CHANGE_PASSWORD', 'FAIL', 'Current password incorrect', req);
+            return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        }
+
+        // 2. Hash new password and update
+        const newHash = await bcrypt.hash(newPassword, 10);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('email', email);
+
+        if (updateError) throw updateError;
+
+        await logActivity(email, 'CHANGE_PASSWORD', 'SUCCESS', 'Password changed successfully', req);
+        res.json({ success: true });
+    } catch (e) {
+        await logActivity(req.body.email || 'unknown', 'CHANGE_PASSWORD', 'ERROR', `Password change failed: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// User Management Routes (Super Admin Only)
+app.get('/api/users', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, email, role, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/users/reset-master-password', async (req, res) => {
+    try {
+        const { email, newMasterPassword } = req.body;
+        const adminEmail = req.headers['x-user-email'] || 'unknown';
+
+        // Verify the user exists and is an admin
+        const { data: user } = await supabase
+            .from('users')
+            .select('role')
+            .eq('email', email)
+            .single();
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.role !== 'admin' && user.role !== 'super_admin') {
+            return res.status(400).json({ error: 'Can only reset master password for admin users' });
+        }
+
+        // Hash and update master password
+        const newHash = await bcrypt.hash(newMasterPassword, 10);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ master_password_hash: newHash })
+            .eq('email', email);
+
+        if (updateError) throw updateError;
+
+        await logActivity(adminEmail, 'RESET_MASTER_PASSWORD', 'SUCCESS', `Reset master password for ${email}`, req);
+        res.json({ success: true });
+    } catch (e) {
+        await logActivity(req.headers['x-user-email'] || 'unknown', 'RESET_MASTER_PASSWORD', 'ERROR', `Failed to reset master password: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/users/reset-login-password', async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+        const adminEmail = req.headers['x-user-email'] || 'unknown';
+
+        // Verify user exists
+        const { data: user } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Hash and update login password
+        const newHash = await bcrypt.hash(newPassword, 10);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('email', email);
+
+        if (updateError) throw updateError;
+
+        await logActivity(adminEmail, 'RESET_LOGIN_PASSWORD', 'SUCCESS', `Reset login password for ${email}`, req);
+        res.json({ success: true });
+    } catch (e) {
+        await logActivity(req.headers['x-user-email'] || 'unknown', 'RESET_LOGIN_PASSWORD', 'ERROR', `Failed to reset login password: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 
 // Whitelist Routes (Super Admin Only - Front-end should enforce this check)
 app.get('/api/whitelist', async (req, res) => {
@@ -221,10 +377,14 @@ app.get('/api/whitelist', async (req, res) => {
 
 app.post('/api/whitelist', async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, role } = req.body;
         const userEmail = req.headers['x-user-email'] || 'unknown';
-        await supabase.from('whitelist').insert({ email });
-        await logActivity(userEmail, 'ADD_WHITELIST_EMAIL', 'SUCCESS', `Added ${email} to whitelist`, req);
+
+        // Default to employee if no role specified
+        const assignedRole = role || 'employee';
+
+        await supabase.from('whitelist').insert({ email, role: assignedRole });
+        await logActivity(userEmail, 'ADD_WHITELIST_EMAIL', 'SUCCESS', `Added ${email} to whitelist as ${assignedRole}`, req);
         res.json({ success: true });
     } catch (e) {
         await logActivity(req.headers['x-user-email'] || 'unknown', 'ADD_WHITELIST_EMAIL', 'ERROR', `Failed to add ${req.body.email} to whitelist: ${e.message}`, req);

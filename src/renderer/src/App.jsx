@@ -22,6 +22,7 @@ import AssetManagement from './components/AssetManagement';
 import Discipline from './components/Discipline';
 import MyPerformance from './components/MyPerformance';
 import NotificationPanel from './components/NotificationPanel';
+import UserManagement from './components/UserManagement';
 import api from './api';
 
 export default function App() {
@@ -44,6 +45,9 @@ export default function App() {
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
         document.body.className = savedTheme;
         document.documentElement.style.setProperty('--accent', savedAccent);
+
+        // Restore session if exists
+        restoreSession();
         checkSetup();
 
         const handlePathChange = () => setPathname(window.location.pathname.toLowerCase());
@@ -55,6 +59,34 @@ export default function App() {
             clearInterval(interval);
         };
     }, []);
+
+    const restoreSession = () => {
+        try {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedView = localStorage.getItem('currentView');
+
+            if (savedUser) {
+                const userData = JSON.parse(savedUser);
+                setUser(userData);
+                setAuth(true);
+                api.setUser(userData.email);
+
+                // Restore last view or default based on role
+                if (savedView) {
+                    setView(savedView);
+                } else if (userData.role === 'employee') {
+                    setView('portal');
+                } else {
+                    setView('dashboard');
+                }
+            }
+        } catch (e) {
+            console.error('Failed to restore session:', e);
+            // Clear corrupted session data
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentView');
+        }
+    };
 
     const checkSetup = async () => {
         try {
@@ -71,6 +103,8 @@ export default function App() {
             setShowPasswordConfirm(true);
         } else {
             setView(id);
+            // Save current view to localStorage
+            localStorage.setItem('currentView', id);
         }
         if (window.innerWidth <= 768) setSidebarOpen(false);
     };
@@ -95,13 +129,20 @@ export default function App() {
             setAuth(true);
             setNeedsSetup(false);
             api.setUser(u.email);
-            if (u.role !== 'super_admin') setView('portal');
+
+            // Save session to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(u));
+
+            const initialView = u.role === 'employee' ? 'portal' : 'dashboard';
+            setView(initialView);
+            localStorage.setItem('currentView', initialView);
+
             window.history.pushState({}, '', '/');
             setPathname('/');
         }} />;
     }
 
-    const isEmployee = user.role !== 'super_admin';
+    const isEmployee = user.role === 'employee';
 
     return (
         <div className="app-container">
@@ -127,7 +168,7 @@ export default function App() {
                 ) : (
                     <>
                         <NavItem id="dashboard" label={user.role === 'super_admin' ? 'Super Admin' : 'HR Dashboard'} />
-                        <div className="nav-group">PAYROLL & HAHA</div>
+                        <div className="nav-group">PAYROLL & HR</div>
                         <NavItem id="employees" label="Employees" />
                         <NavItem id="payroll" label="Payroll Grid" />
                         <NavItem id="admin-leaves" label="Leave Requests" />
@@ -143,6 +184,7 @@ export default function App() {
                         {user.role === 'super_admin' && (
                             <>
                                 <div className="nav-group">SYSTEM (Super Admin)</div>
+                                <NavItem id="user-management" label="User Management" />
                                 <NavItem id="whitelist" label="Whitelist" />
                                 <NavItem id="logs" label="Activity Logs" />
                             </>
@@ -152,7 +194,14 @@ export default function App() {
 
                 <div className="spacer"></div>
                 <NavItem id="settings" label="Settings" />
-                <div className="nav-item logout" onClick={() => { setAuth(false); setUser(null); api.setUser(null); }}>
+                <div className="nav-item logout" onClick={() => {
+                    setAuth(false);
+                    setUser(null);
+                    api.setUser(null);
+                    // Clear session from localStorage
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('currentView');
+                }}>
                     Logout
                 </div>
             </div>
@@ -177,7 +226,7 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="view-container" style={{ padding: '10px 25px' }}>
+                <div className="view-container">
                     {isEmployee ? (
                         <>
                             {view === 'portal' && <EmployeePortal user={user} />}
@@ -200,6 +249,7 @@ export default function App() {
                             {view === 'assets' && <AssetManagement />}
                             {view === 'warnings' && <Discipline />}
 
+                            {view === 'user-management' && (user.role === 'super_admin' ? <UserManagement /> : <div className="p-20">Access Denied</div>)}
                             {view === 'whitelist' && (user.role === 'super_admin' ? <Whitelist /> : <div className="p-20">Access Denied</div>)}
                             {view === 'logs' && (user.role === 'super_admin' ? <AdminLogs /> : <div className="p-20">Access Denied</div>)}
 
@@ -213,7 +263,11 @@ export default function App() {
             {showPasswordConfirm && (
                 <PasswordConfirm
                     email={user?.email}
-                    onConfirm={() => { setView(pendingView); setShowPasswordConfirm(false); }}
+                    onConfirm={() => {
+                        setView(pendingView);
+                        localStorage.setItem('currentView', pendingView);
+                        setShowPasswordConfirm(false);
+                    }}
                     onCancel={() => setShowPasswordConfirm(false)}
                     title="Security Access"
                     message="Please enter Admin PIN to continue."

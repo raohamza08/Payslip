@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api';
 
-export default function Settings() {
+export default function Settings({ user }) {
     const [activeTab, setActiveTab] = useState('appearance');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     const [accentColor, setAccentColor] = useState(localStorage.getItem('accentColor') || '#0FB8AF');
@@ -87,19 +87,24 @@ export default function Settings() {
         }
 
         try {
-            // Verify current password
-            const isValid = await api.login(currentPassword);
-            if (!isValid) {
-                setMessage('Current password is incorrect');
+            // Get current user email from the user prop
+            const userEmail = user?.email || api.getUserEmail();
+            if (!userEmail) {
+                setMessage('Error: User email not found');
                 return;
             }
 
-            // This would need a new API endpoint to update password
-            // For now, show success message
-            setMessage('Password reset successful! (Feature coming soon)');
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            // Change password using the new API
+            const success = await api.changePassword(userEmail, currentPassword, newPassword);
+
+            if (success) {
+                setMessage('Password changed successfully!');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                setMessage('Current password is incorrect');
+            }
         } catch (e) {
             setMessage('Error: ' + e.message);
         }
@@ -168,12 +173,14 @@ export default function Settings() {
                 >
                     Need Support?
                 </button>
-                <button
-                    className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('pdf')}
-                >
-                    PDF Customization
-                </button>
+                {user?.role !== 'employee' && (
+                    <button
+                        className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('pdf')}
+                    >
+                        PDF Customization
+                    </button>
+                )}
             </div>
 
             {message && (

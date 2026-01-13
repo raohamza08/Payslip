@@ -4,6 +4,7 @@ import api from '../api';
 export default function Whitelist() {
     const [emails, setEmails] = useState([]);
     const [newEmail, setNewEmail] = useState('');
+    const [selectedRole, setSelectedRole] = useState('employee');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -24,8 +25,9 @@ export default function Whitelist() {
         if (!newEmail) return;
         setLoading(true);
         try {
-            await api.addToWhitelist(newEmail);
+            await api.addToWhitelist(newEmail, selectedRole);
             setNewEmail('');
+            setSelectedRole('employee');
             loadWhitelist();
         } catch (e) {
             alert(e.message);
@@ -50,15 +52,25 @@ export default function Whitelist() {
             <p style={{ marginBottom: 20, color: '#666' }}>Only emails listed here will be allowed to sign up for an account.</p>
 
             <div className="card" style={{ marginBottom: 20 }}>
-                <form onSubmit={handleAdd} className="flex-row" style={{ gap: 10 }}>
+                <form onSubmit={handleAdd} className="flex-row" style={{ gap: 10, flexWrap: 'wrap' }}>
                     <input
                         type="email"
                         placeholder="Enter email to whitelist..."
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
-                        style={{ flex: 1 }}
+                        style={{ flex: '1 1 250px' }}
                         required
                     />
+                    <select
+                        value={selectedRole}
+                        onChange={(e) => setSelectedRole(e.target.value)}
+                        className="form-control"
+                        style={{ width: '150px' }}
+                    >
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                        <option value="super_admin">Super Admin</option>
+                    </select>
                     <button type="submit" className="btn btn-primary" disabled={loading}>
                         {loading ? 'Adding...' : 'Add to Whitelist'}
                     </button>
@@ -70,6 +82,7 @@ export default function Whitelist() {
                     <thead>
                         <tr>
                             <th>Email Address</th>
+                            <th>Role</th>
                             <th>Whitelisted On</th>
                             <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
@@ -78,6 +91,11 @@ export default function Whitelist() {
                         {emails.map(item => (
                             <tr key={item.id}>
                                 <td><strong>{item.email}</strong></td>
+                                <td>
+                                    <span className={`badge ${item.role === 'super_admin' ? 'pending' : item.role === 'admin' ? 'approved' : ''}`}>
+                                        {item.role === 'super_admin' ? 'Super Admin' : item.role === 'admin' ? 'Admin' : 'Employee'}
+                                    </span>
+                                </td>
                                 <td>{new Date(item.created_at).toLocaleDateString()}</td>
                                 <td style={{ textAlign: 'right' }}>
                                     <button
@@ -91,7 +109,7 @@ export default function Whitelist() {
                         ))}
                         {emails.length === 0 && (
                             <tr>
-                                <td colSpan="3" style={{ textAlign: 'center', padding: 20 }}>No emails whitelisted yet.</td>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: 20 }}>No emails whitelisted yet.</td>
                             </tr>
                         )}
                     </tbody>

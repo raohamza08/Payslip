@@ -42,13 +42,13 @@ const api = {
         if (data.success) currentUserEmail = email;
         return data.success;
     },
-    signup: async (email, password) => {
+    signup: async (email, password, masterPassword = null) => {
         const data = await api.fetchJson(`${API_BASE}/auth/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password, masterPassword })
         });
-        return data.success;
+        return data;
     },
     login: async (email, password) => {
         const data = await api.fetchJson(`${API_BASE}/auth/login`, {
@@ -59,11 +59,26 @@ const api = {
         if (data.success) currentUserEmail = email;
         return data;
     },
+    checkRole: async (email) => {
+        return await api.fetchJson(`${API_BASE}/auth/check-role`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+    },
     confirmAction: async (email, password) => {
         const data = await api.fetchJson(`${API_BASE}/auth/confirm`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
+        });
+        return data.success;
+    },
+    changePassword: async (email, currentPassword, newPassword) => {
+        const data = await api.fetchJson(`${API_BASE}/auth/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, currentPassword, newPassword })
         });
         return data.success;
     },
@@ -291,16 +306,35 @@ const api = {
     getWhitelist: async () => {
         return await api.fetchJson(`${API_BASE}/whitelist`);
     },
-    addToWhitelist: async (email) => {
+    addToWhitelist: async (email, role = 'employee') => {
         return await api.fetchJson(`${API_BASE}/whitelist`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, role })
         });
     },
     deleteFromWhitelist: async (id) => {
         return await api.fetchJson(`${API_BASE}/whitelist/${id}`, {
             method: 'DELETE'
+        });
+    },
+
+    // User Management (Super Admin)
+    getUsers: async () => {
+        return await api.fetchJson(`${API_BASE}/users`);
+    },
+    resetUserMasterPassword: async (email, newMasterPassword) => {
+        return await api.fetchJson(`${API_BASE}/users/reset-master-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, newMasterPassword })
+        });
+    },
+    resetUserLoginPassword: async (email, newPassword) => {
+        return await api.fetchJson(`${API_BASE}/users/reset-login-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, newPassword })
         });
     },
 

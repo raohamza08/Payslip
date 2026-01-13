@@ -5,8 +5,26 @@ export default function Login({ onLogin }) {
     const [isSignup, setIsSignup] = useState(window.location.pathname === '/signup');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [masterPassword, setMasterPassword] = useState('');
+    const [confirmMasterPassword, setConfirmMasterPassword] = useState('');
+    const [requiresMasterPassword, setRequiresMasterPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Check if email requires master password (admin role)
+    const checkEmailRole = async (emailValue) => {
+        if (!isSignup || !emailValue) return;
+        try {
+            const result = await api.checkRole(emailValue);
+            if (result.exists && (result.role === 'admin' || result.role === 'super_admin')) {
+                setRequiresMasterPassword(true);
+            } else {
+                setRequiresMasterPassword(false);
+            }
+        } catch (e) {
+            console.error('Failed to check role:', e);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,9 +32,26 @@ export default function Login({ onLogin }) {
         setLoading(true);
         try {
             if (isSignup) {
-                await api.signup(email, password);
-                alert('Account created! Please login.');
+                // Validate master password for admins
+                if (requiresMasterPassword) {
+                    if (!masterPassword || masterPassword.length < 8) {
+                        setError('Master password must be at least 8 characters');
+                        setLoading(false);
+                        return;
+                    }
+                    if (masterPassword !== confirmMasterPassword) {
+                        setError('Master passwords do not match');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                const result = await api.signup(email, password, masterPassword || null);
+                alert(`Account created as ${result.role}! Please login.`);
                 setIsSignup(false);
+                setMasterPassword('');
+                setConfirmMasterPassword('');
+                setRequiresMasterPassword(false);
             } else {
                 const res = await api.login(email, password);
                 if (res.success) {
@@ -43,14 +78,18 @@ export default function Login({ onLogin }) {
                         <input
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (isSignup) checkEmailRole(e.target.value);
+                            }}
+                            onBlur={() => isSignup && checkEmailRole(email)}
                             placeholder="name@euroshub.com"
                             autoComplete="username"
                             required
                         />
                     </div>
                     <div className="form-group">
-                        <label>Password</label>
+                        <label>{isSignup ? 'Login Password' : 'Password'}</label>
                         <input
                             type="password"
                             value={password}
@@ -59,7 +98,37 @@ export default function Login({ onLogin }) {
                             autoComplete={isSignup ? "new-password" : "current-password"}
                             required
                         />
+                        {isSignup && <small style={{ color: '#666', fontSize: '12px' }}>Used for logging into the system</small>}
                     </div>
+
+                    {isSignup && requiresMasterPassword && (
+                        <>
+                            <div className="form-group">
+                                <label>Master Password</label>
+                                <input
+                                    type="password"
+                                    value={masterPassword}
+                                    onChange={(e) => setMasterPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <small style={{ color: '#666', fontSize: '12px' }}>Used for accessing sensitive sections (min. 8 characters)</small>
+                            </div>
+                            <div className="form-group">
+                                <label>Confirm Master Password</label>
+                                <input
+                                    type="password"
+                                    value={confirmMasterPassword}
+                                    onChange={(e) => setConfirmMasterPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+
                     <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
                         {loading ? 'Processing...' : (isSignup ? 'Sign Up' : 'Login')}
                     </button>
