@@ -107,11 +107,13 @@ export default function AssetManagement() {
 
     return (
         <div className="p-20">
-            <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: '20px' }}>
+            <div className="toolbar">
                 <h1>Asset Management</h1>
-                <button className="btn btn-primary" onClick={() => { setEditingAsset(null); setShowModal(true); }}>
-                    + Add New Asset
-                </button>
+                <div className="toolbar-group">
+                    <button className="btn btn-primary" onClick={() => { setEditingAsset(null); setShowModal(true); }}>
+                        + Add New Asset
+                    </button>
+                </div>
             </div>
 
             <div className="grid-3" style={{ marginBottom: '20px' }}>

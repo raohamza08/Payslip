@@ -26,10 +26,10 @@ export default function EmployeeList({ onEdit }) {
 
     return (
         <div>
-            <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div className="toolbar">
                 <h1>Employees</h1>
-                <div>
-                    <button className="btn btn-secondary" style={{ marginRight: '10px' }} onClick={() => exportToCSV(employees, 'employees_list')}>Export to CSV</button>
+                <div className="toolbar-group">
+                    <button className="btn btn-secondary" onClick={() => exportToCSV(employees, 'employees_list')}>Export CSV</button>
                     <button className="btn btn-primary" onClick={() => onEdit({})}>+ Add Employee</button>
                 </div>
             </div>

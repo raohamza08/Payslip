@@ -20,7 +20,7 @@ export default function UserManagement() {
                 <ul>
                     <li><strong>Super Admin</strong>: Full access to everything.</li>
                     <li><strong>Admin</strong>: Access to HR/Payroll but no Logs/Whitelist.</li>
-                    <li><strong>Employee</strong>: Portal access only.</li>
+                    <li><strong>Employee</strong>: EurosHub Portal access only.</li>
                 </ul>
             </div>
         </div>

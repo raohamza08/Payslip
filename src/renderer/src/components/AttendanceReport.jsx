@@ -102,8 +102,8 @@ export default function AttendanceReport() {
 
     return (
         <div className="p-20">
-            <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="toolbar">
+                <div className="toolbar-group">
                     <button
                         className={`btn ${activeTab === 'attendance' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setActiveTab('attendance')}
@@ -118,7 +118,7 @@ export default function AttendanceReport() {
                     </button>
                 </div>
 
-                <div className="flex-row" style={{ gap: '10px' }}>
+                <div className="toolbar-group">
                     {activeTab === 'attendance' && (
                         <>
                             <select className="form-control" style={{ width: '130px' }} value={month} onChange={e => setMonth(parseInt(e.target.value))}>

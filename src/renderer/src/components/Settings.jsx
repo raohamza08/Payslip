@@ -107,7 +107,7 @@ export default function Settings() {
 
     const predefinedColors = [
         // Professional Blues
-        { name: 'EurosHub', value: '#0FB8AF' },
+        { name: 'EuroShub', value: '#0FB8AF' },
         { name: 'Ocean Blue', value: '#0077B6' },
         { name: 'Corporate Blue', value: '#1E3A8A' },
         { name: 'Sky Blue', value: '#0EA5E9' },
@@ -149,73 +149,28 @@ export default function Settings() {
             <h1>Settings</h1>
 
             {/* Tab Navigation */}
-            <div style={{
-                display: 'flex',
-                gap: '10px',
-                borderBottom: '2px solid #e0e0e0',
-                marginBottom: '30px'
-            }}>
+            <div className="tab-nav">
                 <button
                     className={`tab-btn ${activeTab === 'appearance' ? 'active' : ''}`}
                     onClick={() => setActiveTab('appearance')}
-                    style={{
-                        padding: '12px 24px',
-                        border: 'none',
-                        background: activeTab === 'appearance' ? accentColor : 'transparent',
-                        color: activeTab === 'appearance' ? '#fff' : '#666',
-                        cursor: 'pointer',
-                        borderRadius: '8px 8px 0 0',
-                        fontWeight: activeTab === 'appearance' ? 'bold' : 'normal',
-                        transition: 'all 0.3s'
-                    }}
                 >
                     Appearance
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveTab('security')}
-                    style={{
-                        padding: '12px 24px',
-                        border: 'none',
-                        background: activeTab === 'security' ? accentColor : 'transparent',
-                        color: activeTab === 'security' ? '#fff' : '#666',
-                        cursor: 'pointer',
-                        borderRadius: '8px 8px 0 0',
-                        fontWeight: activeTab === 'security' ? 'bold' : 'normal',
-                        transition: 'all 0.3s'
-                    }}
                 >
                     Security
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
                     onClick={() => setActiveTab('support')}
-                    style={{
-                        padding: '12px 24px',
-                        border: 'none',
-                        background: activeTab === 'support' ? accentColor : 'transparent',
-                        color: activeTab === 'support' ? '#fff' : '#666',
-                        cursor: 'pointer',
-                        borderRadius: '8px 8px 0 0',
-                        fontWeight: activeTab === 'support' ? 'bold' : 'normal',
-                        transition: 'all 0.3s'
-                    }}
                 >
                     Need Support?
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
                     onClick={() => setActiveTab('pdf')}
-                    style={{
-                        padding: '12px 24px',
-                        border: 'none',
-                        background: activeTab === 'pdf' ? accentColor : 'transparent',
-                        color: activeTab === 'pdf' ? '#fff' : '#666',
-                        cursor: 'pointer',
-                        borderRadius: '8px 8px 0 0',
-                        fontWeight: activeTab === 'pdf' ? 'bold' : 'normal',
-                        transition: 'all 0.3s'
-                    }}
                 >
                     PDF Customization
                 </button>
@@ -483,7 +438,7 @@ export default function Settings() {
                             <p><strong>Version:</strong> 1.2.1</p>
                             <p><strong>Database:</strong> Supabase (Global)</p>
                             <p><strong>Email Provider:</strong> Gmail SMTP Server</p>
-                            <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EurosHub</p>
+                            <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EuroShub</p>
                         </div>
                     </div>
                 </div>
@@ -610,7 +565,7 @@ export default function Settings() {
                                     textColor: '#333333',
                                     tableHeaderBg: '#0FB8AF',
                                     tableHeaderColor: '#ffffff',
-                                    companyName: 'EurosHub',
+                                    companyName: 'EuroShub',
                                     companySubtitle: 'Payroll Department',
                                     accentColor: '#0FB8AF'
                                 })}

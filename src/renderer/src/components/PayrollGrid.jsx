@@ -149,10 +149,10 @@ export default function PayrollGrid({ onNavigate }) {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div className="toolbar">
                 <h1>Payroll Grid</h1>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ padding: 8 }} />
+                <div className="toolbar-group">
+                    <input type="month" className="form-control" value={month} onChange={e => setMonth(e.target.value)} style={{ width: 'auto' }} />
                     <button className="btn btn-secondary" onClick={handleSave}>Save Changes</button>
                     <button className="btn btn-primary" onClick={() => setView('review')}>Create Payslips</button>
                 </div>

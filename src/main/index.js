@@ -12,7 +12,7 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true
         },
-        title: "EurosHub Payslips"
+        title: "EurosHub Portal"
     });
 
     if (process.env.VITE_DEV_SERVER_URL) {

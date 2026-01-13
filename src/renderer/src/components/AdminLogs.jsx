@@ -37,9 +37,9 @@ export default function AdminLogs() {
 
     return (
         <div>
-            <div className="flex-row flex-between" style={{ marginBottom: 20 }}>
+            <div className="toolbar">
                 <h1>Activity Logs</h1>
-                <div className="flex-row" style={{ gap: 10 }}>
+                <div className="toolbar-group">
                     <select
                         className="form-control"
                         value={filter}

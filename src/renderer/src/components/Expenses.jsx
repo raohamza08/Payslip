@@ -50,10 +50,10 @@ export default function Expenses() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="toolbar">
                 <h1>Company Expenses</h1>
-                <div>
-                    <button className="btn btn-secondary" style={{ marginRight: '10px' }} onClick={() => exportToCSV(expenses, 'expenses_list')}>Export to CSV</button>
+                <div className="toolbar-group">
+                    <button className="btn btn-secondary" onClick={() => exportToCSV(expenses, 'expenses_list')}>Export CSV</button>
                     <button className="btn btn-primary" onClick={() => {
                         setEditingId(null); setFormData({
                             title: '', category: 'Miscellaneous', amount: '',
@@ -77,7 +77,7 @@ export default function Expenses() {
             </div>
 
             {/* Filters */}
-            <div className="filter-bar" style={{ display: 'flex', gap: '10px', marginBottom: '20px', padding: '15px', background: '#fff', borderRadius: '8px' }}>
+            <div className="filter-bar">
                 <input type="date" value={filters.start} onChange={e => setFilters({ ...filters, start: e.target.value })} className="form-control" />
                 <input type="date" value={filters.end} onChange={e => setFilters({ ...filters, end: e.target.value })} className="form-control" />
                 <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })} className="form-control">

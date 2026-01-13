@@ -23,7 +23,7 @@ export default function EmployeePortal({ user }) {
         setLoading(false);
     };
 
-    if (loading) return <div className="loading-screen">Loading Portal...</div>;
+    if (loading) return <div className="loading-screen">Loading EurosHub Portal...</div>;
 
     if (!data) return (
         <div className="p-20 text-center" style={{ marginTop: '100px' }}>
@@ -40,29 +40,31 @@ export default function EmployeePortal({ user }) {
 
     return (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-            <div className="flex-row flex-between" style={{ marginBottom: '30px', alignItems: 'center' }}>
+            <div className="flex-row flex-between portal-header" style={{ marginBottom: '30px', alignItems: 'center' }}>
                 <div>
-                    <h1>Welcome, {profile.name}</h1>
-                    <p style={{ color: 'var(--text-light)', marginTop: '5px' }}>{profile.job_title} | {profile.department}</p>
+                    <h1 style={{ marginBottom: '5px' }}>Welcome, {profile.name}</h1>
+                    <p style={{ color: 'var(--text-light)' }}>{profile.job_title} | {profile.department}</p>
                 </div>
-                <div className="badge" style={{ padding: '10px 20px', fontSize: '14px', background: 'var(--accent)', color: 'white' }}>
+                <div className="badge portal-status" style={{ padding: '10px 20px', fontSize: '14px', background: 'var(--accent)', color: 'white' }}>
                     Status: {profile.status}
                 </div>
             </div>
 
-            <nav style={{ display: 'flex', gap: '20px', borderBottom: '1px solid var(--border)', marginBottom: '30px' }}>
+            <nav className="portal-nav" style={{ display: 'flex', gap: '20px', borderBottom: '1px solid var(--border)', marginBottom: '30px', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '5px' }}>
                 {['Dashboard', 'Attendance', 'My Leaves', 'My Payslips', 'My Assets', 'Performance', 'Documents'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
+                        className={`nav-tab ${activeTab === tab.toLowerCase().replace(' ', '-') ? 'active' : ''}`}
                         style={{
-                            padding: '10px 15px',
+                            padding: '10px 5px',
                             border: 'none',
                             background: 'none',
                             cursor: 'pointer',
                             color: activeTab === tab.toLowerCase().replace(' ', '-') ? 'var(--accent)' : 'var(--text)',
                             borderBottom: activeTab === tab.toLowerCase().replace(' ', '-') ? '3px solid var(--accent)' : 'none',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            flexShrink: 0
                         }}
                     >
                         {tab}

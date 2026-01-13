@@ -89,15 +89,16 @@ export default function Attendance() {
 
     return (
         <div>
-            <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div className="toolbar">
                 <h1>Attendance Management</h1>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="toolbar-group">
                     <button className="btn btn-secondary" onClick={handleExport}>Export to Excel</button>
                     <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        style={{ width: 150, padding: '8px 12px' }}
+                        className="form-control"
+                        style={{ width: 'auto' }}
                     />
                 </div>
             </div>

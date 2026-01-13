@@ -133,9 +133,9 @@ export default function LeaveManagement({ user }) {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="toolbar">
                 <h1>Leave Management</h1>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="toolbar-group">
                     <select
                         className="form-control"
                         value={filter}

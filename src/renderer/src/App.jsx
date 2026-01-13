@@ -115,12 +115,12 @@ export default function App() {
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <img src="/logo.png" alt="Logo" style={{ width: '60px', marginBottom: '10px' }} />
-                    <h2>EurosHub</h2>
+                    <h2>EuroShub</h2>
                 </div>
 
                 {isEmployee ? (
                     <>
-                        <NavItem id="portal" label="My Portal" icon="🏠" />
+                        <NavItem id="portal" label="EuroShub Portal" icon="🏠" />
                         <NavItem id="my-leaves" label="My Leaves" icon="📅" />
                         <NavItem id="my-performance" label="My Performance" icon="⭐" />
                         <NavItem id="my-payslips" label="My Payslips" icon="📜" />
@@ -160,26 +160,18 @@ export default function App() {
 
             <div className="main-content">
                 {/* TOP BAR */}
-                <div style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '15px 25px', background: 'white', borderBottom: '1px solid #eee',
-                    marginBottom: '10px'
-                }}>
-                    <h2 style={{ margin: 0, textTransform: 'capitalize' }}>
-                        {view.replace('-', ' ')}
+                <div className="top-bar">
+                    <h2 className="top-bar-title">
+                        {view === 'portal' ? 'EurosHub Portal' : view.replace('-', ' ')}
                     </h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div className="top-bar-actions">
                         <NotificationPanel />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{user.name || user.email}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>{user.role.replace('_', ' ')}</div>
+                        <div className="user-profile">
+                            <div className="user-info">
+                                <div className="user-name">{user.name || user.email}</div>
+                                <div className="user-role">{user.role.replace('_', ' ')}</div>
                             </div>
-                            <div style={{
-                                width: '35px', height: '35px', borderRadius: '50%', background: 'var(--accent)',
-                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontWeight: 'bold'
-                            }}>
+                            <div className="user-avatar">
                                 {(user.name || user.email)[0].toUpperCase()}
                             </div>
                         </div>

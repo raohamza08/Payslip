@@ -64,11 +64,13 @@ export default function Discipline() {
 
     return (
         <div className="p-20">
-            <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: '20px' }}>
+            <div className="toolbar">
                 <h1>Disciplinary Actions</h1>
-                <button className="btn btn-danger" onClick={() => setShowModal(true)}>
-                    + Issue Warning
-                </button>
+                <div className="toolbar-group">
+                    <button className="btn btn-danger" onClick={() => setShowModal(true)}>
+                        + Issue Warning
+                    </button>
+                </div>
             </div>
 
             <div className="card shadow" style={{ overflowX: 'auto' }}>

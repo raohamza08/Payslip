@@ -66,11 +66,13 @@ export default function PerformanceReviews({ user }) {
 
     return (
         <div className="p-20">
-            <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: '30px' }}>
+            <div className="toolbar">
                 <h1>Performance Management (KPIs)</h1>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                    + New Review
-                </button>
+                <div className="toolbar-group">
+                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                        + New Review
+                    </button>
+                </div>
             </div>
 
             <div className="table-container shadow">
