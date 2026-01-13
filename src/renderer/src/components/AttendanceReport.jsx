@@ -56,7 +56,7 @@ export default function AttendanceReport() {
 
     const exportAttendance = () => {
         if (attendanceData.length === 0) return alert('No data to export');
-        const headers = ['Employee ID', 'Name', 'Present', 'Absent', 'Leave', 'Total Days'];
+        const headers = ['Employee ID', 'Name', 'Present', 'Absent', 'Leave', 'Sitting Hours', 'Total Days'];
         const csvContent = [
             headers.join(','),
             ...attendanceData.map(row => [
@@ -65,6 +65,7 @@ export default function AttendanceReport() {
                 row.present,
                 row.absent,
                 row.leave,
+                row.sitting_hours || '0.00',
                 row.total
             ].join(','))
         ].join('\n');
@@ -150,6 +151,7 @@ export default function AttendanceReport() {
                                 <th>Present</th>
                                 <th>Absent</th>
                                 <th>Leaves</th>
+                                <th>Sitting Hours</th>
                                 <th>Total Days</th>
                             </tr>
                         </thead>
@@ -161,6 +163,7 @@ export default function AttendanceReport() {
                                     <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>{row.present}</td>
                                     <td style={{ color: 'var(--danger)', fontWeight: 'bold' }}>{row.absent}</td>
                                     <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>{row.leave}</td>
+                                    <td style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{row.sitting_hours || '0.00'} hrs</td>
                                     <td>{row.total}</td>
                                 </tr>
                             ))}

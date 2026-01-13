@@ -51,7 +51,7 @@ export default function EmployeePortal({ user }) {
             </div>
 
             <nav style={{ display: 'flex', gap: '20px', borderBottom: '1px solid var(--border)', marginBottom: '30px' }}>
-                {['Dashboard', 'My Leaves', 'My Payslips', 'My Assets', 'Performance', 'Documents'].map(tab => (
+                {['Dashboard', 'Attendance', 'My Leaves', 'My Payslips', 'My Assets', 'Performance', 'Documents'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
@@ -162,6 +162,7 @@ export default function EmployeePortal({ user }) {
             )}
 
             {/* Sub-modules would be implemented as separate components or conditional renders here */}
+            {activeTab === 'attendance' && <AttendanceModule employeeId={profile.id} />}
             {activeTab === 'my-leaves' && <LeaveModule employeeId={profile.id} />}
             {activeTab === 'my-assets' && <AssetModule employeeId={profile.id} employeeName={profile.name} />}
             {activeTab === 'my-warnings' && <WarningModule employeeId={profile.id} />}
@@ -173,6 +174,73 @@ export default function EmployeePortal({ user }) {
 }
 
 // Internal sub-components for simplicity (in a real app, these would be separate files)
+function AttendanceModule({ employeeId }) {
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [month, setMonth] = useState(new Date().getMonth() + 1);
+    const [year, setYear] = useState(new Date().getFullYear());
+
+    useEffect(() => {
+        loadLogs();
+    }, [month, year]);
+
+    const loadLogs = async () => {
+        setLoading(true);
+        try {
+            const data = await api.getSittingHours(employeeId, month, year);
+            setLogs(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="card shadow">
+            <div className="flex-row flex-between" style={{ marginBottom: '20px' }}>
+                <h2>My Attendance & Sitting Hours</h2>
+                <div className="flex-row" style={{ gap: '10px' }}>
+                    <select className="form-control" value={month} onChange={e => setMonth(e.target.value)}>
+                        {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
+                        ))}
+                    </select>
+                    <select className="form-control" value={year} onChange={e => setYear(e.target.value)}>
+                        {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {loading ? <p>Loading logs...</p> : (
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>First IN</th>
+                                <th>Last OUT</th>
+                                <th>Total Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {logs.map(log => (
+                                <tr key={log.day}>
+                                    <td>{new Date(log.day).toLocaleDateString()}</td>
+                                    <td>{log.in ? new Date(log.in).toLocaleTimeString() : '-'}</td>
+                                    <td>{log.out ? new Date(log.out).toLocaleTimeString() : '-'}</td>
+                                    <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{log.hours} hrs</td>
+                                </tr>
+                            ))}
+                            {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this period.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function LeaveModule({ employeeId }) {
     const [leaves, setLeaves] = useState([]);
     const [showForm, setShowForm] = useState(false);

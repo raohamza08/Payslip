@@ -888,8 +888,43 @@ app.get('/api/portal/dashboard', async (req, res) => {
             return res.status(404).json({ error: "Employee profile not found in Supabase" });
         }
 
+        // Calculate sitting hours for current month
+        let monthlySittingHours = 0;
+        if (profile && profile.biometric_id) {
+            const now = new Date();
+            const startOfMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-01`;
+            const endOfMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-31`;
+
+            const { data: logs } = await supabase.from('biometric_logs')
+                .select('*')
+                .eq('biometric_id', profile.biometric_id)
+                .gte('timestamp', startOfMonth)
+                .lte('timestamp', endOfMonth);
+
+            if (logs && logs.length > 0) {
+                const dayMap = {};
+                logs.forEach(log => {
+                    const day = new Date(log.timestamp).toISOString().split('T')[0];
+                    if (!dayMap[day]) dayMap[day] = { in: null, out: null };
+                    if (log.direction === 'IN' && (!dayMap[day].in || new Date(log.timestamp) < new Date(dayMap[day].in))) {
+                        dayMap[day].in = log.timestamp;
+                    }
+                    if (log.direction === 'OUT' && (!dayMap[day].out || new Date(log.timestamp) > new Date(dayMap[day].out))) {
+                        dayMap[day].out = log.timestamp;
+                    }
+                });
+
+                Object.values(dayMap).forEach(times => {
+                    if (times.in && times.out) {
+                        const h = (new Date(times.out) - new Date(times.in)) / (1000 * 60 * 60);
+                        if (h > 0) monthlySittingHours += h;
+                    }
+                });
+            }
+        }
+
         res.json({
-            profile,
+            profile: { ...profile, sitting_hours: monthlySittingHours.toFixed(2) },
             ...dashboardData
         });
     } catch (e) {
@@ -1329,16 +1364,36 @@ app.get('/api/attendance/report', async (req, res) => {
 
         const report = await Promise.all(employees.map(async emp => {
             let present = 0;
+            let sittingHours = 0;
             if (emp.biometric_id) {
                 const { data: logs } = await supabase.from('biometric_logs')
-                    .select('timestamp')
+                    .select('*')
                     .eq('biometric_id', emp.biometric_id)
                     .gte('timestamp', startDate)
                     .lte('timestamp', endDate);
 
-                // Count unique days with logs
-                const uniqueDays = new Set((logs || []).map(l => new Date(l.timestamp).toISOString().split('T')[0]));
-                present = uniqueDays.size;
+                if (logs && logs.length > 0) {
+                    const dayMap = {};
+                    logs.forEach(log => {
+                        const day = new Date(log.timestamp).toISOString().split('T')[0];
+                        if (!dayMap[day]) dayMap[day] = { in: null, out: null };
+                        if (log.direction === 'IN' && (!dayMap[day].in || new Date(log.timestamp) < new Date(dayMap[day].in))) {
+                            dayMap[day].in = log.timestamp;
+                        }
+                        if (log.direction === 'OUT' && (!dayMap[day].out || new Date(log.timestamp) > new Date(dayMap[day].out))) {
+                            dayMap[day].out = log.timestamp;
+                        }
+                    });
+
+                    Object.values(dayMap).forEach(times => {
+                        if (times.in && times.out) {
+                            const h = (new Date(times.out) - new Date(times.in)) / (1000 * 60 * 60);
+                            if (h > 0) sittingHours += h;
+                        }
+                    });
+
+                    present = Object.keys(dayMap).length;
+                }
             }
 
             const { data: approvedLeaves } = await supabase.from('leave_requests')
@@ -1358,7 +1413,8 @@ app.get('/api/attendance/report', async (req, res) => {
                 present,
                 leave: leave || 0,
                 absent,
-                total
+                total,
+                sitting_hours: sittingHours.toFixed(2)
             };
         }));
 

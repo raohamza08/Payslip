@@ -22,9 +22,12 @@ export default function PerformanceReviews({ user }) {
 
     const loadData = async () => {
         try {
-            const emps = await api.getEmployees();
+            const [emps, data] = await Promise.all([
+                api.getEmployees(),
+                api.fetchJson('/api/performance')
+            ]);
             setEmployees(emps);
-            // In a real app, we'd fetch existing reviews here
+            setReviews(data || []);
         } catch (e) {
             console.error(e);
         }
@@ -55,7 +58,7 @@ export default function PerformanceReviews({ user }) {
             await api.saveReview(reviewData);
             alert(`Performance Review Submitted! Final Rating: ${final_rating}/5`);
             setShowModal(false);
-            loadData(); // Reload list if we were showing it
+            loadData();
         } catch (e) {
             alert(e.message);
         }
@@ -63,16 +66,57 @@ export default function PerformanceReviews({ user }) {
 
     return (
         <div className="p-20">
-            <div className="flex-row flex-between" style={{ alignItems: 'center' }}>
+            <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: '30px' }}>
                 <h1>Performance Management (KPIs)</h1>
                 <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                     + New Review
                 </button>
             </div>
 
-            <div className="card" style={{ marginTop: '20px', textAlign: 'center', color: '#666', padding: '40px' }}>
-                <p>Select "New Review" to evaluate an employee.</p>
-                <p>Past reviews will appear here.</p>
+            <div className="table-container shadow">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Period</th>
+                            <th>Quality</th>
+                            <th>Speed</th>
+                            <th>Initiative</th>
+                            <th>Teamwork</th>
+                            <th>Attendance</th>
+                            <th>Final</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {reviews.map(r => (
+                            <tr key={r.id}>
+                                <td><strong>{r.employees?.name || 'Unknown'}</strong></td>
+                                <td>{r.period}</td>
+                                <td>{r.quality_rating}</td>
+                                <td>{r.speed_rating}</td>
+                                <td>{r.initiative_rating}</td>
+                                <td>{r.teamwork_rating}</td>
+                                <td>{r.attendance_rating}</td>
+                                <td>
+                                    <span style={{
+                                        padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold',
+                                        background: r.final_rating >= 4 ? '#dcfce7' : r.final_rating >= 3 ? '#fef9c3' : '#fee2e2',
+                                        color: r.final_rating >= 4 ? '#166534' : r.final_rating >= 3 ? '#854d0e' : '#991b1b'
+                                    }}>
+                                        {r.final_rating}
+                                    </span>
+                                </td>
+                                <td style={{ fontSize: '12px', color: '#666' }}>
+                                    {new Date(r.review_date).toLocaleDateString()}
+                                </td>
+                            </tr>
+                        ))}
+                        {reviews.length === 0 && (
+                            <tr><td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>No performance reviews found.</td></tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             {showModal && (
