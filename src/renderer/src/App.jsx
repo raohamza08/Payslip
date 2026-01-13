@@ -75,9 +75,8 @@ export default function App() {
         if (window.innerWidth <= 768) setSidebarOpen(false);
     };
 
-    const NavItem = ({ id, label, icon }) => (
+    const NavItem = ({ id, label }) => (
         <div className={`nav-item ${view === id ? 'active' : ''}`} onClick={() => handleNavClick(id)}>
-            <span style={{ marginRight: 10 }}>{icon || '•'}</span>
             {label}
         </div>
     );
@@ -120,41 +119,41 @@ export default function App() {
 
                 {isEmployee ? (
                     <>
-                        <NavItem id="portal" label="EuroShub Portal" icon="🏠" />
-                        <NavItem id="my-leaves" label="My Leaves" icon="📅" />
-                        <NavItem id="my-performance" label="My Performance" icon="⭐" />
-                        <NavItem id="my-payslips" label="My Payslips" icon="📜" />
+                        <NavItem id="portal" label="EuroShub Portal" />
+                        <NavItem id="my-leaves" label="My Leaves" />
+                        <NavItem id="my-performance" label="My Performance" />
+                        <NavItem id="my-payslips" label="My Payslips" />
                     </>
                 ) : (
                     <>
-                        <NavItem id="dashboard" label={user.role === 'super_admin' ? 'Super Admin' : 'HR Dashboard'} icon="📊" />
-                        <div className="nav-group">PAYROLL & HR</div>
-                        <NavItem id="employees" label="Employees" icon="👥" />
-                        <NavItem id="payroll" label="Payroll Grid" icon="💰" />
-                        <NavItem id="admin-leaves" label="Leave Requests" icon="📅" />
-                        <NavItem id="assets" label="Asset Management" icon="💻" />
+                        <NavItem id="dashboard" label={user.role === 'super_admin' ? 'Super Admin' : 'HR Dashboard'} />
+                        <div className="nav-group">PAYROLL & HAHA</div>
+                        <NavItem id="employees" label="Employees" />
+                        <NavItem id="payroll" label="Payroll Grid" />
+                        <NavItem id="admin-leaves" label="Leave Requests" />
+                        <NavItem id="assets" label="Asset Management" />
 
                         <div className="nav-group">OPERATIONS</div>
-                        <NavItem id="attendance" label="Attendance" icon="🕒" />
-                        <NavItem id="reports" label="Reports & KPIs" icon="📈" />
-                        <NavItem id="expenses" label="Expenses" icon="💸" />
-                        <NavItem id="performance" label="KPIs & Reviews" icon="⭐" />
-                        <NavItem id="warnings" label="Discipline" icon="⚠️" />
+                        <NavItem id="attendance" label="Attendance" />
+                        <NavItem id="reports" label="Reports & KPIs" />
+                        <NavItem id="expenses" label="Expenses" />
+                        <NavItem id="performance" label="KPIs & Reviews" />
+                        <NavItem id="warnings" label="Discipline" />
 
                         {user.role === 'super_admin' && (
                             <>
                                 <div className="nav-group">SYSTEM (Super Admin)</div>
-                                <NavItem id="whitelist" label="Whitelist" icon="🔒" />
-                                <NavItem id="logs" label="Activity Logs" icon="📋" />
+                                <NavItem id="whitelist" label="Whitelist" />
+                                <NavItem id="logs" label="Activity Logs" />
                             </>
                         )}
                     </>
                 )}
 
                 <div className="spacer"></div>
-                <NavItem id="settings" label="Settings" icon="⚙️" />
+                <NavItem id="settings" label="Settings" />
                 <div className="nav-item logout" onClick={() => { setAuth(false); setUser(null); api.setUser(null); }}>
-                    <span style={{ marginRight: 10 }}>🚪</span> Logout
+                    Logout
                 </div>
             </div>
 
@@ -229,15 +228,15 @@ function AdminDashboard({ onNav }) {
         <div style={{ padding: '10px' }}>
             <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
                 <div className="card shadow clickable" onClick={() => onNav('payroll')}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>💰 Run Payroll</h3>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Run Payroll</h3>
                     <p style={{ color: '#666', fontSize: '14px' }}>Process salaries for current month</p>
                 </div>
                 <div className="card shadow clickable" onClick={() => onNav('admin-leaves')}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>📅 Pending Leaves</h3>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Pending Leaves</h3>
                     <p style={{ color: '#666', fontSize: '14px' }}>New requests waiting for approval</p>
                 </div>
                 <div className="card shadow clickable" onClick={() => onNav('attendance')}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>🕒 Daily Attendance</h3>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Daily Attendance</h3>
                     <p style={{ color: '#666', fontSize: '14px' }}>View today's check-ins</p>
                 </div>
             </div>

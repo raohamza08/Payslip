@@ -61,7 +61,7 @@ export default function Expenses() {
                             payment_method: 'Cash', reference_number: ''
                         }); setShowModal(true);
                     }}>
-                        + Add Expense
+                        Add Expense
                     </button>
                 </div>
             </div>

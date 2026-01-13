@@ -70,7 +70,7 @@ export default function PerformanceReviews({ user }) {
                 <h1>Performance Management (KPIs)</h1>
                 <div className="toolbar-group">
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                        + New Review
+                        New Review
                     </button>
                 </div>
             </div>

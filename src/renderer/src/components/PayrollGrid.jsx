@@ -265,9 +265,9 @@ export default function PayrollGrid({ onNavigate }) {
 
                             return (
                                 <div key={i} style={{ color }}>
-                                    {L.status === 'Success' ? `✓ ${L.emp}: ${L.msg}` :
-                                        L.status === 'Partial' ? `⚠ ${L.emp}: ${L.msg}` :
-                                            `✗ ${L.emp}: ${L.msg}`}
+                                    {L.status === 'Success' ? `Success: ${L.emp}: ${L.msg}` :
+                                        L.status === 'Partial' ? `Partial: ${L.emp}: ${L.msg}` :
+                                            `Failed: ${L.emp}: ${L.msg}`}
                                 </div>
                             );
                         })}
@@ -276,7 +276,7 @@ export default function PayrollGrid({ onNavigate }) {
                     {progress.current === progress.total && (
                         <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'center' }}>
                             <button className="btn btn-success" onClick={() => api.downloadBulkPayslips(progress.ids, `Payslips_${month}.zip`)}>
-                                📥 Download All (ZIP)
+                                Download All (ZIP)
                             </button>
                             <button className="btn btn-primary" onClick={() => onNavigate('history')}>
                                 View All Payslips
@@ -297,10 +297,10 @@ export default function PayrollGrid({ onNavigate }) {
                             <div key={i} className="flex-row" style={{ marginBottom: 10 }}>
                                 <input value={item.name} onChange={e => updateModalItem(i, 'name', e.target.value)} placeholder="Name" style={{ flex: 2, marginRight: 5 }} />
                                 <input type="number" value={item.amount} onChange={e => updateModalItem(i, 'amount', e.target.value)} placeholder="Amount" style={{ flex: 1, marginRight: 5 }} />
-                                <button className="btn btn-danger" onClick={() => removeModalItem(i)}>X</button>
+                                <button className="btn btn-danger" onClick={() => removeModalItem(i)}>Remove</button>
                             </div>
                         ))}
-                        <button className="btn btn-secondary" onClick={addModalItem}>+ Add Item</button>
+                        <button className="btn btn-secondary" onClick={addModalItem}>Add Item</button>
                         <div className="flex-row flex-end" style={{ marginTop: 20 }}>
                             <button className="btn btn-secondary" onClick={() => setEditingCell(null)}>Cancel</button>
                             <button className="btn btn-primary" onClick={saveModal}>Save</button>

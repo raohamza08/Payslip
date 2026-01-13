@@ -111,7 +111,7 @@ export default function AssetManagement() {
                 <h1>Asset Management</h1>
                 <div className="toolbar-group">
                     <button className="btn btn-primary" onClick={() => { setEditingAsset(null); setShowModal(true); }}>
-                        + Add New Asset
+                        Add New Asset
                     </button>
                 </div>
             </div>

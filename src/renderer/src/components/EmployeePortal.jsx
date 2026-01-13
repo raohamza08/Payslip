@@ -137,7 +137,7 @@ export default function EmployeePortal({ user }) {
                     <div className="card shadow">
                         <h3>Warnings & Alerts</h3>
                         {warnings.length === 0 ? (
-                            <p style={{ padding: '20px', textAlign: 'center', color: 'var(--success)' }}>✅ No active warnings</p>
+                            <p style={{ padding: '20px', textAlign: 'center', color: 'var(--success)' }}>No active warnings</p>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                                 {warnings.map(w => (

@@ -30,7 +30,7 @@ export default function EmployeeList({ onEdit }) {
                 <h1>Employees</h1>
                 <div className="toolbar-group">
                     <button className="btn btn-secondary" onClick={() => exportToCSV(employees, 'employees_list')}>Export CSV</button>
-                    <button className="btn btn-primary" onClick={() => onEdit({})}>+ Add Employee</button>
+                    <button className="btn btn-primary" onClick={() => onEdit({})}>Add Employee</button>
                 </div>
             </div>
 

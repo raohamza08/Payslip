@@ -148,7 +148,7 @@ export default function LeaveManagement({ user }) {
                         <option value="Rejected">Rejected</option>
                     </select>
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                        + Request Leave
+                        Request Leave
                     </button>
                 </div>
             </div>

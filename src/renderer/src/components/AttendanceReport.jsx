@@ -108,13 +108,13 @@ export default function AttendanceReport() {
                         className={`btn ${activeTab === 'attendance' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setActiveTab('attendance')}
                     >
-                        🕒 Attendance Report
+                        Attendance Report
                     </button>
                     <button
                         className={`btn ${activeTab === 'kpi' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setActiveTab('kpi')}
                     >
-                        ⭐ KPI Performance Report
+                        KPI Performance Report
                     </button>
                 </div>
 
@@ -134,7 +134,7 @@ export default function AttendanceReport() {
                         </>
                     )}
                     <button className="btn btn-secondary" onClick={handleExport}>
-                        📥 Export CSV
+                        Export CSV
                     </button>
                 </div>
             </div>

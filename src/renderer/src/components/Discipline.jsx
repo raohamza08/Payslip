@@ -68,7 +68,7 @@ export default function Discipline() {
                 <h1>Disciplinary Actions</h1>
                 <div className="toolbar-group">
                     <button className="btn btn-danger" onClick={() => setShowModal(true)}>
-                        + Issue Warning
+                        Issue Warning
                     </button>
                 </div>
             </div>
