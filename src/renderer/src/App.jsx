@@ -23,6 +23,7 @@ import Discipline from './components/Discipline';
 import MyPerformance from './components/MyPerformance';
 import NotificationPanel from './components/NotificationPanel';
 import UserManagement from './components/UserManagement';
+import ToastManager, { showToast } from './components/ToastManager';
 import api from './api';
 
 export default function App() {
@@ -45,6 +46,15 @@ export default function App() {
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
         document.body.className = savedTheme;
         document.documentElement.style.setProperty('--accent', savedAccent);
+
+        // Override default alert with professional toast
+        window.alert = (message) => {
+            const type = message && message.toLowerCase().includes('error') ? 'error' : 'info';
+            showToast(message, type);
+        };
+
+        // Make toast globally available as window.toast
+        window.toast = showToast;
 
         // Restore session if exists
         restoreSession();
@@ -273,6 +283,7 @@ export default function App() {
                     message="Please enter Admin PIN to continue."
                 />
             )}
+            <ToastManager />
         </div>
     );
 }

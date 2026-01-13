@@ -1453,13 +1453,24 @@ app.put('/api/warnings/:id/explanation', async (req, res) => {
 
 app.get('/api/notifications', async (req, res) => {
     try {
-        const userEmail = req.headers['x-user-email'] || 'unknown';
-        // Fetch notifications for specific user or general admin
-        const { data, error } = await supabase.from('notifications')
-            .select('*')
-            .or(`target_user_id.eq."${userEmail}",target_user_id.eq.admin`)
-            .order('created_at', { ascending: false })
-            .limit(20);
+        const userEmail = req.headers['x-user-email'];
+        if (!userEmail) return res.json([]);
+
+        // 1. Get user role to determine access
+        const { data: user } = await supabase.from('users').select('role').eq('email', userEmail).single();
+        const role = user ? user.role : 'employee';
+
+        let query = supabase.from('notifications').select('*');
+
+        if (role === 'admin' || role === 'super_admin') {
+            // Admins see their own AND 'admin' targeted notifs
+            query = query.or(`target_user_id.eq."${userEmail}",target_user_id.eq.admin`);
+        } else {
+            // Employees ONLY see notifs targeted mainly to them
+            query = query.eq('target_user_id', userEmail);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false }).limit(20);
 
         if (error) throw error;
         res.json(data);
@@ -1468,6 +1479,8 @@ app.get('/api/notifications', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
+
 
 app.put('/api/notifications/:id/read', async (req, res) => {
     try {
