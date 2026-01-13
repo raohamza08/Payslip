@@ -552,7 +552,7 @@ function DocumentModule({ employeeId }) {
     }, []);
 
     const handleDownload = (path, name) => {
-        const url = `http://localhost:3000/uploads/documents/${path}`;
+        const url = `/uploads/documents/${path}`;
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', name);

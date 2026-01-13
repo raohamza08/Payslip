@@ -103,7 +103,7 @@ export default function DocumentManager({ employee, onClose }) {
                                         </div>
                                         <div className="flex-row" style={{ gap: '5px' }}>
                                             <a
-                                                href={`http://localhost:3000/uploads/documents/${doc.file_path}`}
+                                                href={`/uploads/documents/${doc.file_path}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="btn btn-sm btn-secondary"
