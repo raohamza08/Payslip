@@ -421,6 +421,28 @@ const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+    },
+    fetchCSVProxy: async (url) => {
+        const res = await fetch(`${API_BASE}/proxy/csv?url=${encodeURIComponent(url)}`);
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || res.statusText);
+        }
+        return await res.text();
+    },
+    importBiometricLogs: async (logs) => {
+        return await api.fetchJson(`${API_BASE}/biometric/import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logs })
+        });
+    },
+    getBiometricLogs: async (date) => {
+        const q = date ? `?date=${date}` : '';
+        return await api.fetchJson(`${API_BASE}/biometric/all${q}`);
+    },
+    getMyBiometricLogs: async () => {
+        return await api.fetchJson(`${API_BASE}/biometric/me`);
     }
 };
 

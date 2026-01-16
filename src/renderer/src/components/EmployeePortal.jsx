@@ -89,7 +89,7 @@ export default function EmployeePortal({ user }) {
                     <div className="card shadow">
                         <h3>Leave Balance</h3>
                         <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--warning)', margin: '15px 0' }}>
-                            {leaves && leaves.filter(l => l.status === 'Approved').reduce((acc, l) => acc + (Number(l.days_count) || 0), 0)} / 20
+                            {leaves && leaves.filter(l => l.status === 'Approved').reduce((acc, l) => acc + (Number(l.days_count) || 0), 0)} / 26
                         </p>
                         <p style={{ fontSize: '14px', color: 'var(--text-light)' }}>Days used this year</p>
                     </div>
@@ -182,12 +182,14 @@ export default function EmployeePortal({ user }) {
 // Internal sub-components for simplicity (in a real app, these would be separate files)
 function AttendanceModule({ employeeId }) {
     const [logs, setLogs] = useState([]);
+    const [rawLogs, setRawLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
         loadLogs();
+        loadRawLogs();
     }, [month, year]);
 
     const loadLogs = async () => {
@@ -200,6 +202,13 @@ function AttendanceModule({ employeeId }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadRawLogs = async () => {
+        try {
+            const data = await api.getMyBiometricLogs();
+            setRawLogs(data);
+        } catch (e) { console.error(e); }
     };
 
     return (
@@ -219,29 +228,56 @@ function AttendanceModule({ employeeId }) {
             </div>
 
             {loading ? <p>Loading logs...</p> : (
-                <div className="table-container">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>First IN</th>
-                                <th>Last OUT</th>
-                                <th>Total Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {logs.map(log => (
-                                <tr key={log.day}>
-                                    <td>{new Date(log.day).toLocaleDateString()}</td>
-                                    <td>{log.in ? new Date(log.in).toLocaleTimeString() : '-'}</td>
-                                    <td>{log.out ? new Date(log.out).toLocaleTimeString() : '-'}</td>
-                                    <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{log.hours} hrs</td>
+                <>
+                    <div className="table-container">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>First IN</th>
+                                    <th>Last OUT</th>
+                                    <th>Total Hours</th>
                                 </tr>
-                            ))}
-                            {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this period.</td></tr>}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {logs.map(log => (
+                                    <tr key={log.day}>
+                                        <td>{new Date(log.day).toLocaleDateString()}</td>
+                                        <td>{log.in ? new Date(log.in).toLocaleTimeString() : '-'}</td>
+                                        <td>{log.out ? new Date(log.out).toLocaleTimeString() : '-'}</td>
+                                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{log.hours} hrs</td>
+                                    </tr>
+                                ))}
+                                {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this period.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Recent Biometric Scans (Last 100)</h3>
+                    <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <table className="table">
+                            <thead><tr><th>Time</th><th>Scan Type</th><th>Direction</th></tr></thead>
+                            <tbody>
+                                {rawLogs.map(log => (
+                                    <tr key={log.id}>
+                                        <td>{new Date(log.timestamp).toLocaleString()}</td>
+                                        <td>Biometric/Punch</td>
+                                        <td>
+                                            <span style={{
+                                                padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
+                                                background: log.direction === 'IN' ? '#dcfce7' : '#fee2e2',
+                                                color: log.direction === 'IN' ? '#166534' : '#991b1b'
+                                            }}>
+                                                {log.direction}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {rawLogs.length === 0 && <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999' }}>No recent scans found. Ensure your User Name matches the attendance sheet.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
         </div>
     );

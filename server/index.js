@@ -1664,6 +1664,171 @@ app.get('/api/attendance/sitting-hours', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Batch Import Biometric Logs (from Sheet)
+app.post('/api/biometric/import', async (req, res) => {
+    try {
+        const { logs } = req.body;
+        if (!Array.isArray(logs)) return res.status(400).json({ error: 'Logs must be array' });
+
+        const { data: employees, error: empError } = await supabase.from('employees').select('id, name, biometric_id');
+        if (empError) throw new Error(`Failed to fetch employees: ${empError.message}`);
+
+        const empMap = {};
+        (employees || []).forEach(e => {
+            if (e.name) empMap[e.name.toLowerCase()] = e;
+        });
+
+        const toInsert = [];
+        const bioIdUpdates = {};
+
+        for (const log of logs) {
+            const { name, userId, timestamp, type } = log;
+            const empName = (name || '').trim().toLowerCase();
+            const emp = empMap[empName];
+
+            if (emp) {
+                let bioId = emp.biometric_id;
+                // Auto-link Biometric ID if missing
+                if (!bioId && userId) {
+                    bioId = userId.toString();
+                    bioIdUpdates[emp.id] = bioId;
+                    emp.biometric_id = bioId;
+                }
+
+                if (bioId) {
+                    toInsert.push({
+                        biometric_id: bioId,
+                        timestamp: timestamp,
+                        direction: (type || '').toUpperCase().includes('OUT') ? 'OUT' : 'IN'
+                    });
+                }
+            }
+        }
+
+        // Apply Updates
+        for (const [id, bioId] of Object.entries(bioIdUpdates)) {
+            await supabase.from('employees').update({ biometric_id: bioId }).eq('id', id);
+        }
+
+        // Insert Logs
+        if (toInsert.length > 0) {
+            // Upsert based on biometric_id + timestamp to avoid dupes
+            const { error } = await supabase.from('biometric_logs').upsert(toInsert, { onConflict: 'biometric_id, timestamp' });
+            if (error) throw error;
+        }
+
+        res.json({ success: true, processed: toInsert.length, updated: Object.keys(bioIdUpdates).length });
+    } catch (e) {
+        console.error('[BIO IMPORT]', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Get All Logs matches
+app.get('/api/biometric/all', async (req, res) => {
+    try {
+        const { date } = req.query;
+        let query = supabase.from('biometric_logs').select('*').order('timestamp', { ascending: false }).limit(200);
+
+        if (date) {
+            query = query.gte('timestamp', `${date}T00:00:00`).lte('timestamp', `${date}T23:59:59`);
+        }
+
+        const { data: logs, error } = await query;
+        if (error) throw error;
+
+        // Fetch employees map for names
+        const { data: employees } = await supabase.from('employees').select('name, biometric_id, employee_id');
+        const bioMap = {};
+        employees.forEach(e => {
+            if (e.biometric_id) bioMap[e.biometric_id] = e;
+        });
+
+        const result = logs.map(l => {
+            const emp = bioMap[l.biometric_id];
+            return {
+                ...l,
+                name: emp ? emp.name : 'Unknown',
+                empCode: emp ? emp.employee_id : '-'
+            };
+        });
+
+        res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Employee: Get My Logs
+app.get('/api/biometric/me', async (req, res) => {
+    try {
+        const email = req.headers['x-user-email'];
+        if (!email) return res.status(401).send('Auth required');
+
+        const { data: emp } = await supabase.from('employees').select('biometric_id').eq('email', email).single();
+        if (!emp || !emp.biometric_id) return res.json([]);
+
+        const { data, error } = await supabase.from('biometric_logs')
+            .select('*')
+            .eq('biometric_id', emp.biometric_id)
+            .order('timestamp', { ascending: false })
+            .limit(100);
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- PDF CONFIG ---
+app.get('/api/config/pdf', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('app_config').select('value').eq('key', 'pdf_settings').single();
+        if (error && error.code !== 'PGRST116') { // PGRST116 is 'no rows returned'
+            throw error;
+        }
+        res.json(data ? data.value : {});
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/config/pdf', async (req, res) => {
+    try {
+        const { error } = await supabase.from('app_config').upsert({
+            key: 'pdf_settings',
+            value: req.body,
+            updated_at: new Date()
+        });
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- PAYROLL DEFAULTS ---
+app.get('/api/payroll/defaults', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('app_config').select('value').eq('key', 'payroll_defaults').single();
+        if (error && error.code !== 'PGRST116') throw error;
+        res.json(data ? data.value : {});
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/payroll/defaults', async (req, res) => {
+    try {
+        const { error } = await supabase.from('app_config').upsert({
+            key: 'payroll_defaults',
+            value: req.body.defaults,
+            updated_at: new Date()
+        });
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // --- 10. ONBOARDING ---
 app.get('/api/onboarding/submissions', async (req, res) => {
     try {
@@ -1749,25 +1914,43 @@ app.post('/api/documents/upload', async (req, res) => {
 });
 
 // Dynamic Download Handler (Fallback for Supabase Storage)
+// ... (keep existing) ...
 app.get('/uploads/documents/:filename', async (req, res) => {
+    // ... (keep existing) ...
     const { filename } = req.params;
     try {
-        // Double check local existence
         const localPath = path.join(__dirname, '../uploads/documents', filename);
-        if (fs.existsSync(localPath)) {
-            return res.sendFile(localPath);
-        }
-
-        // Download from Supabase
+        if (fs.existsSync(localPath)) return res.sendFile(localPath);
         const { data, error } = await supabase.storage.from('documents').download(filename);
         if (error || !data) return res.status(404).send('Document not found');
-
         const buffer = Buffer.from(await data.arrayBuffer());
         res.setHeader('Content-Type', data.type);
         res.send(buffer);
     } catch (e) {
-        console.error('[DOC DOWNLOAD ERROR]', e);
         res.status(500).send('Error retrieving document');
+    }
+});
+
+// --- 12. UTILS ---
+app.get('/api/proxy/csv', async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url) return res.status(400).json({ error: 'URL required' });
+
+        // Basic validation
+        if (!url.includes('google.com/spreadsheets')) {
+            return res.status(400).json({ error: 'Only Google Sheets allowed' });
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            return res.status(response.status).json({ error: `Fetch failed: ${response.statusText}. Ensure sheet is public.` });
+        }
+        const text = await response.text();
+        res.send(text);
+    } catch (e) {
+        console.error('[PROXY ERROR]', e);
+        res.status(500).json({ error: e.message });
     }
 });
 

@@ -1,196 +1,194 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-import { exportToCSV } from '../utils/exportToCSV';
 
-const leaveTypes = [
-    "Casual Leave", "Sick Leave", "Annual Leave", "Earned Leave",
-    "Family/Compassionate Leave", "Unpaid Leave", "Half Day Leave",
-    "Festive Leave", "Matrimonial Leave", "Work From Home", "Study Leave", "Other"
-];
+const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhxvyDalfBTJrGtts4KF51x8rP2Cm-dPVb9u_3S2IiD9SH-1-8LQtxuNO5zNELhps0gxV0K6_Zmjwo/pub?gid=719528164&single=true&output=csv';
 
 export default function Attendance() {
-    const [employees, setEmployees] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    const [attendanceData, setAttendanceData] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+    const [view, setView] = useState('sync'); // 'sync' | 'logs'
+    const [status, setStatus] = useState('Idle');
+    const [report, setReport] = useState([]);
+    const [lastSyncTime, setLastSyncTime] = useState(null);
+    const [csvUrl, setCsvUrl] = useState(localStorage.getItem('attendance_sheet_url') || DEFAULT_URL);
+    const [showConfig, setShowConfig] = useState(false);
 
-    // Leave Modal State
-    const [leaveModal, setLeaveModal] = useState({ show: false, empId: null });
-    const [leaveReason, setLeaveReason] = useState({ type: 'Casual Leave', note: '' });
+    // Logs View State
+    const [logs, setLogs] = useState([]);
+    const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
-        loadData();
-    }, [selectedDate]);
+        if (view === 'sync' && csvUrl) runAutoSync();
+        if (view === 'logs') loadLogs();
+    }, [view, logDate]);
 
-    const loadData = async () => {
-        setLoading(true);
+    const handleUrlChange = (e) => {
+        const val = e.target.value;
+        setCsvUrl(val);
+        localStorage.setItem('attendance_sheet_url', val);
+    };
+
+    const runAutoSync = async () => {
+        if (!csvUrl) { setStatus('Config Needed'); return; }
+
+        setStatus('Syncing...');
         try {
-            const emps = await api.getEmployees();
-            setEmployees(emps);
-            const att = await api.getAttendance(selectedDate);
-            const attMap = {};
-            att.forEach(a => {
-                attMap[a.employee_id] = a;
+            const text = await api.fetchCSVProxy(csvUrl);
+            const rows = text.trim().split('\n').map(r => {
+                const matches = r.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || r.split(',');
+                return matches.map(c => c.replace(/^"|"$/g, '').trim());
             });
-            setAttendanceData(attMap);
+
+            if (rows.length < 2) throw new Error('Empty CSV');
+
+            const headers = rows[0];
+            const data = rows.slice(1);
+
+            const colMap = {
+                userId: headers.findIndex(h => h.toLowerCase().includes('userid') || h.toLowerCase().includes('user id')),
+                userName: headers.findIndex(h => h.toLowerCase().includes('username') || h.toLowerCase().includes('name')),
+                date: headers.findIndex(h => h.toLowerCase().includes('punch date') || h.toLowerCase().includes('date')),
+                time: headers.findIndex(h => h.toLowerCase().includes('punch time') || h.toLowerCase().includes('time')),
+                type: headers.findIndex(h => h.toLowerCase().includes('type') || h.toLowerCase().includes('status'))
+            };
+
+            if (Object.values(colMap).some(i => i === -1)) {
+                const missing = Object.entries(colMap).filter(([k, v]) => v === -1).map(([k]) => k).join(', ');
+                throw new Error(`Missing columns: ${missing}.`);
+            }
+
+            const logsToImport = [];
+            let skipped = 0;
+
+            for (const row of data) {
+                if (row.length < headers.length) continue;
+                const userId = row[colMap.userId];
+                const userName = row[colMap.userName];
+                const dateStr = row[colMap.date];
+                const timeStr = row[colMap.time];
+                const type = row[colMap.type];
+
+                if (!userName) { skipped++; continue; }
+
+                let timestamp = null;
+                try {
+                    const d = new Date(`${dateStr} ${timeStr}`);
+                    if (!isNaN(d.getTime())) timestamp = d.toISOString();
+                    else { skipped++; continue; }
+                } catch (e) { skipped++; continue; }
+
+                logsToImport.push({ name: userName, userId, timestamp, type });
+            }
+
+            const res = await api.importBiometricLogs(logsToImport);
+
+            setLastSyncTime(new Date());
+            setStatus('Synced');
+            setReport([
+                `Latest Sync: ${new Date().toLocaleTimeString()}`,
+                `Rows Parsed: ${data.length}`,
+                `Processed Logs: ${res.processed}`,
+                `Employee Links Updated: ${res.updated}`,
+                `Skipped/Invalid: ${skipped}`,
+                res.processed === 0 ? 'Warning: 0 Logs Processed. Check Name Mapping.' : ''
+            ]);
+
         } catch (e) {
             console.error(e);
-        } finally {
-            setLoading(false);
+            setStatus('Error');
+            setReport([`Error: ${e.message}`, 'Check your Sheet URL and Permissions.']);
         }
     };
 
-    const handleMark = async (employee_id, status, notes = '') => {
+    const loadLogs = async () => {
         try {
-            await api.markAttendance({
-                employee_id,
-                date: selectedDate,
-                status,
-                notes
-            });
-            setMessage(`Marked ${status} for employee`);
-            loadData();
-            setTimeout(() => setMessage(''), 3000);
+            const data = await api.getBiometricLogs(logDate);
+            setLogs(data);
         } catch (e) {
-            alert(e.message);
+            console.error(e);
         }
-    };
-
-    const openLeaveModal = (id) => {
-        setLeaveModal({ show: true, empId: id });
-        setLeaveReason({ type: 'Casual Leave', note: '' });
-    };
-
-    const confirmLeave = async () => {
-        // Construct detailed reason
-        let finalNote = leaveReason.type;
-        if (leaveReason.type === 'Other' || leaveReason.note) {
-            finalNote = leaveReason.type === 'Other' ? leaveReason.note : `${leaveReason.type} - ${leaveReason.note}`;
-        }
-
-        await handleMark(leaveModal.empId, 'Leave', finalNote);
-        setLeaveModal({ show: false, empId: null });
-    };
-
-    const handleExport = () => {
-        const data = employees.map(emp => {
-            const att = attendanceData[emp.id] || {};
-            return {
-                EmployeeID: emp.employee_id || emp.id,
-                Name: emp.name,
-                Date: selectedDate,
-                Status: att.status || 'Not Marked',
-                Notes: att.notes || ''
-            };
-        });
-        exportToCSV(data, `Attendance_${selectedDate}`);
     };
 
     return (
-        <div>
-            <div className="toolbar">
+        <div className="p-20">
+            <div className="toolbar" style={{ marginBottom: 20 }}>
                 <h1>Attendance Management</h1>
                 <div className="toolbar-group">
-                    <button className="btn btn-secondary" onClick={handleExport}>Export to Excel</button>
-                    <input
-                        type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="form-control"
-                        style={{ width: 'auto' }}
-                    />
+                    <button className={`btn ${view === 'sync' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('sync')}>Sync Dashboard</button>
+                    <button className={`btn ${view === 'logs' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('logs')}>View Logs</button>
                 </div>
             </div>
 
-            {message && (
-                <div style={{
-                    padding: '12px 20px', background: '#dcfce7', color: '#166534',
-                    borderRadius: '8px', marginBottom: '20px', border: '1px solid #86efac'
-                }}>
-                    {message}
+            {view === 'sync' && (
+                <div>
+                    <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: 20 }}>
+                        <div className="flex-row" style={{ alignItems: 'center', gap: 10 }}>
+                            <h3>Auto-Sync Status</h3>
+                            <button className="btn btn-sm btn-secondary" onClick={() => setShowConfig(!showConfig)}>⚙️ Config</button>
+                        </div>
+                        <button className="btn btn-primary" onClick={runAutoSync} disabled={status === 'Syncing...' || !csvUrl}>
+                            {status === 'Syncing...' ? 'Syncing...' : 'Force Sync Now'}
+                        </button>
+                    </div>
+
+                    {showConfig && (
+                        <div className="card shadow" style={{ marginBottom: 20, borderLeft: '4px solid #6366f1' }}>
+                            <div className="form-group">
+                                <label>Published CSV Link</label>
+                                <input className="form-control" value={csvUrl} onChange={handleUrlChange} />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="card shadow" style={{ padding: 30, textAlign: 'center' }}>
+                        <div style={{ fontSize: 40, marginBottom: 10 }}>
+                            {status === 'Syncing...' ? '🔄' : status === 'Error' ? '❌' : status === 'Config Needed' ? '⚙️' : '✅'}
+                        </div>
+                        <h3>{status === 'Syncing...' ? 'Syncing...' : status === 'Error' ? 'Sync Failed' : status === 'Config Needed' ? 'Setup Required' : 'Up to Date'}</h3>
+                        {lastSyncTime && <p style={{ fontSize: 12, color: '#888' }}>Last successful sync: {lastSyncTime.toLocaleString()}</p>}
+                    </div>
+
+                    <div className="card shadow" style={{ marginTop: 20 }}>
+                        <h3>Sync Log</h3>
+                        <div style={{ padding: 15, background: '#1e1e1e', color: '#fff', borderRadius: 8, marginTop: 10, fontFamily: 'monospace' }}>
+                            {report.map((line, i) => <div key={i} style={{ marginBottom: 5 }}>{line}</div>)}
+                        </div>
+                    </div>
                 </div>
             )}
 
-            <div className="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Employee ID</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {employees.map(emp => {
-                            const att = attendanceData[emp.id] || {};
-                            return (
-                                <tr key={emp.id}>
-                                    <td>{emp.employee_id || emp.id.substring(0, 8)}</td>
-                                    <td>{emp.name}</td>
-                                    <td>
-                                        <span style={{
-                                            padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold',
-                                            backgroundColor: att.status === 'Present' ? '#dcfce7' :
-                                                att.status === 'Absent' ? '#fee2e2' :
-                                                    att.status === 'Leave' ? '#fef9c3' : '#f3f4f6',
-                                            color: att.status === 'Present' ? '#166534' :
-                                                att.status === 'Absent' ? '#991b1b' :
-                                                    att.status === 'Leave' ? '#854d0e' : '#4b5563'
-                                        }}>
-                                            {att.status || 'Not Marked'}
-                                        </span>
-                                    </td>
-                                    <td style={{ fontSize: '12px', color: '#666', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {att.notes || '-'}
-                                    </td>
-                                    <td className="flex-row">
-                                        <button className="btn btn-success" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => handleMark(emp.id, 'Present')}>Present</button>
-                                        <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => handleMark(emp.id, 'Absent')}>Absent</button>
-                                        <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '12px', background: '#fef9c3', border: '1px solid #ca8a04', color: '#854d0e' }} onClick={() => openLeaveModal(emp.id)}>Leave</button>
-                                    </td>
+            {view === 'logs' && (
+                <div>
+                    <div className="toolbar" style={{ marginBottom: 15 }}>
+                        <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
+                        <button className="btn btn-primary" onClick={loadLogs}>Refresh</button>
+                    </div>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Employee</th>
+                                    <th>ID</th>
+                                    <th>Direction</th>
                                 </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Leave Modal */}
-            {leaveModal.show && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Mark Leave</h2>
-                        <div className="form-group">
-                            <label>Leave Type</label>
-                            <select
-                                className="form-control"
-                                value={leaveReason.type}
-                                onChange={e => setLeaveReason({ ...leaveReason, type: e.target.value })}
-                            >
-                                {leaveTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                        </div>
-
-                        {(leaveReason.type === 'Other' || true) && (
-                            <div className="form-group">
-                                <label>{leaveReason.type === 'Other' ? 'Specify Reason' : 'Additional Note (Optional)'}</label>
-                                <input
-                                    className="form-control"
-                                    value={leaveReason.note}
-                                    onChange={e => setLeaveReason({ ...leaveReason, note: e.target.value })}
-                                    placeholder={leaveReason.type === 'Other' ? "Enter custom reason..." : "e.g. Morning off"}
-                                    required={leaveReason.type === 'Other'}
-                                />
-                            </div>
-                        )}
-
-                        <div className="flex-row flex-end" style={{ marginTop: 20 }}>
-                            <button className="btn btn-secondary" onClick={() => setLeaveModal({ show: false, empId: null })}>Cancel</button>
-                            <button className="btn btn-primary" onClick={confirmLeave}>Confirm Leave</button>
-                        </div>
+                            </thead>
+                            <tbody>
+                                {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this date</td></tr>}
+                                {logs.map(log => (
+                                    <tr key={log.id}>
+                                        <td>{new Date(log.timestamp).toLocaleTimeString()}</td>
+                                        <td>{log.name || 'Unknown'}</td>
+                                        <td>{log.biometric_id}</td>
+                                        <td>
+                                            <span style={{
+                                                padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
+                                                background: log.direction === 'IN' ? '#dcfce7' : '#fee2e2',
+                                                color: log.direction === 'IN' ? '#166534' : '#991b1b'
+                                            }}>{log.direction}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
