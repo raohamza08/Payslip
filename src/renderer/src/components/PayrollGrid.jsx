@@ -36,7 +36,11 @@ export default function PayrollGrid({ onNavigate }) {
                     earnings.unshift({ name: 'Basic Salary', amount: Number(emp.monthly_salary) || 0 });
                 }
                 let deductions = Array.isArray(def.deductions) ? [...def.deductions] : [];
-                data[emp.id] = { earnings, deductions };
+                data[emp.id] = {
+                    earnings,
+                    deductions,
+                    notes: def.notes || ""
+                };
             });
 
             setEmployees(activeEmps);
@@ -121,7 +125,7 @@ export default function PayrollGrid({ onNavigate }) {
                 net_pay: net,
                 net_pay_words: numberToWords(net),
                 currency: emp.currency || 'PKR',
-                notes: `Salary for ${new Date(year, mth - 1).toLocaleString('default', { month: 'long' })} ${year}`
+                notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`
             };
 
             try {
@@ -167,12 +171,14 @@ export default function PayrollGrid({ onNavigate }) {
                                 <th>Basic Salary</th>
                                 <th>Earnings (Allowances)</th>
                                 <th>Deductions</th>
+                                <th>Notes</th>
                                 <th>Net Pay (Est)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {employees.map(emp => {
                                 const data = gridData[emp.id];
+                                if (!data) return null;
                                 const { gross, totalDed, net } = calculateNet(data);
                                 // Basic Salary is usually first item
                                 const changeBasic = (val) => {
@@ -182,6 +188,12 @@ export default function PayrollGrid({ onNavigate }) {
                                     if (idx >= 0) newEarnings[idx].amount = Number(val);
                                     else newEarnings.unshift({ name: 'Basic Salary', amount: Number(val) });
                                     newData[emp.id].earnings = newEarnings;
+                                    setGridData(newData);
+                                };
+
+                                const changeNotes = (val) => {
+                                    const newData = { ...gridData };
+                                    newData[emp.id].notes = val;
                                     setGridData(newData);
                                 };
 
@@ -211,6 +223,14 @@ export default function PayrollGrid({ onNavigate }) {
                                                 <button className="btn btn-sm btn-secondary" onClick={() => openEdit(emp.id, 'deductions')}>Edit ({data.deductions.length})</button>
                                             </div>
                                         </td>
+                                        <td>
+                                            <textarea
+                                                value={data.notes || ''}
+                                                onChange={e => changeNotes(e.target.value)}
+                                                placeholder="Custom notes for payslip..."
+                                                style={{ width: '100%', minHeight: '40px', fontSize: '11px', padding: '5px' }}
+                                            />
+                                        </td>
                                         <td style={{ fontWeight: 'bold', color: '#166534' }}>{net.toLocaleString()}</td>
                                     </tr>
                                 );
@@ -225,15 +245,17 @@ export default function PayrollGrid({ onNavigate }) {
                     <h2>Review Before Generation</h2>
                     <p>Month: {month}</p>
                     <table className="table">
-                        <thead><tr><th>Name</th><th>Gross</th><th>Deductions</th><th>Net Pay</th></tr></thead>
+                        <thead><tr><th>Name</th><th>Gross</th><th>Deductions</th><th>Notes</th><th>Net Pay</th></tr></thead>
                         <tbody>
                             {employees.map(emp => {
-                                const { gross, totalDed, net } = calculateNet(gridData[emp.id]);
+                                const data = gridData[emp.id];
+                                const { gross, totalDed, net } = calculateNet(data);
                                 return (
                                     <tr key={emp.id}>
                                         <td>{emp.name}</td>
                                         <td>{gross.toLocaleString()}</td>
                                         <td>{totalDed.toLocaleString()}</td>
+                                        <td style={{ fontSize: 10, color: '#666' }}>{data.notes}</td>
                                         <td><strong>{net.toLocaleString()}</strong></td>
                                     </tr>
                                 )
