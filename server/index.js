@@ -996,7 +996,7 @@ app.post('/api/attendance/mark', async (req, res) => {
     }
 });
 
-app.get('/api/attendance/report', async (req, res) => {
+app.get('/api/attendance/report-manual', async (req, res) => {
     try {
         const { month, year } = req.query;
         const monthStr = month.toString().padStart(2, '0');
@@ -1005,7 +1005,7 @@ app.get('/api/attendance/report', async (req, res) => {
 
         const { data: attendance, error: aError } = await supabase.from('attendance').select('*').gte('date', start).lte('date', end);
         if (aError) throw aError;
-        const { data: employees, error: eError } = await supabase.from('employees').select('*');
+        const { data: employees, error: eError } = await supabase.from('employees').select('id, name, employee_id');
         if (eError) throw eError;
 
         const report = employees.map(emp => {
@@ -1557,10 +1557,12 @@ app.post('/api/biometric/sync', async (req, res) => {
 app.get('/api/attendance/report', async (req, res) => {
     try {
         const { month, year } = req.query;
-        const { data: employees } = await supabase.from('employees').select('id, name, biometric_id');
+        const { data: employees } = await supabase.from('employees').select('id, name, biometric_id, employee_id');
 
-        const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+        const m = parseInt(month);
+        const y = parseInt(year);
+        const startDate = `${y}-${m.toString().padStart(2, '0')}-01`;
+        const endDate = new Date(y, m, 0).toISOString().split('T')[0]; // Correct last day of month
 
         const report = await Promise.all(employees.map(async emp => {
             let present = 0;
@@ -1569,8 +1571,8 @@ app.get('/api/attendance/report', async (req, res) => {
                 const { data: logs } = await supabase.from('biometric_logs')
                     .select('*')
                     .eq('biometric_id', emp.biometric_id)
-                    .gte('timestamp', startDate)
-                    .lte('timestamp', endDate);
+                    .gte('timestamp', `${startDate}T00:00:00`)
+                    .lte('timestamp', `${endDate}T23:59:59`);
 
                 if (logs && logs.length > 0) {
                     const dayMap = {};
@@ -1604,11 +1606,12 @@ app.get('/api/attendance/report', async (req, res) => {
                 .lte('end_date', endDate);
 
             const leave = (approvedLeaves || []).reduce((acc, l) => acc + (Number(l.days_count) || 0), 0);
-            const total = 30; // Approximation or actual days in month
+            const total = new Date(y, m, 0).getDate(); // Actual days in month
             const absent = Math.max(0, total - present - leave);
 
             return {
                 id: emp.id,
+                employee_id: emp.employee_id,
                 name: emp.name,
                 present,
                 leave: leave || 0,
