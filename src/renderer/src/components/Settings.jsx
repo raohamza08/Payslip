@@ -442,10 +442,10 @@ export default function Settings({ user }) {
                     }}>
                         <h3 style={{ marginTop: 0 }}>📋 System Information</h3>
                         <div style={{ fontSize: '14px', color: '#666' }}>
-                            <p><strong>Version:</strong> 1.2.1</p>
+                            <p><strong>Version:</strong> v3.9</p>
                             <p><strong>Database:</strong> Supabase (Global)</p>
                             <p><strong>Email Provider:</strong> Gmail SMTP Server</p>
-                            <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EuroShub</p>
+                            <p style={{ marginBottom: 0 }}><strong>Developer:</strong> EurosHub</p>
                         </div>
                     </div>
                 </div>
