@@ -1660,12 +1660,17 @@ app.post('/api/biometric/import', async (req, res) => {
         const { logs } = req.body;
         if (!Array.isArray(logs)) return res.status(400).json({ error: 'Logs must be array' });
 
-        const { data: employees, error: empError } = await supabase.from('employees').select('id, name, biometric_id');
+        const { data: employees, error: empError } = await supabase.from('employees').select('id, name, biometric_id, employee_id');
         if (empError) throw new Error(`Failed to fetch employees: ${empError.message}`);
 
-        const empMap = {};
+        const nameMap = {};
+        const bioIdMap = {};
+        const empCodeMap = {};
+
         (employees || []).forEach(e => {
-            if (e.name) empMap[e.name.toLowerCase()] = e;
+            if (e.name) nameMap[e.name.toLowerCase().trim()] = e;
+            if (e.biometric_id) bioIdMap[e.biometric_id.toString().toLowerCase().trim()] = e;
+            if (e.employee_id) empCodeMap[e.employee_id.toString().toLowerCase().trim()] = e;
         });
 
         const toInsert = [];
@@ -1673,16 +1678,20 @@ app.post('/api/biometric/import', async (req, res) => {
 
         for (const log of logs) {
             const { name, userId, timestamp, type } = log;
-            const empName = (name || '').trim().toLowerCase();
-            const emp = empMap[empName];
+            const logUserId = (userId || '').toString().toLowerCase().trim();
+            const logName = (name || '').toLowerCase().trim();
+
+            // Try matching by BioId, then EmpCode, then Name
+            let emp = bioIdMap[logUserId] || empCodeMap[logUserId] || nameMap[logName];
 
             if (emp) {
                 let bioId = emp.biometric_id;
-                // Auto-link Biometric ID if missing
+                // Auto-link Biometric ID if missing and we matched by name/empCode
                 if (!bioId && userId) {
                     bioId = userId.toString();
                     bioIdUpdates[emp.id] = bioId;
                     emp.biometric_id = bioId;
+                    bioIdMap[bioId.toLowerCase().trim()] = emp; // Update map for subsequent logs
                 }
 
                 if (bioId) {
@@ -1695,7 +1704,7 @@ app.post('/api/biometric/import', async (req, res) => {
             }
         }
 
-        // Apply Updates
+        // Apply Biometric ID updates to employees table
         for (const [id, bioId] of Object.entries(bioIdUpdates)) {
             await supabase.from('employees').update({ biometric_id: bioId }).eq('id', id);
         }

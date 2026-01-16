@@ -32,9 +32,10 @@ export default function Attendance() {
         setStatus('Syncing...');
         try {
             const text = await api.fetchCSVProxy(csvUrl);
-            const rows = text.trim().split('\n').map(r => {
-                const matches = r.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || r.split(',');
-                return matches.map(c => c.replace(/^"|"$/g, '').trim());
+            const rows = text.trim().split(/\r?\n/).map(line => {
+                // Safer split that handles basic CSV (doesn't handle commas inside quotes, 
+                // but biometric CSVs usually don't have those).
+                return line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
             });
 
             if (rows.length < 2) throw new Error('Empty CSV');
