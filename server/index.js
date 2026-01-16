@@ -102,23 +102,12 @@ app.get('/api/auth/is-setup', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PDF Config Routes
-app.get('/api/config/pdf', (req, res) => {
+// Auth Routes
+app.get('/api/auth/is-setup', async (req, res) => {
     try {
-        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
-        if (fs.existsSync(settingsPath)) {
-            res.json(JSON.parse(fs.readFileSync(settingsPath, 'utf8')));
-        } else {
-            res.json({});
-        }
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/config/pdf', (req, res) => {
-    try {
-        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
-        fs.writeFileSync(settingsPath, JSON.stringify(req.body, null, 4));
-        res.json({ success: true });
+        const { data, error } = await supabase.from('config').select('is_setup').eq('id', 1).maybeSingle();
+        if (error && error.code !== 'PGRST116') throw error;
+        res.json({ isSetup: data?.is_setup || false });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1985,38 +1974,38 @@ app.listen(PORT, () => {
 });
 
 // PDF Generation Function
-function generatePDF(data, filePath) {
+async function generatePDF(data, filePath) {
+    // Load settings from Supabase
+    let settings = {
+        headerColor: '#17a2b8',
+        textColor: '#333333',
+        tableHeaderBg: '#17a2b8',
+        tableHeaderColor: '#ffffff',
+        companyName: 'EurosHub',
+        companySubtitle: 'Payroll Department',
+        accentColor: '#17a2b8'
+    };
+
+    try {
+        const { data: configRows } = await supabase.from('app_config').select('value').eq('key', 'pdf_settings').single();
+        if (configRows && configRows.value) {
+            settings = { ...settings, ...configRows.value };
+        }
+    } catch (e) {
+        console.warn('Failed to load PDF settings from Supabase:', e.message);
+    }
+
     return new Promise((resolve, reject) => {
-        // Load settings
-        const settingsPath = path.join(__dirname, '../data/pdf_settings.json');
-        let settings = {
-            headerColor: '#17a2b8',
-            textColor: '#333333',
-            tableHeaderBg: '#17a2b8',
-            tableHeaderColor: '#ffffff',
-            companyName: 'EurosHub',
-            companySubtitle: 'Payroll Department',
-            accentColor: '#17a2b8'
-        };
-
-        try {
-            if (fs.existsSync(settingsPath)) {
-                const raw = fs.readFileSync(settingsPath, 'utf8');
-                settings = { ...settings, ...JSON.parse(raw) };
-            }
-        } catch (e) { console.warn('Failed to load PDF settings:', e); }
-
         const printer = new PdfPrinter(fonts);
 
         // Load logo
         const logoPath = path.join(__dirname, 'assets', 'logo.png');
-        let logoImage = null;
-        if (fs.existsSync(logoPath)) {
+        let logoImage = settings.logo || null;
+
+        // If no base64 logo in settings, try local file
+        if (!logoImage && fs.existsSync(logoPath)) {
             const logoBuffer = fs.readFileSync(logoPath);
             logoImage = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-            console.log('[PDF] Logo loaded successfully');
-        } else {
-            console.warn('[PDF] Logo not found at:', logoPath);
         }
 
         const docDefinition = {
