@@ -1537,9 +1537,20 @@ app.post('/api/biometric/sync', async (req, res) => {
             device_ip: req.ip
         }));
 
-        const { data, error } = await supabase.from('biometric_logs').upsert(formattedLogs, { onConflict: ['biometric_id', 'timestamp'] });
+        // Deduplicate
+        const seen = new Set();
+        const uniqueLogs = [];
+        for (const log of formattedLogs) {
+            const key = `${log.biometric_id}-${log.timestamp}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueLogs.push(log);
+            }
+        }
+
+        const { data, error } = await supabase.from('biometric_logs').upsert(uniqueLogs, { onConflict: ['biometric_id', 'timestamp'] });
         if (error) throw error;
-        res.json({ success: true, count: formattedLogs.length });
+        res.json({ success: true, count: uniqueLogs.length });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1711,8 +1722,18 @@ app.post('/api/biometric/import', async (req, res) => {
 
         // Insert Logs
         if (toInsert.length > 0) {
-            // Upsert based on biometric_id + timestamp to avoid dupes
-            const { error } = await supabase.from('biometric_logs').upsert(toInsert, { onConflict: 'biometric_id, timestamp' });
+            // Deduplicate local array to prevent "ON CONFLICT DO UPDATE command cannot affect row a second time"
+            const seen = new Set();
+            const uniqueToInsert = [];
+            for (const item of toInsert) {
+                const key = `${item.biometric_id}-${item.timestamp}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueToInsert.push(item);
+                }
+            }
+
+            const { error } = await supabase.from('biometric_logs').upsert(uniqueToInsert, { onConflict: 'biometric_id, timestamp' });
             if (error) throw error;
         }
 
