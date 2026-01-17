@@ -27,10 +27,9 @@ export default function Settings({ user }) {
     const [neonX, setNeonX] = useState(localStorage.getItem('neonX') || '10');
     const [neonY, setNeonY] = useState(localStorage.getItem('neonY') || '10');
     const [neonShape, setNeonShape] = useState(localStorage.getItem('neonShape') || 'circular');
-    const [neonAnimation, setNeonAnimation] = useState(localStorage.getItem('neonAnimation') || 'none');
 
-    const updateBodyClass = (t, s, a) => {
-        document.body.className = `${t} neon-${s} animate-${a}`;
+    const updateBodyClass = (t, s) => {
+        document.body.className = `${t} neon-${s}`;
     };
 
     // Apply saved theme and color on mount
@@ -76,7 +75,7 @@ export default function Settings({ user }) {
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
-        updateBodyClass(newTheme, neonShape, neonAnimation);
+        updateBodyClass(newTheme, neonShape);
         setMessage('Theme updated successfully!');
         setTimeout(() => setMessage(''), 3000);
     };
@@ -121,13 +120,7 @@ export default function Settings({ user }) {
             case 'shape':
                 setNeonShape(value);
                 localStorage.setItem('neonShape', value);
-                updateBodyClass(theme, value, neonAnimation);
-                break;
-            case 'animation':
-                setNeonAnimation(value);
-                localStorage.setItem('neonAnimation', value);
-                updateBodyClass(theme, neonShape, value);
-                window.dispatchEvent(new Event('atmosphereChanged'));
+                updateBodyClass(theme, value);
                 break;
         }
     };
@@ -410,14 +403,18 @@ export default function Settings({ user }) {
                                         { id: 'circular', label: 'Classic Circular', icon: '⭕' },
                                         { id: 'wave', label: 'Soft Wave', icon: '🌊' },
                                         { id: 'line', label: 'Focus Line', icon: '📏' },
-                                        { id: 'abstract', label: 'Cosmic Abstract', icon: '✨' }
+                                        { id: 'abstract', label: 'Cosmic Abstract', icon: '✨' },
+                                        { id: 'prism', label: 'Refractive Prism', icon: '💎' },
+                                        { id: 'aurora', label: 'Emerald Aurora', icon: '🌌' },
+                                        { id: 'eclipse', label: 'Solar Eclipse', icon: '🌑' },
+                                        { id: 'nova', label: 'Supernova', icon: '💥' }
                                     ].map(shape => (
                                         <button
                                             type="button"
                                             key={shape.id}
                                             className={`tab-btn ${neonShape === shape.id ? 'active' : ''}`}
                                             onClick={() => updateNeonSetting('shape', shape.id)}
-                                            style={neonShape === shape.id ? { color: 'var(--accent)' } : {}}
+                                            style={neonShape === shape.id ? { color: 'white', background: 'var(--accent)', boxShadow: '0 0 15px var(--accent-glow)' } : {}}
                                         >
                                             <span style={{ marginRight: '8px' }}>{shape.icon}</span>
                                             {shape.label}
@@ -426,32 +423,6 @@ export default function Settings({ user }) {
                                 </div>
                             </div>
 
-                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                <label>Atmospheric Dynamics (Live Animation)</label>
-                                <div className="tab-nav" style={{ marginTop: '10px', width: '100%', justifyContent: 'flex-start' }}>
-                                    {[
-                                        { id: 'none', label: 'Static Deep', icon: '💎' },
-                                        { id: 'aurora', label: 'Cyber Waves (Aurora)', icon: '🌊' },
-                                        { id: 'cosmos', label: 'Stardust (Cosmos)', icon: '✨' },
-                                        { id: 'sonic', label: 'Sonic Pulse', icon: '📡' }
-                                    ].map(anim => (
-                                        <button
-                                            type="button"
-                                            key={anim.id}
-                                            className={`tab-btn ${neonAnimation === anim.id ? 'active' : ''}`}
-                                            onClick={() => updateNeonSetting('animation', anim.id)}
-                                            style={neonAnimation === anim.id ? {
-                                                color: 'white',
-                                                background: 'var(--accent)',
-                                                boxShadow: '0 0 15px var(--accent-glow)'
-                                            } : {}}
-                                        >
-                                            <span style={{ marginRight: '8px' }}>{anim.icon}</span>
-                                            {anim.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             <div className="form-group">
                                 <label>Neon Glow Color</label>
