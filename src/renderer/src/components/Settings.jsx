@@ -27,15 +27,16 @@ export default function Settings({ user }) {
     const [neonX, setNeonX] = useState(localStorage.getItem('neonX') || '10');
     const [neonY, setNeonY] = useState(localStorage.getItem('neonY') || '10');
     const [neonShape, setNeonShape] = useState(localStorage.getItem('neonShape') || 'circular');
+    const [neonAnimation, setNeonAnimation] = useState(localStorage.getItem('neonAnimation') || 'none');
 
-    const updateBodyClass = (t, s) => {
-        document.body.className = `${t} neon-${s}`;
+    const updateBodyClass = (t, s, a) => {
+        document.body.className = `${t} neon-${s} animate-${a}`;
     };
 
     // Apply saved theme and color on mount
     React.useEffect(() => {
         loadPdfSettings();
-        updateBodyClass(theme, neonShape);
+        updateBodyClass(theme, neonShape, neonAnimation);
         document.documentElement.style.setProperty('--accent', accentColor);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
 
@@ -75,7 +76,7 @@ export default function Settings({ user }) {
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
-        updateBodyClass(newTheme, neonShape);
+        updateBodyClass(newTheme, neonShape, neonAnimation);
         setMessage('Theme updated successfully!');
         setTimeout(() => setMessage(''), 3000);
     };
@@ -119,7 +120,12 @@ export default function Settings({ user }) {
             case 'shape':
                 setNeonShape(value);
                 localStorage.setItem('neonShape', value);
-                updateBodyClass(theme, value);
+                updateBodyClass(theme, value, neonAnimation);
+                break;
+            case 'animation':
+                setNeonAnimation(value);
+                localStorage.setItem('neonAnimation', value);
+                updateBodyClass(theme, neonShape, value);
                 break;
         }
     };
@@ -210,18 +216,33 @@ export default function Settings({ user }) {
                 <button
                     className={`tab-btn ${activeTab === 'appearance' ? 'active' : ''}`}
                     onClick={() => setActiveTab('appearance')}
+                    style={activeTab === 'appearance' ? {
+                        color: 'white',
+                        background: accentColor,
+                        boxShadow: `0 0 15px ${accentColor}66`
+                    } : {}}
                 >
                     Appearance
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveTab('security')}
+                    style={activeTab === 'security' ? {
+                        color: 'white',
+                        background: accentColor,
+                        boxShadow: `0 0 15px ${accentColor}66`
+                    } : {}}
                 >
                     Security
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
                     onClick={() => setActiveTab('support')}
+                    style={activeTab === 'support' ? {
+                        color: 'white',
+                        background: accentColor,
+                        boxShadow: `0 0 15px ${accentColor}66`
+                    } : {}}
                 >
                     Need Support?
                 </button>
@@ -229,6 +250,11 @@ export default function Settings({ user }) {
                     <button
                         className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
                         onClick={() => setActiveTab('pdf')}
+                        style={activeTab === 'pdf' ? {
+                            color: 'white',
+                            background: accentColor,
+                            boxShadow: `0 0 15px ${accentColor}66`
+                        } : {}}
                     >
                         PDF Customization
                     </button>
@@ -389,6 +415,33 @@ export default function Settings({ user }) {
                                         >
                                             <span style={{ marginRight: '8px' }}>{shape.icon}</span>
                                             {shape.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                <label>Atmospheric Dynamics (Live Animation)</label>
+                                <div className="tab-nav" style={{ marginTop: '10px', width: '100%', justifyContent: 'flex-start' }}>
+                                    {[
+                                        { id: 'none', label: 'Static Deep', icon: '💎' },
+                                        { id: 'pulse', label: 'Subtle Pulse', icon: '💓' },
+                                        { id: 'float', label: 'Celestial Float', icon: '🎈' },
+                                        { id: 'drift', label: 'Ethereal Drift', icon: '🌪️' }
+                                    ].map(anim => (
+                                        <button
+                                            type="button"
+                                            key={anim.id}
+                                            className={`tab-btn ${neonAnimation === anim.id ? 'active' : ''}`}
+                                            onClick={() => updateNeonSetting('animation', anim.id)}
+                                            style={neonAnimation === anim.id ? {
+                                                color: 'white',
+                                                background: 'var(--accent)',
+                                                boxShadow: '0 0 15px var(--accent-glow)'
+                                            } : {}}
+                                        >
+                                            <span style={{ marginRight: '8px' }}>{anim.icon}</span>
+                                            {anim.label}
                                         </button>
                                     ))}
                                 </div>

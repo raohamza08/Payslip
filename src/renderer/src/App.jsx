@@ -53,8 +53,9 @@ export default function App() {
         const neonX = localStorage.getItem('neonX') || '10';
         const neonY = localStorage.getItem('neonY') || '10';
         const neonShape = localStorage.getItem('neonShape') || 'circular';
+        const neonAnimation = localStorage.getItem('neonAnimation') || 'none';
 
-        document.body.className = `${savedTheme} neon-${neonShape}`;
+        document.body.className = `${savedTheme} neon-${neonShape} animate-${neonAnimation}`;
         document.documentElement.style.setProperty('--neon-color', neonColor);
         document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
         document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
