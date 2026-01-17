@@ -26,6 +26,37 @@ import UserManagement from './components/UserManagement';
 import ToastManager, { showToast } from './components/ToastManager';
 import api from './api';
 
+const AtmosphereCanvas = ({ animation, shape }) => {
+    if (animation === 'none' || !animation) return null;
+
+    return (
+        <div className="atmosphere-canvas">
+            {animation === 'aurora' && (
+                <>
+                    <div className="aurora-layer"></div>
+                    <div className="aurora-layer"></div>
+                    <div className="aurora-layer"></div>
+                </>
+            )}
+            {animation === 'cosmos' && (
+                <>
+                    <div className="starfield"></div>
+                    <div className="starfield"></div>
+                    <div className="starfield"></div>
+                </>
+            )}
+            {animation === 'sonic' && (
+                <>
+                    <div className="sonic-ring"></div>
+                    <div className="sonic-ring"></div>
+                    <div className="sonic-ring"></div>
+                    <div className="sonic-ring"></div>
+                </>
+            )}
+        </div>
+    );
+};
+
 export default function App() {
     const [auth, setAuth] = useState(false);
     const [user, setUser] = useState(null);
@@ -38,10 +69,15 @@ export default function App() {
     const [pendingView, setPendingView] = useState(null);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
     const [pathname, setPathname] = useState(window.location.pathname.toLowerCase());
+    const [neonAnimation, setNeonAnimation] = useState(localStorage.getItem('neonAnimation') || 'none');
 
     useEffect(() => {
+        const handleAtmosphere = () => {
+            setNeonAnimation(localStorage.getItem('neonAnimation') || 'none');
+        };
+        window.addEventListener('atmosphereChanged', handleAtmosphere);
+
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
 
@@ -53,9 +89,9 @@ export default function App() {
         const neonX = localStorage.getItem('neonX') || '10';
         const neonY = localStorage.getItem('neonY') || '10';
         const neonShape = localStorage.getItem('neonShape') || 'circular';
-        const neonAnimation = localStorage.getItem('neonAnimation') || 'none';
+        const initialAnim = localStorage.getItem('neonAnimation') || 'none';
 
-        document.body.className = `${savedTheme} neon-${neonShape} animate-${neonAnimation}`;
+        document.body.className = `${savedTheme} neon-${neonShape} animate-${initialAnim}`;
         document.documentElement.style.setProperty('--neon-color', neonColor);
         document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
         document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
@@ -67,10 +103,7 @@ export default function App() {
             showToast(message, type);
         };
 
-        // Make toast globally available as window.toast
         window.toast = showToast;
-
-        // Restore session if exists
         restoreSession();
         checkSetup();
 
@@ -80,6 +113,7 @@ export default function App() {
 
         return () => {
             window.removeEventListener('popstate', handlePathChange);
+            window.removeEventListener('atmosphereChanged', handleAtmosphere);
             clearInterval(interval);
         };
     }, []);
@@ -197,6 +231,7 @@ export default function App() {
 
     return (
         <div className="app-container">
+            <AtmosphereCanvas animation={neonAnimation} />
             <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <span style={{ fontSize: '24px' }}>☰</span>
             </button>

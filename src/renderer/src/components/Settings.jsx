@@ -126,6 +126,7 @@ export default function Settings({ user }) {
                 setNeonAnimation(value);
                 localStorage.setItem('neonAnimation', value);
                 updateBodyClass(theme, neonShape, value);
+                window.dispatchEvent(new Event('atmosphereChanged'));
                 break;
         }
     };
@@ -425,9 +426,9 @@ export default function Settings({ user }) {
                                 <div className="tab-nav" style={{ marginTop: '10px', width: '100%', justifyContent: 'flex-start' }}>
                                     {[
                                         { id: 'none', label: 'Static Deep', icon: '💎' },
-                                        { id: 'pulse', label: 'Subtle Pulse', icon: '💓' },
-                                        { id: 'float', label: 'Celestial Float', icon: '🎈' },
-                                        { id: 'drift', label: 'Ethereal Drift', icon: '🌪️' }
+                                        { id: 'aurora', label: 'Cyber Waves (Aurora)', icon: '🌊' },
+                                        { id: 'cosmos', label: 'Stardust (Cosmos)', icon: '✨' },
+                                        { id: 'sonic', label: 'Sonic Pulse', icon: '📡' }
                                     ].map(anim => (
                                         <button
                                             type="button"
