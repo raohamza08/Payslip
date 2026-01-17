@@ -14,6 +14,8 @@ export default function Attendance() {
     // Logs View State
     const [logs, setLogs] = useState([]);
     const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [directionFilter, setDirectionFilter] = useState('ALL');
 
     useEffect(() => {
         if (view === 'sync' && csvUrl) runAutoSync();
@@ -108,6 +110,20 @@ export default function Attendance() {
         }
     };
 
+    const filteredLogs = (logs || []).filter(log => {
+        const query = searchQuery.toLowerCase();
+        const timeStr = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
+
+        const matchesSearch = (log.name || '').toLowerCase().includes(query) ||
+            (log.biometric_id || '').toLowerCase().includes(query) ||
+            (log.empCode || '').toLowerCase().includes(query) ||
+            timeStr.includes(query);
+
+        const matchesDirection = directionFilter === 'ALL' || log.direction === directionFilter;
+
+        return matchesSearch && matchesDirection;
+    });
+
     return (
         <div className="p-20">
             <div className="toolbar" style={{ marginBottom: 20 }}>
@@ -158,30 +174,67 @@ export default function Attendance() {
 
             {view === 'logs' && (
                 <div>
-                    <div className="toolbar" style={{ marginBottom: 15 }}>
-                        <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
-                        <button className="btn btn-primary" onClick={loadLogs}>Refresh</button>
+                    <div className="card shadow" style={{ marginBottom: 15, padding: '15px' }}>
+                        <div className="toolbar" style={{ border: 'none', padding: 0, gap: '15px', flexWrap: 'wrap' }}>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Date</label>
+                                <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
+                            </div>
+
+                            <div className="form-group" style={{ margin: 0, flex: 1, minWidth: '200px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Search Name / ID</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search employee or ID..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Direction</label>
+                                <select className="form-control" value={directionFilter} onChange={e => setDirectionFilter(e.target.value)}>
+                                    <option value="ALL">All Directions</option>
+                                    <option value="IN">IN Only</option>
+                                    <option value="OUT">OUT Only</option>
+                                </select>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                <button className="btn btn-primary" onClick={loadLogs}>Refresh</button>
+                            </div>
+                        </div>
                     </div>
+
                     <div className="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Timestamp</th>
+                                    <th>Time</th>
                                     <th>Employee</th>
-                                    <th>ID</th>
+                                    <th>Biometric ID</th>
+                                    <th>Emp Code</th>
                                     <th>Direction</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this date</td></tr>}
-                                {logs.map(log => (
+                                {filteredLogs.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                                            No logs found for the current filters.
+                                        </td>
+                                    </tr>
+                                )}
+                                {filteredLogs.map(log => (
                                     <tr key={log.id}>
-                                        <td>{new Date(log.timestamp).toLocaleTimeString()}</td>
-                                        <td>{log.name || 'Unknown'}</td>
-                                        <td>{log.biometric_id}</td>
+                                        <td>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                                        <td><strong>{log.name || 'Unknown'}</strong></td>
+                                        <td><code>{log.biometric_id}</code></td>
+                                        <td>{log.empCode || '-'}</td>
                                         <td>
                                             <span style={{
-                                                padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
+                                                padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
                                                 background: log.direction === 'IN' ? '#dcfce7' : '#fee2e2',
                                                 color: log.direction === 'IN' ? '#166534' : '#991b1b'
                                             }}>{log.direction}</span>
