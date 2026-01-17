@@ -26,11 +26,16 @@ export default function Settings({ user }) {
     const [neonSize, setNeonSize] = useState(localStorage.getItem('neonSize') || '40');
     const [neonX, setNeonX] = useState(localStorage.getItem('neonX') || '10');
     const [neonY, setNeonY] = useState(localStorage.getItem('neonY') || '10');
+    const [neonShape, setNeonShape] = useState(localStorage.getItem('neonShape') || 'circular');
+
+    const updateBodyClass = (t, s) => {
+        document.body.className = `${t} neon-${s}`;
+    };
 
     // Apply saved theme and color on mount
     React.useEffect(() => {
         loadPdfSettings();
-        document.body.className = theme;
+        updateBodyClass(theme, neonShape);
         document.documentElement.style.setProperty('--accent', accentColor);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
 
@@ -70,7 +75,7 @@ export default function Settings({ user }) {
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
-        document.body.className = newTheme;
+        updateBodyClass(newTheme, neonShape);
         setMessage('Theme updated successfully!');
         setTimeout(() => setMessage(''), 3000);
     };
@@ -110,6 +115,11 @@ export default function Settings({ user }) {
                 setNeonY(value);
                 localStorage.setItem('neonY', value);
                 document.documentElement.style.setProperty('--neon-position', `${neonX}% ${value}%`);
+                break;
+            case 'shape':
+                setNeonShape(value);
+                localStorage.setItem('neonShape', value);
+                updateBodyClass(theme, value);
                 break;
         }
     };
@@ -361,6 +371,29 @@ export default function Settings({ user }) {
                         </p>
 
                         <div className="grid-2" style={{ gap: '30px' }}>
+                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                <label>Atmospheric Geometry</label>
+                                <div className="tab-nav" style={{ marginTop: '10px', width: '100%', justifyContent: 'flex-start' }}>
+                                    {[
+                                        { id: 'circular', label: 'Classic Circular', icon: '⭕' },
+                                        { id: 'wave', label: 'Soft Wave', icon: '🌊' },
+                                        { id: 'line', label: 'Focus Line', icon: '📏' },
+                                        { id: 'abstract', label: 'Cosmic Abstract', icon: '✨' }
+                                    ].map(shape => (
+                                        <button
+                                            type="button"
+                                            key={shape.id}
+                                            className={`tab-btn ${neonShape === shape.id ? 'active' : ''}`}
+                                            onClick={() => updateNeonSetting('shape', shape.id)}
+                                            style={neonShape === shape.id ? { color: 'var(--accent)' } : {}}
+                                        >
+                                            <span style={{ marginRight: '8px' }}>{shape.icon}</span>
+                                            {shape.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="form-group">
                                 <label>Neon Glow Color</label>
                                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>

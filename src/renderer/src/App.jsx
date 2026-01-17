@@ -44,16 +44,17 @@ export default function App() {
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
-        document.body.className = savedTheme;
-        document.documentElement.style.setProperty('--accent', savedAccent);
 
+        document.documentElement.style.setProperty('--accent', savedAccent);
         // Load Neon Atmosphere
         const neonColor = localStorage.getItem('neonColor') || '#0075FF';
         const neonIntensity = localStorage.getItem('neonIntensity') || '0.15';
         const neonSize = localStorage.getItem('neonSize') || '40';
         const neonX = localStorage.getItem('neonX') || '10';
         const neonY = localStorage.getItem('neonY') || '10';
+        const neonShape = localStorage.getItem('neonShape') || 'circular';
 
+        document.body.className = `${savedTheme} neon-${neonShape}`;
         document.documentElement.style.setProperty('--neon-color', neonColor);
         document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
         document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
