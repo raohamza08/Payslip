@@ -13,6 +13,12 @@
 
   /* Shared Timing */
   --theme-transition: background 0.6s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+
+  /* Dynamic Neon Defaults */
+  --neon-color: var(--accent);
+  --neon-intensity: 0.15;
+  --neon-size: 40%;
+  --neon-position: 10% 10%;
 }
 
 /* Light Mode: Frosted Arctic */
@@ -84,15 +90,37 @@ body {
   line-height: 1.6;
 }
 
+/* Theme Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-top);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+  border: 2px solid var(--bg-top);
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
 /* Dynamic Background Lighting */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 10% 10%, var(--accent-glow) 0%, transparent 40%),
+  background: radial-gradient(circle at var(--neon-position), var(--neon-color) 0%, transparent var(--neon-size)),
     radial-gradient(circle at 90% 90%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
   z-index: -1;
   pointer-events: none;
+  opacity: var(--neon-intensity);
 }
 
 h1,
@@ -797,13 +825,13 @@ tr:last-child td {
 }
 
 .tab-btn {
-  padding: 10px 24px;
-  border-radius: 16px;
+  padding: 6px 18px;
+  border-radius: 12px;
   border: none;
   background: transparent;
   color: var(--text-light);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;

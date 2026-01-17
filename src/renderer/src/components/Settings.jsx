@@ -21,12 +21,24 @@ export default function Settings({ user }) {
         accentColor: '#17a2b8'
     });
 
+    const [neonColor, setNeonColor] = useState(localStorage.getItem('neonColor') || '#0075FF');
+    const [neonIntensity, setNeonIntensity] = useState(localStorage.getItem('neonIntensity') || '0.15');
+    const [neonSize, setNeonSize] = useState(localStorage.getItem('neonSize') || '40');
+    const [neonX, setNeonX] = useState(localStorage.getItem('neonX') || '10');
+    const [neonY, setNeonY] = useState(localStorage.getItem('neonY') || '10');
+
     // Apply saved theme and color on mount
     React.useEffect(() => {
         loadPdfSettings();
         document.body.className = theme;
         document.documentElement.style.setProperty('--accent', accentColor);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
+
+        // Load Neon Settings
+        document.documentElement.style.setProperty('--neon-color', neonColor);
+        document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
+        document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
+        document.documentElement.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
     }, []);
 
     const adjustColor = (color, amount) => {
@@ -70,6 +82,36 @@ export default function Settings({ user }) {
         document.documentElement.style.setProperty('--accent-hover', adjustColor(color, -20));
         setMessage('Accent color updated!');
         setTimeout(() => setMessage(''), 3000);
+    };
+
+    const updateNeonSetting = (key, value) => {
+        switch (key) {
+            case 'color':
+                setNeonColor(value);
+                localStorage.setItem('neonColor', value);
+                document.documentElement.style.setProperty('--neon-color', value);
+                break;
+            case 'intensity':
+                setNeonIntensity(value);
+                localStorage.setItem('neonIntensity', value);
+                document.documentElement.style.setProperty('--neon-intensity', value);
+                break;
+            case 'size':
+                setNeonSize(value);
+                localStorage.setItem('neonSize', value);
+                document.documentElement.style.setProperty('--neon-size', `${value}%`);
+                break;
+            case 'x':
+                setNeonX(value);
+                localStorage.setItem('neonX', value);
+                document.documentElement.style.setProperty('--neon-position', `${value}% ${neonY}%`);
+                break;
+            case 'y':
+                setNeonY(value);
+                localStorage.setItem('neonY', value);
+                document.documentElement.style.setProperty('--neon-position', `${neonX}% ${value}%`);
+                break;
+        }
     };
 
     const handlePasswordReset = async (e) => {
@@ -305,10 +347,86 @@ export default function Settings({ user }) {
                             textAlign: 'center',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                         }}>
-                            <h4 style={{ margin: '0 0 8px 0' }}>Preview</h4>
+                            <h4 style={{ margin: '0 0 8px 0', color: 'white' }}>Preview</h4>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
                                 This is how your accent color will look
                             </p>
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '40px' }}>
+                        <h3>Nebula Atmosphere</h3>
+                        <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                            Customize the dynamic background lighting and neon effects.
+                        </p>
+
+                        <div className="grid-2" style={{ gap: '30px' }}>
+                            <div className="form-group">
+                                <label>Neon Glow Color</label>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                    <input
+                                        type="color"
+                                        value={neonColor}
+                                        onChange={(e) => updateNeonSetting('color', e.target.value)}
+                                        style={{ width: '60px', height: '45px', padding: '0', borderRadius: '8px', cursor: 'pointer', border: 'none' }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={neonColor.toUpperCase()}
+                                        onChange={(e) => updateNeonSetting('color', e.target.value)}
+                                        style={{ flex: 1 }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Glow Intensity ({Math.round(neonIntensity * 100)}%)</label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    value={neonIntensity}
+                                    onChange={(e) => updateNeonSetting('intensity', e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Glow Dispersion ({neonSize}%)</label>
+                                <input
+                                    type="range"
+                                    min="10"
+                                    max="80"
+                                    value={neonSize}
+                                    onChange={(e) => updateNeonSetting('size', e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Focal Hub Position</label>
+                                <div className="flex-row" style={{ gap: '10px' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <span style={{ fontSize: '11px', textTransform: 'uppercase', opacity: 0.6 }}>Horizontal (X)</span>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={neonX}
+                                            onChange={(e) => updateNeonSetting('x', e.target.value)}
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <span style={{ fontSize: '11px', textTransform: 'uppercase', opacity: 0.6 }}>Vertical (Y)</span>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={neonY}
+                                            onChange={(e) => updateNeonSetting('y', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -363,7 +481,8 @@ export default function Settings({ user }) {
                         padding: '15px',
                         background: '#fff3cd',
                         borderRadius: '8px',
-                        border: '1px solid #ffc107'
+                        border: '1px solid #ffc107',
+                        color: '#856404'
                     }}>
                         <strong>⚠️ Security Notice:</strong>
                         <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
@@ -380,7 +499,7 @@ export default function Settings({ user }) {
 
                     <div style={{ marginBottom: '25px' }}>
                         <h3>Need Help?</h3>
-                        <p style={{ color: '#500303ff', lineHeight: '1.6' }}>
+                        <p style={{ color: 'var(--text-light)', lineHeight: '1.6' }}>
                             If you're experiencing any issues or have questions about the Payslip Manager,
                             we're here to help!
                         </p>
@@ -402,11 +521,9 @@ export default function Settings({ user }) {
                             boxShadow: '0 4px 12px rgba(14, 165, 233, 0.2)'
                         }}
                             onClick={() => window.location.href = 'mailto:hamzabadar.euroshub@gmail.com?subject=Payslip Manager Support'}
-                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
                             <div style={{ fontSize: '40px', marginBottom: '10px' }}>📧</div>
-                            <h3 style={{ margin: '0 0 8px 0' }}>Email Support</h3>
+                            <h3 style={{ margin: '0 0 8px 0', color: 'white' }}>Email Support</h3>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
                                 raohamzabadar@euroshub.com
                             </p>
@@ -422,11 +539,9 @@ export default function Settings({ user }) {
                             boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
                         }}
                             onClick={() => window.open('https://wa.me/923078445045', '_blank')}
-                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
                             <div style={{ fontSize: '40px', marginBottom: '10px' }}>💬</div>
-                            <h3 style={{ margin: '0 0 8px 0' }}>WhatsApp</h3>
+                            <h3 style={{ margin: '0 0 8px 0', color: 'white' }}>WhatsApp</h3>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
                                 Quick response via chat
                             </p>
@@ -436,12 +551,12 @@ export default function Settings({ user }) {
                     <div style={{
                         marginTop: '30px',
                         padding: '20px',
-                        background: '#f8f9fa',
+                        background: 'var(--item-hover)',
                         borderRadius: '10px',
-                        border: '1px solid #e0e0e0'
+                        border: '1px solid var(--border)'
                     }}>
                         <h3 style={{ marginTop: 0 }}>📋 System Information</h3>
-                        <div style={{ fontSize: '14px', color: '#666' }}>
+                        <div style={{ fontSize: '14px', color: 'var(--text-light)' }}>
                             <p><strong>Version:</strong> v3.9</p>
                             <p><strong>Database:</strong> Supabase (Global)</p>
                             <p><strong>Email Provider:</strong> Gmail SMTP Server</p>
@@ -455,7 +570,7 @@ export default function Settings({ user }) {
             {activeTab === 'pdf' && (
                 <div className="card">
                     <h2 style={{ marginTop: 0 }}>PDF Customization</h2>
-                    <p style={{ color: '#666', marginBottom: '25px' }}>
+                    <p style={{ color: 'var(--text-light)', marginBottom: '25px' }}>
                         Customize how your payslips look. These settings will apply to all future generated payslips.
                     </p>
 
@@ -586,6 +701,6 @@ export default function Settings({ user }) {
                     </form>
                 </div>
             )}
-        </div>
+        </div >
     );
 }

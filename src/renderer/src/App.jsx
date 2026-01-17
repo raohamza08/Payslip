@@ -47,6 +47,18 @@ export default function App() {
         document.body.className = savedTheme;
         document.documentElement.style.setProperty('--accent', savedAccent);
 
+        // Load Neon Atmosphere
+        const neonColor = localStorage.getItem('neonColor') || '#0075FF';
+        const neonIntensity = localStorage.getItem('neonIntensity') || '0.15';
+        const neonSize = localStorage.getItem('neonSize') || '40';
+        const neonX = localStorage.getItem('neonX') || '10';
+        const neonY = localStorage.getItem('neonY') || '10';
+
+        document.documentElement.style.setProperty('--neon-color', neonColor);
+        document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
+        document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
+        document.documentElement.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
+
         // Override default alert with professional toast
         window.alert = (message) => {
             const type = message && message.toLowerCase().includes('error') ? 'error' : 'info';
