@@ -173,8 +173,11 @@ export default function App() {
 
     const hasPermission = (id) => {
         if (isSuperAdmin) return true;
-        if (user.role === 'admin') return true; // Admins also have all permissions currently, or we can restrict them too
-        if (user.permissions && Array.isArray(user.permissions) && user.permissions.includes(id)) return true;
+        // Role 'admin' used to have default access, but we now check explicit permissions 
+        // for both Admins and Employees to allow for the granular control requested.
+        if (user.permissions && Array.isArray(user.permissions)) {
+            return user.permissions.includes(id);
+        }
         return false;
     };
 
