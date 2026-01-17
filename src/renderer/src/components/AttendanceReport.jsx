@@ -101,36 +101,40 @@ export default function AttendanceReport() {
     };
 
     return (
-        <div className="p-20">
-            <div className="toolbar">
-                <div className="toolbar-group">
-                    <button
-                        className={`btn ${activeTab === 'attendance' ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setActiveTab('attendance')}
-                    >
-                        Attendance Report
-                    </button>
-                    <button
-                        className={`btn ${activeTab === 'kpi' ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setActiveTab('kpi')}
-                    >
-                        KPI Performance Report
-                    </button>
-                </div>
+        <div className="view-container">
+            <div className="tab-nav">
+                <button
+                    className={`tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('attendance')}
+                >
+                    Attendance Report
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'kpi' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('kpi')}
+                >
+                    KPI Performance Report
+                </button>
+            </div>
 
-                <div className="toolbar-group">
+            <div className="filter-bar">
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     {activeTab === 'attendance' && (
                         <>
-                            <select className="form-control" style={{ width: '130px' }} value={month} onChange={e => setMonth(parseInt(e.target.value))}>
-                                {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
-                                ))}
-                            </select>
-                            <select className="form-control" style={{ width: '100px' }} value={year} onChange={e => setYear(parseInt(e.target.value))}>
-                                {Array.from({ length: 5 }, (_, i) => (
-                                    <option key={i} value={2024 + i}>{2024 + i}</option>
-                                ))}
-                            </select>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <select value={month} onChange={e => setMonth(parseInt(e.target.value))}>
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                        <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <select value={year} onChange={e => setYear(parseInt(e.target.value))}>
+                                    {Array.from({ length: 5 }, (_, i) => (
+                                        <option key={i} value={2024 + i}>{2024 + i}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </>
                     )}
                     <button className="btn btn-secondary" onClick={handleExport}>

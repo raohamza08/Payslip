@@ -317,19 +317,22 @@ export default function App() {
 
 function AdminDashboard({ onNav }) {
     return (
-        <div style={{ padding: '10px' }}>
+        <div className="view-container">
             <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
-                <div className="card shadow clickable" onClick={() => onNav('payroll')}>
+                <div className="card clickable" onClick={() => onNav('payroll')}>
+                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>💰</div>
                     <h3 style={{ margin: '0 0 10px 0' }}>Run Payroll</h3>
-                    <p style={{ color: '#666', fontSize: '14px' }}>Process salaries for current month</p>
+                    <p className="text-light text-sm">Review financials and generate monthly payslips for the team.</p>
                 </div>
-                <div className="card shadow clickable" onClick={() => onNav('admin-leaves')}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>Pending Leaves</h3>
-                    <p style={{ color: '#666', fontSize: '14px' }}>New requests waiting for approval</p>
+                <div className="card clickable" onClick={() => onNav('admin-leaves')}>
+                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>📅</div>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Leave Requests</h3>
+                    <p className="text-light text-sm">Manage employee absence requests and vacation approvals.</p>
                 </div>
-                <div className="card shadow clickable" onClick={() => onNav('attendance')}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>Daily Attendance</h3>
-                    <p style={{ color: '#666', fontSize: '14px' }}>View today's check-ins</p>
+                <div className="card clickable" onClick={() => onNav('attendance')}>
+                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🕒</div>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Live Attendance</h3>
+                    <p className="text-light text-sm">Monitor daily check-ins and track real-time sitting hours.</p>
                 </div>
             </div>
         </div>

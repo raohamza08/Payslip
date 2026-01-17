@@ -39,130 +39,97 @@ export default function EmployeePortal({ user }) {
     const { profile, leaves, recentPayslips, warnings, assets, recentPerformance } = data;
 
     return (
-        <div style={{ padding: '20px' }}>
-            <div className="flex-row flex-between portal-header" style={{ marginBottom: '30px', alignItems: 'center' }}>
+        <div className="view-container">
+            <div className="flex-row flex-between portal-header" style={{ marginBottom: '30px' }}>
                 <div>
-                    <h1 style={{ marginBottom: '5px' }}>Welcome, {profile.name}</h1>
-                    <p style={{ color: 'var(--text-light)' }}>{profile.job_title} | {profile.department}</p>
+                    <h1 style={{ marginBottom: '5px' }}>Welcome back, {profile.name}</h1>
+                    <p className="text-light">{profile.job_title} | {profile.department}</p>
                 </div>
-                <div className="badge portal-status" style={{ padding: '10px 20px', fontSize: '14px', background: 'var(--accent)', color: 'white' }}>
-                    Status: {profile.status}
+                <div className="badge success" style={{ padding: '10px 20px', fontSize: '14px' }}>
+                    {profile.status}
                 </div>
             </div>
 
-            <nav className="portal-nav" style={{ display: 'flex', gap: '20px', borderBottom: '1px solid var(--border)', marginBottom: '30px', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '5px' }}>
+            <div className="tab-nav">
                 {['Dashboard', 'Attendance', 'My Leaves', 'My Payslips', 'My Assets', 'Performance', 'Documents'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
-                        className={`nav-tab ${activeTab === tab.toLowerCase().replace(' ', '-') ? 'active' : ''}`}
-                        style={{
-                            padding: '10px 5px',
-                            border: 'none',
-                            background: 'none',
-                            cursor: 'pointer',
-                            color: activeTab === tab.toLowerCase().replace(' ', '-') ? 'var(--accent)' : 'var(--text)',
-                            borderBottom: activeTab === tab.toLowerCase().replace(' ', '-') ? '3px solid var(--accent)' : 'none',
-                            fontWeight: 'bold',
-                            flexShrink: 0
-                        }}
+                        className={`tab-btn ${activeTab === tab.toLowerCase().replace(' ', '-') ? 'active' : ''}`}
                     >
                         {tab}
                     </button>
                 ))}
-            </nav>
+            </div>
 
             {activeTab === 'dashboard' && (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '20px'
-                }}>
-                    <div className="card shadow">
+                <div className="grid-3" style={{ gap: '20px' }}>
+                    <div className="card">
                         <h3>Attendance & Sitting</h3>
-                        <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--accent)', margin: '15px 0' }}>
+                        <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', margin: '15px 0' }}>
                             {profile.sitting_hours || '0.0'} hrs
                         </p>
-                        <p style={{ fontSize: '14px', color: 'var(--text-light)' }}>Total sitting hours this month</p>
+                        <p className="text-light text-sm">Total sitting hours this month</p>
                     </div>
 
-                    <div className="card shadow">
+                    <div className="card">
                         <h3>Leave Balance</h3>
-                        <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--warning)', margin: '15px 0' }}>
+                        <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--warning)', margin: '15px 0' }}>
                             {leaves && leaves.filter(l => l.status === 'Approved').reduce((acc, l) => acc + (Number(l.days_count) || 0), 0)} / 26
                         </p>
-                        <p style={{ fontSize: '14px', color: 'var(--text-light)' }}>Days used this year</p>
+                        <p className="text-light text-sm">Days used this year</p>
                     </div>
 
-                    <div className="card shadow">
+                    <div className="card">
                         <h3>KPI Rating</h3>
-                        <p style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--success)', margin: '15px 0' }}>
+                        <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--success)', margin: '15px 0' }}>
                             {recentPerformance ? `${recentPerformance.final_rating} / 5` : 'N/A'}
                         </p>
                         {recentPerformance && (
-                            <div style={{ marginTop: '10px', fontSize: '13px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                            <div style={{ marginTop: '10px', fontSize: '13px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
                                 <p><strong>Feedback:</strong> {recentPerformance.comments || 'No comments'}</p>
-                                <p style={{ color: '#888', marginTop: '5px' }}>Period: {recentPerformance.period}</p>
+                                <p className="text-light" style={{ marginTop: '5px' }}>Period: {recentPerformance.period}</p>
                             </div>
                         )}
-                        {!recentPerformance && <p style={{ fontSize: '14px', color: 'var(--text-light)' }}>No recent review</p>}
                     </div>
 
-                    <div className="card shadow">
-                        <h3>My Assets</h3>
-                        <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#6366f1', margin: '15px 0' }}>
-                            {assets.length}
-                        </p>
-                        <ul style={{ paddingLeft: '20px', fontSize: '12px', color: '#666' }}>
-                            {assets.slice(0, 3).map(a => <li key={a.id}>{a.name}</li>)}
-                        </ul>
+                    <div className="card" style={{ gridColumn: 'span 2' }}>
+                        <div className="flex-row flex-between" style={{ marginBottom: '15px' }}>
+                            <h3>Recent Payslips</h3>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setActiveTab('my-payslips')}>View History</button>
+                        </div>
+                        <div className="table-container">
+                            <table className="table">
+                                <thead>
+                                    <tr><th>Period</th><th>Issue Date</th><th>Net Pay</th><th>Action</th></tr>
+                                </thead>
+                                <tbody>
+                                    {recentPayslips.map(ps => (
+                                        <tr key={ps.id}>
+                                            <td>{ps.pay_period_start}</td>
+                                            <td>{ps.issue_date}</td>
+                                            <td><strong>{ps.net_pay.toLocaleString()}</strong></td>
+                                            <td><button className="btn btn-secondary btn-sm" onClick={() => api.openPayslip(ps.id)}>View PDF</button></td>
+                                        </tr>
+                                    ))}
+                                    {recentPayslips.length === 0 && <tr><td colSpan="4" className="text-center">No payslips found</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <div className="card shadow" style={{ gridColumn: 'span 2' }}>
-                        <h3>Recent Payslips</h3>
-                        <table className="table" style={{ marginTop: '10px' }}>
-                            <thead>
-                                <tr><th>Period</th><th>Issue Date</th><th>Net Pay</th><th>Action</th></tr>
-                            </thead>
-                            <tbody>
-                                {recentPayslips.map(ps => (
-                                    <tr key={ps.id}>
-                                        <td>{ps.pay_period_start}</td>
-                                        <td>{ps.issue_date}</td>
-                                        <td><strong>{ps.net_pay.toLocaleString()}</strong></td>
-                                        <td><button className="btn btn-sm btn-secondary" onClick={() => api.openPayslip(ps.id)}>View</button></td>
-                                    </tr>
-                                ))}
-                                {recentPayslips.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No payslips found</td></tr>}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="card shadow" style={{ gridRow: 'span 2' }}>
-                        <h3>Warnings & Alerts</h3>
-                        {warnings.length === 0 ? (
-                            <p style={{ padding: '20px', textAlign: 'center', color: 'var(--success)' }}>No active warnings</p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                                {warnings.map(w => (
-                                    <div
-                                        key={w.id}
-                                        onClick={() => setActiveTab('my-warnings')}
-                                        style={{
-                                            padding: '10px', borderLeft: '4px solid var(--danger)',
-                                            background: '#fff1f2', borderRadius: '4px', cursor: 'pointer',
-                                            transition: 'transform 0.2s'
-                                        }}
-                                        onMouseOver={e => e.currentTarget.style.transform = 'translateX(5px)'}
-                                        onMouseOut={e => e.currentTarget.style.transform = 'translateX(0)'}
-                                    >
-                                        <strong>{w.level}</strong>
-                                        <p style={{ fontSize: '13px', margin: '5px 0' }}>{w.reason}</p>
-                                        <span style={{ fontSize: '11px', color: '#888' }}>{w.date}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                    <div className="card">
+                        <h3>Assigned Assets</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' }}>
+                            {assets.slice(0, 3).map(a => (
+                                <div key={a.id} className="flex-row flex-between" style={{ padding: '8px', background: 'var(--bg)', borderRadius: '8px' }}>
+                                    <span style={{ fontWeight: '600' }}>{a.name}</span>
+                                    <span className="text-light text-sm">{a.asset_tag}</span>
+                                </div>
+                            ))}
+                            {assets.length === 0 && <p className="text-light text-center">No assets assigned</p>}
+                            {assets.length > 3 && <button className="btn btn-secondary btn-sm" onClick={() => setActiveTab('my-assets')}>+{assets.length - 3} more</button>}
+                        </div>
                     </div>
                 </div>
             )}
@@ -575,49 +542,94 @@ function PerformanceModule({ performanceHistory }) {
         rating: p.final_rating
     }));
 
+    // Theme-aware colors
+    const isDark = document.body.classList.contains('dark');
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0FB8AF';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+    const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+
     return (
-        <div className="card shadow p-20">
-            <h2>Performance Trend</h2>
-            <div style={{ height: '300px', width: '100%', marginTop: '20px' }}>
+        <div className="card">
+            <div className="flex-row flex-between" style={{ marginBottom: '20px' }}>
+                <div>
+                    <h2>Performance Trend</h2>
+                    <p className="text-light text-sm">Visualize your rating history over time.</p>
+                </div>
+            </div>
+
+            <div style={{ height: '340px', width: '100%', marginTop: '10px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="period" />
-                        <YAxis domain={[0, 5]} />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="rating" stroke="var(--accent)" strokeWidth={3} />
+                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                        <XAxis
+                            dataKey="period"
+                            stroke={textColor}
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            dy={10}
+                        />
+                        <YAxis
+                            domain={[0, 5]}
+                            stroke={textColor}
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            dx={-10}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                background: 'var(--card-bg)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '12px',
+                                boxShadow: 'var(--shadow-lg)',
+                                color: 'var(--text-heading)'
+                            }}
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey="rating"
+                            stroke={accentColor}
+                            strokeWidth={4}
+                            dot={{ fill: accentColor, strokeWidth: 2, r: 6, stroke: isDark ? '#060b28' : '#fff' }}
+                            activeDot={{ r: 8, strokeWidth: 0 }}
+                            animationDuration={1500}
+                        />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
 
-            <h2 style={{ marginTop: '30px' }}>Historical Ratings</h2>
-            <table className="table" style={{ marginTop: '10px' }}>
-                <thead>
-                    <tr>
-                        <th>Period</th>
-                        <th>Quality</th>
-                        <th>Speed</th>
-                        <th>Initiative</th>
-                        <th>Teamwork</th>
-                        <th>Final Rating</th>
-                        <th>Comments</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {performanceHistory.map(p => (
-                        <tr key={p.id}>
-                            <td>{p.period}</td>
-                            <td>{p.quality_rating}/5</td>
-                            <td>{p.speed_rating}/5</td>
-                            <td>{p.initiative_rating}/5</td>
-                            <td>{p.teamwork_rating}/5</td>
-                            <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{p.final_rating}/5.0</td>
-                            <td>{p.comments}</td>
+            <h2 style={{ marginTop: '40px', marginBottom: '15px' }}>Detailed History</h2>
+            <div className="table-container">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Quality</th>
+                            <th>Speed</th>
+                            <th>Initiative</th>
+                            <th>Teamwork</th>
+                            <th>Final</th>
+                            <th>Comments</th>
                         </tr>
-                    ))}
-                    {performanceHistory.length === 0 && <tr><td colSpan="7" style={{ textAlign: 'center' }}>No performance data available.</td></tr>}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {performanceHistory.map(p => (
+                            <tr key={p.id}>
+                                <td><strong>{p.period}</strong></td>
+                                <td>{p.quality_rating}/5</td>
+                                <td>{p.speed_rating}/5</td>
+                                <td>{p.initiative_rating}/5</td>
+                                <td>{p.teamwork_rating}/5</td>
+                                <td style={{ fontWeight: '800', color: 'var(--accent)' }}>{p.final_rating}</td>
+                                <td className="text-sm" style={{ maxWidth: '250px' }}>{p.comments}</td>
+                            </tr>
+                        ))}
+                        {performanceHistory.length === 0 && <tr><td colSpan="7" className="text-center">No performance data available.</td></tr>}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

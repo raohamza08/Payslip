@@ -152,27 +152,35 @@ export default function PayrollGrid({ onNavigate }) {
     if (loading) return <div>Loading Payroll Data...</div>;
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="view-container">
             <div className="toolbar">
-                <h1>Payroll Grid</h1>
+                <div>
+                    <h1>Payroll Grid</h1>
+                    <p className="text-light">Configure earnings and deductions for all active employees.</p>
+                </div>
                 <div className="toolbar-group">
-                    <input type="month" className="form-control" value={month} onChange={e => setMonth(e.target.value)} style={{ width: 'auto' }} />
-                    <button className="btn btn-secondary" onClick={handleSave}>Save Changes</button>
-                    <button className="btn btn-primary" onClick={() => setView('review')}>Create Payslips</button>
+                    <div className="form-group" style={{ margin: 0 }}>
+                        <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ width: '160px' }} />
+                    </div>
+                    <button className="btn btn-secondary" onClick={handleSave}>Save Defaults</button>
+                    <button className="btn btn-primary" onClick={() => setView('review')}>
+                        <span style={{ fontSize: '1.1rem', marginRight: '5px' }}>⚡</span>
+                        Generate Payslips
+                    </button>
                 </div>
             </div>
 
             {view === 'grid' && (
-                <div className="table-container" style={{ flex: 1, overflow: 'auto' }}>
-                    <table>
+                <div className="table-container">
+                    <table className="table">
                         <thead>
                             <tr>
                                 <th>Employee</th>
                                 <th>Basic Salary</th>
-                                <th>Earnings (Allowances)</th>
-                                <th>Deductions</th>
+                                <th className="text-center">Earnings</th>
+                                <th className="text-center">Deductions</th>
                                 <th>Notes</th>
-                                <th>Net Pay (Est)</th>
+                                <th className="text-right">Net Pay (Est)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -180,7 +188,7 @@ export default function PayrollGrid({ onNavigate }) {
                                 const data = gridData[emp.id];
                                 if (!data) return null;
                                 const { gross, totalDed, net } = calculateNet(data);
-                                // Basic Salary is usually first item
+
                                 const changeBasic = (val) => {
                                     const newData = { ...gridData };
                                     const newEarnings = [...newData[emp.id].earnings];
@@ -201,37 +209,40 @@ export default function PayrollGrid({ onNavigate }) {
                                     <tr key={emp.id}>
                                         <td>
                                             <strong>{emp.name}</strong><br />
-                                            <span style={{ fontSize: 10, color: '#666' }}>{emp.job_title}</span>
+                                            <span className="text-sm text-light">{emp.job_title}</span>
                                         </td>
-                                        <td>
+                                        <td style={{ width: '140px' }}>
                                             <input
                                                 type="number"
+                                                className="table-input"
                                                 value={data.earnings.find(e => e.name === 'Basic Salary')?.amount || 0}
                                                 onChange={e => changeBasic(e.target.value)}
-                                                style={{ width: 100, padding: 5 }}
+                                                style={{ padding: '8px' }}
                                             />
                                         </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span>{gross.toLocaleString()}</span>
-                                                <button className="btn btn-sm btn-secondary" onClick={() => openEdit(emp.id, 'earnings')}>Edit ({data.earnings.length})</button>
+                                        <td className="text-center">
+                                            <div className="flex-row flex-center" style={{ gap: '10px' }}>
+                                                <span style={{ fontWeight: '700' }}>{gross.toLocaleString()}</span>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')}>Edit</button>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span>{totalDed.toLocaleString()}</span>
-                                                <button className="btn btn-sm btn-secondary" onClick={() => openEdit(emp.id, 'deductions')}>Edit ({data.deductions.length})</button>
+                                        <td className="text-center">
+                                            <div className="flex-row flex-center" style={{ gap: '10px' }}>
+                                                <span style={{ fontWeight: '700', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')}>Edit</button>
                                             </div>
                                         </td>
                                         <td>
                                             <textarea
                                                 value={data.notes || ''}
                                                 onChange={e => changeNotes(e.target.value)}
-                                                placeholder="Custom notes for payslip..."
-                                                style={{ width: '100%', minHeight: '40px', fontSize: '11px', padding: '5px' }}
+                                                placeholder="..."
+                                                style={{ minHeight: '60px', padding: '8px', fontSize: '12px' }}
                                             />
                                         </td>
-                                        <td style={{ fontWeight: 'bold', color: '#166534' }}>{net.toLocaleString()}</td>
+                                        <td className="text-right" style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1.1rem' }}>
+                                            {net.toLocaleString()}
+                                        </td>
                                     </tr>
                                 );
                             })}

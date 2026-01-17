@@ -65,17 +65,21 @@ export default function PerformanceReviews({ user }) {
     };
 
     return (
-        <div className="p-20">
+        <div className="view-container">
             <div className="toolbar">
-                <h1>Performance Management (KPIs)</h1>
+                <div>
+                    <h1>KPI Management</h1>
+                    <p className="text-light">Evaluate and track employee performance across key metrics.</p>
+                </div>
                 <div className="toolbar-group">
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                        <span style={{ fontSize: '1.2rem', marginRight: '5px' }}>+</span>
                         New Review
                     </button>
                 </div>
             </div>
 
-            <div className="table-container shadow">
+            <div className="table-container">
                 <table className="table">
                     <thead>
                         <tr>
@@ -86,7 +90,7 @@ export default function PerformanceReviews({ user }) {
                             <th>Initiative</th>
                             <th>Teamwork</th>
                             <th>Attendance</th>
-                            <th>Final</th>
+                            <th>Final Score</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -101,21 +105,17 @@ export default function PerformanceReviews({ user }) {
                                 <td>{r.teamwork_rating}</td>
                                 <td>{r.attendance_rating}</td>
                                 <td>
-                                    <span style={{
-                                        padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold',
-                                        background: r.final_rating >= 4 ? '#dcfce7' : r.final_rating >= 3 ? '#fef9c3' : '#fee2e2',
-                                        color: r.final_rating >= 4 ? '#166534' : r.final_rating >= 3 ? '#854d0e' : '#991b1b'
-                                    }}>
-                                        {r.final_rating}
+                                    <span className={`badge ${r.final_rating >= 4 ? 'success' : r.final_rating >= 3 ? 'warning' : 'danger'}`}>
+                                        {r.final_rating} / 5.0
                                     </span>
                                 </td>
-                                <td style={{ fontSize: '12px', color: '#666' }}>
+                                <td className="text-light text-sm">
                                     {new Date(r.review_date).toLocaleDateString()}
                                 </td>
                             </tr>
                         ))}
                         {reviews.length === 0 && (
-                            <tr><td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>No performance reviews found.</td></tr>
+                            <tr><td colSpan="9" className="text-center">No performance reviews found.</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -123,31 +123,31 @@ export default function PerformanceReviews({ user }) {
 
             {showModal && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '600px' }}>
-                        <h2>New Performance Review</h2>
+                    <div className="modal" style={{ maxWidth: '640px' }}>
+                        <h2 style={{ marginBottom: '25px' }}>New Performance Review</h2>
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label>Employee</label>
-                                <select
-                                    className="form-control"
-                                    onChange={(e) => setSelectedEmployee(e.target.value)}
-                                    required
-                                >
-                                    <option value="">Select Employee...</option>
-                                    {employees.map(emp => (
-                                        <option key={emp.id} value={emp.id}>{emp.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Review Period</label>
-                                <input
-                                    type="month"
-                                    className="form-control"
-                                    value={formData.period}
-                                    onChange={e => setFormData({ ...formData, period: e.target.value })}
-                                />
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>Employee</label>
+                                    <select
+                                        onChange={(e) => setSelectedEmployee(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Employee...</option>
+                                        {employees.map(emp => (
+                                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Review Period</label>
+                                    <input
+                                        type="month"
+                                        value={formData.period}
+                                        onChange={e => setFormData({ ...formData, period: e.target.value })}
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid-2" style={{ gap: '15px' }}>
