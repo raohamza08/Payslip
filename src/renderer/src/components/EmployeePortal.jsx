@@ -240,9 +240,9 @@ function AttendanceModule({ employeeId }) {
                                     const isToday = day === new Date().toISOString().split('T')[0];
 
                                     let status = <span className="badge secondary">Upcoming</span>;
-                                    if (log) status = <span className="badge approved">PRESENT</span>;
-                                    else if (leaveType) status = <span className="badge pending">{leaveType} (LEAVE)</span>;
-                                    else if (isPast) status = <span className="badge danger" style={{ background: '#fee2e2', color: '#991b1b' }}>ABSENT</span>;
+                                    if (log) status = <span className="badge success">PRESENT</span>;
+                                    else if (leaveType) status = <span className="badge warning">{leaveType} (LEAVE)</span>;
+                                    else if (isPast) status = <span className="badge danger">ABSENT</span>;
                                     else if (isToday) status = <span className="badge warning">TODAY</span>;
 
                                     return (
@@ -261,27 +261,23 @@ function AttendanceModule({ employeeId }) {
                         </table>
                     </div>
 
-                    <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Recent Biometric Scans (Last 100)</h3>
-                    <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Recent Biometric Scans</h3>
+                    <div className="table-container" style={{ maxHeight: '340px', overflowY: 'auto' }}>
                         <table className="table">
-                            <thead><tr><th>Time</th><th>Scan Type</th><th>Direction</th></tr></thead>
+                            <thead><tr><th>Time</th><th>Verification</th><th className="text-center">Direction</th></tr></thead>
                             <tbody>
                                 {rawLogs.map(log => (
                                     <tr key={log.id}>
-                                        <td>{new Date(log.timestamp).toLocaleString()}</td>
-                                        <td>Biometric/Punch</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
-                                                background: log.direction === 'IN' ? '#dcfce7' : '#fee2e2',
-                                                color: log.direction === 'IN' ? '#166534' : '#991b1b'
-                                            }}>
+                                        <td>{new Date(log.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                                        <td>Biometric/ID Card</td>
+                                        <td className="text-center">
+                                            <span className={`badge ${log.direction === 'IN' ? 'success' : 'danger'}`}>
                                                 {log.direction}
                                             </span>
                                         </td>
                                     </tr>
                                 ))}
-                                {rawLogs.length === 0 && <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999' }}>No recent scans found. Ensure your User Name matches the attendance sheet.</td></tr>}
+                                {rawLogs.length === 0 && <tr><td colSpan="3" className="text-center text-light">No recent scans detected.</td></tr>}
                             </tbody>
                         </table>
                     </div>
@@ -336,7 +332,7 @@ function LeaveModule({ employeeId }) {
     };
 
     return (
-        <div className="card shadow p-20">
+        <div className="card">
             <div className="flex-row flex-between" style={{ marginBottom: '20px' }}>
                 <h2>My Leave Requests</h2>
                 <button className="btn btn-primary" onClick={() => setShowForm(true)}>Request Leave</button>
@@ -356,7 +352,7 @@ function LeaveModule({ employeeId }) {
                             <td>{l.comment || '-'}</td>
                         </tr>
                     ))}
-                    {leaves.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center' }}>No leaves found</td></tr>}
+                    {leaves.length === 0 && <tr><td colSpan="5" className="text-center">No leave requests found.</td></tr>}
                 </tbody>
             </table>
 
@@ -368,7 +364,7 @@ function LeaveModule({ employeeId }) {
                             <div className="grid-2">
                                 <div className="form-group">
                                     <label>Leave Type</label>
-                                    <select className="form-control" value={formData.leave_type} onChange={e => handleTypeChange(e.target.value)}>
+                                    <select value={formData.leave_type} onChange={e => handleTypeChange(e.target.value)}>
                                         <option>Annual</option>
                                         <option>Sick</option>
                                         <option>Casual</option>
@@ -379,20 +375,20 @@ function LeaveModule({ employeeId }) {
                                 </div>
                                 <div className="form-group">
                                     <label>Duration</label>
-                                    <input type="text" className="form-control" readOnly value={`${formData.days_count} day(s)`} style={{ background: '#f3f4f6' }} />
+                                    <input type="text" readOnly value={`${formData.days_count} day(s)`} style={{ background: 'var(--item-hover)' }} />
                                 </div>
                                 <div className="form-group">
                                     <label>Start Date</label>
-                                    <input type="date" className="form-control" required value={formData.start_date} onChange={e => handleDateChange('start_date', e.target.value)} />
+                                    <input type="date" required value={formData.start_date} onChange={e => handleDateChange('start_date', e.target.value)} />
                                 </div>
                                 <div className="form-group">
                                     <label>End Date</label>
-                                    <input type="date" className="form-control" required value={formData.end_date} onChange={e => handleDateChange('end_date', e.target.value)} min={formData.start_date} />
+                                    <input type="date" required value={formData.end_date} onChange={e => handleDateChange('end_date', e.target.value)} min={formData.start_date} />
                                 </div>
                             </div>
                             <div className="form-group">
                                 <label>Reason</label>
-                                <textarea className="form-control" value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })} />
+                                <textarea rows="3" value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })} />
                             </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -411,24 +407,23 @@ function AssetModule({ employeeId, employeeName }) {
     useEffect(() => { api.getAssets(employeeId).then(setAssets); }, []);
 
     return (
-        <div className="card shadow p-20">
+        <div className="card">
             <h2>My Assigned Assets</h2>
             <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
                 {assets.map(a => (
-                    <div key={a.id} className="card border" style={{ padding: '15px' }}>
+                    <div key={a.id} className="card" style={{ padding: '15px', background: 'var(--item-hover)' }}>
                         <h4 style={{ color: 'var(--accent)' }}>{a.name}</h4>
-                        <p style={{ fontSize: '12px', color: '#888' }}>Tag: {a.asset_tag}</p>
-                        <hr style={{ margin: '10px 0', borderColor: '#eee' }} />
+                        <p className="text-sm text-light">Tag: {a.asset_tag}</p>
+                        <hr style={{ margin: '15px 0', borderColor: 'var(--border)' }} />
                         <div style={{ fontSize: '13px' }}>
-                            <p><strong>Assigned To:</strong> <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{employeeName}</span></p>
-                            <p><strong>Date of Issue:</strong> {a.assigned_date || 'N/A'}</p>
-                            <p><strong>Date of Return:</strong> {a.return_date || 'N/A'}</p>
+                            <p><strong>Issued To:</strong> {employeeName}</p>
+                            <p><strong>Date:</strong> {a.assigned_date || 'N/A'}</p>
                             <p><strong>Condition:</strong> {a.condition}</p>
                         </div>
                     </div>
                 ))}
             </div>
-            {assets.length === 0 && <p style={{ padding: '40px', textAlign: 'center', color: '#999' }}>No assets assigned to you yet.</p>}
+            {assets.length === 0 && <p className="text-light text-center" style={{ padding: '40px' }}>No company assets assigned to your profile.</p>}
         </div>
     );
 }
@@ -453,74 +448,64 @@ function WarningModule({ employeeId }) {
     };
 
     return (
-        <div className="card shadow p-20">
+        <div className="card">
             <h2>My Disciplinary Records</h2>
             <div className="table-container" style={{ marginTop: '20px' }}>
                 <table className="table">
-                    <thead><tr><th>Date</th><th>Severity</th><th>Reason</th><th>Admin Action</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Severity</th><th>Reason</th><th>Status</th><th className="text-center">Actions</th></tr></thead>
                     <tbody>
                         {warnings.map(w => (
                             <tr key={w.id}>
                                 <td>{w.date}</td>
                                 <td><span className="badge danger">{w.level}</span></td>
                                 <td>{w.reason}</td>
-                                <td>{w.action_taken}</td>
                                 <td>
                                     {w.explanation ? (
-                                        <span className="badge success">Explanation Provided</span>
+                                        <span className="badge success">Resolved</span>
                                     ) : (
-                                        <span className="badge warning">Needs Reply</span>
+                                        <span className="badge warning">Action Required</span>
                                     )}
                                 </td>
-                                <td>
+                                <td className="text-center">
                                     <button className="btn btn-sm btn-secondary" onClick={() => setSelectedWarning(w)}>
-                                        {w.explanation ? 'View Details' : 'Reply / Explain'}
+                                        {w.explanation ? 'View Details' : 'Reply Now'}
                                     </button>
                                 </td>
                             </tr>
                         ))}
-                        {warnings.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center' }}>No warnings on record. Keep it up!</td></tr>}
+                        {warnings.length === 0 && <tr><td colSpan="5" className="text-center">No disciplinary records found.</td></tr>}
                     </tbody>
                 </table>
             </div>
 
             {selectedWarning && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '600px' }}>
-                        <h3>Warning Details</h3>
-                        <div style={{ background: '#f9fafb', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                    <div className="modal">
+                        <h3>Disciplinary Incident</h3>
+                        <div style={{ background: 'var(--item-hover)', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
                             <p><strong>Date:</strong> {selectedWarning.date}</p>
-                            <p><strong>Severity:</strong> {selectedWarning.level}</p>
                             <p><strong>Reason:</strong> {selectedWarning.reason}</p>
-                            <p><strong>Action Taken:</strong> {selectedWarning.action_taken}</p>
+                            <p><strong>Administrative Action:</strong> {selectedWarning.action_taken}</p>
                         </div>
 
                         {selectedWarning.explanation ? (
-                            <div style={{ marginBottom: '20px' }}>
-                                <h4>Your Explanation</h4>
-                                <div style={{ borderLeft: '4px solid var(--success)', padding: '10px 15px', background: '#f0fdf4', color: '#166534' }}>
-                                    {selectedWarning.explanation}
-                                </div>
-                                <p style={{ fontSize: '11px', color: '#888', marginTop: '5px' }}>Submitted on: {new Date(selectedWarning.explanation_date).toLocaleString()}</p>
+                            <div className="card" style={{ background: 'var(--item-hover)', border: '1px solid var(--success)' }}>
+                                <h4 style={{ color: 'var(--success)', marginBottom: '10px' }}>Your Explanation</h4>
+                                <p>{selectedWarning.explanation}</p>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmitExplanation}>
-                                <h4>Submit Your Explanation</h4>
-                                <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-                                    Please provide your version of events or any mitigating circumstances.
-                                    This will be visible to Management.
-                                </p>
+                                <label>Your Response</label>
                                 <textarea
-                                    className="form-control"
-                                    rows="5"
                                     required
-                                    placeholder="Enter your explanation here..."
+                                    rows="4"
+                                    placeholder="Provide your explanation for internal review..."
                                     value={explanation}
                                     onChange={e => setExplanation(e.target.value)}
                                 />
                                 <div className="modal-actions">
                                     <button type="button" className="btn btn-secondary" onClick={() => setSelectedWarning(null)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary">Submit Explanation</button>
+                                    <button type="submit" className="btn btn-primary">Submit Response</button>
                                 </div>
                             </form>
                         )}
@@ -651,27 +636,22 @@ function DocumentModule({ employeeId }) {
     };
 
     return (
-        <div className="card shadow p-20">
-            <h2>My Documents</h2>
-            <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
+        <div className="view-container">
+            <div className="toolbar">
+                <h2>My Documents</h2>
+                <p className="text-light">Access shared company policies and personal documents.</p>
+            </div>
+            <div className="grid-3" style={{ gap: '20px' }}>
                 {docs.map(doc => (
-                    <div key={doc.id} className="card border" style={{ padding: '15px', position: 'relative' }}>
-                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📄</div>
+                    <div key={doc.id} className="card clickable" onClick={() => handleDownload(doc.file_path, doc.name)}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>📄</div>
                         <h4 style={{ margin: '0 0 5px 0' }}>{doc.name}</h4>
-                        <p style={{ fontSize: '11px', color: '#888' }}>
-                            Uploaded: {new Date(doc.created_at).toLocaleDateString()}
-                        </p>
-                        <button
-                            className="btn btn-sm btn-primary"
-                            style={{ marginTop: '15px', width: '100%' }}
-                            onClick={() => handleDownload(doc.file_path, doc.name)}
-                        >
-                            Download
-                        </button>
+                        <p className="text-sm text-light">Uploaded: {new Date(doc.created_at).toLocaleDateString()}</p>
+                        <button className="btn btn-secondary btn-sm" style={{ marginTop: '20px', width: '100%' }}>Download Link</button>
                     </div>
                 ))}
             </div>
-            {docs.length === 0 && <p style={{ padding: '40px', textAlign: 'center', color: '#999' }}>No shared documents available.</p>}
+            {docs.length === 0 && <p className="text-light text-center" style={{ padding: '60px' }}>Your document vault is currently empty.</p>}
         </div>
     );
 }
