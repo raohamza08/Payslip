@@ -183,20 +183,26 @@ export default function EmployeePortal({ user }) {
 function AttendanceModule({ employeeId }) {
     const [logs, setLogs] = useState([]);
     const [rawLogs, setRawLogs] = useState([]);
+    const [leaves, setLeaves] = useState([]);
     const [loading, setLoading] = useState(true);
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
-        loadLogs();
-        loadRawLogs();
+        loadData();
     }, [month, year]);
 
-    const loadLogs = async () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            const data = await api.getSittingHours(employeeId, month, year);
-            setLogs(data);
+            const [attData, scanData, leaveData] = await Promise.all([
+                api.getSittingHours(employeeId, month, year),
+                api.getMyBiometricLogs(),
+                api.getLeaves(employeeId)
+            ]);
+            setLogs(attData);
+            setRawLogs(scanData);
+            setLeaves(leaveData);
         } catch (e) {
             console.error(e);
         } finally {
@@ -204,12 +210,31 @@ function AttendanceModule({ employeeId }) {
         }
     };
 
-    const loadRawLogs = async () => {
-        try {
-            const data = await api.getMyBiometricLogs();
-            setRawLogs(data);
-        } catch (e) { console.error(e); }
+    // Helper to get all days in the selected month
+    const getDaysInMonth = () => {
+        const days = [];
+        const date = new Date(year, month - 1, 1);
+        while (date.getMonth() === month - 1) {
+            days.push(new Date(date).toISOString().split('T')[0]);
+            date.setDate(date.getDate() + 1);
+        }
+        return days;
     };
+
+    const days = getDaysInMonth();
+    const logMap = logs.reduce((acc, l) => ({ ...acc, [l.day]: l }), {});
+    const leaveMap = leaves.reduce((acc, l) => {
+        if (l.status !== 'Approved') return acc;
+        // Simple range check for days in this month
+        let start = new Date(l.start_date);
+        let end = new Date(l.end_date);
+        let curr = new Date(start);
+        while (curr <= end) {
+            acc[curr.toISOString().split('T')[0]] = l.leave_type;
+            curr.setDate(curr.getDate() + 1);
+        }
+        return acc;
+    }, {});
 
     return (
         <div className="card shadow">
@@ -234,21 +259,37 @@ function AttendanceModule({ employeeId }) {
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Status</th>
                                     <th>First IN</th>
                                     <th>Last OUT</th>
                                     <th>Total Hours</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {logs.map(log => (
-                                    <tr key={log.day}>
-                                        <td>{new Date(log.day).toLocaleDateString()}</td>
-                                        <td>{log.in ? new Date(log.in).toLocaleTimeString() : '-'}</td>
-                                        <td>{log.out ? new Date(log.out).toLocaleTimeString() : '-'}</td>
-                                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{log.hours} hrs</td>
-                                    </tr>
-                                ))}
-                                {logs.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No logs found for this period.</td></tr>}
+                                {days.map(day => {
+                                    const log = logMap[day];
+                                    const leaveType = leaveMap[day];
+                                    const isPast = new Date(day) < new Date(new Date().setHours(0, 0, 0, 0));
+                                    const isToday = day === new Date().toISOString().split('T')[0];
+
+                                    let status = <span className="badge secondary">Upcoming</span>;
+                                    if (log) status = <span className="badge approved">PRESENT</span>;
+                                    else if (leaveType) status = <span className="badge pending">{leaveType} (LEAVE)</span>;
+                                    else if (isPast) status = <span className="badge danger" style={{ background: '#fee2e2', color: '#991b1b' }}>ABSENT</span>;
+                                    else if (isToday) status = <span className="badge warning">TODAY</span>;
+
+                                    return (
+                                        <tr key={day} style={{ opacity: isPast || isToday ? 1 : 0.6 }}>
+                                            <td>{new Date(day).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+                                            <td>{status}</td>
+                                            <td>{log?.in ? new Date(log.in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                            <td>{log?.out ? new Date(log.out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                            <td style={{ fontWeight: 'bold', color: log?.hours > 0 ? 'var(--accent)' : 'inherit' }}>
+                                                {log?.hours ? `${log.hours} hrs` : '-'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

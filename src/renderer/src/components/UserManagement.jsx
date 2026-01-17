@@ -18,7 +18,12 @@ export default function UserManagement() {
         try {
             setLoading(true);
             const data = await api.getUsers();
-            setUsers(data || []);
+            // Map users to ensure permissions is an array
+            const mapped = (data || []).map(u => ({
+                ...u,
+                permissions: Array.isArray(u.permissions) ? u.permissions : []
+            }));
+            setUsers(mapped);
         } catch (e) {
             console.error('Failed to load users:', e);
         } finally {
@@ -55,6 +60,18 @@ export default function UserManagement() {
             setTimeout(() => setMessage(''), 3000);
         } catch (e) {
             setMessage('Error: ' + e.message);
+        }
+    };
+
+    const handleSavePermissions = async (userId, permissions) => {
+        try {
+            await api.updateUserPermissions(userId, permissions);
+            setMessage('Permissions updated successfully');
+            loadUsers();
+            setEditingUser(null);
+            setTimeout(() => setMessage(''), 3000);
+        } catch (e) {
+            setMessage('Error updating permissions: ' + e.message);
         }
     };
 
@@ -106,6 +123,16 @@ export default function UserManagement() {
                                 <td>{new Date(user.created_at).toLocaleDateString()}</td>
                                 <td style={{ textAlign: 'right' }}>
                                     <button
+                                        className="btn btn-primary btn-sm"
+                                        style={{ marginRight: 5 }}
+                                        onClick={() => {
+                                            setEditingUser(user);
+                                            setResetType('permissions');
+                                        }}
+                                    >
+                                        Permissions
+                                    </button>
+                                    <button
                                         className="btn btn-secondary btn-sm"
                                         style={{ marginRight: 5 }}
                                         onClick={() => {
@@ -151,53 +178,131 @@ export default function UserManagement() {
             {editingUser && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '500px' }}>
-                        <h3>Reset {resetType === 'master' ? 'Master Password' : 'Login Password'}</h3>
-                        <p style={{ color: '#666', marginBottom: 20 }}>
-                            For user: <strong>{editingUser.email}</strong>
-                        </p>
-                        <form onSubmit={handleResetPassword}>
-                            <div className="form-group">
-                                <label>New {resetType === 'master' ? 'Master' : 'Login'} Password</label>
-                                <input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="Minimum 8 characters"
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Confirm Password</label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Re-type password"
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </div>
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => {
-                                        setEditingUser(null);
-                                        setNewPassword('');
-                                        setConfirmPassword('');
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-primary">
-                                    Reset Password
-                                </button>
-                            </div>
-                        </form>
+                        {resetType === 'permissions' ? (
+                            <PermissionEditor
+                                user={editingUser}
+                                onSave={(perms) => handleSavePermissions(editingUser.id, perms)}
+                                onCancel={() => setEditingUser(null)}
+                            />
+                        ) : (
+                            <>
+                                <h3>Reset {resetType === 'master' ? 'Master Password' : 'Login Password'}</h3>
+                                <p style={{ color: '#666', marginBottom: 20 }}>
+                                    For user: <strong>{editingUser.email}</strong>
+                                </p>
+                                <form onSubmit={handleResetPassword}>
+                                    <div className="form-group">
+                                        <label>New {resetType === 'master' ? 'Master' : 'Login'} Password</label>
+                                        <input
+                                            type="password"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="Minimum 8 characters"
+                                            autoComplete="new-password"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Re-type password"
+                                            autoComplete="new-password"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="modal-actions">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary"
+                                            onClick={() => {
+                                                setEditingUser(null);
+                                                setNewPassword('');
+                                                setConfirmPassword('');
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-primary">
+                                            Reset Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function PermissionEditor({ user, onSave, onCancel }) {
+    const modules = [
+        { id: 'employees', label: 'Employee Management', desc: 'Add/Edit/Delete workers' },
+        { id: 'payroll', label: 'Payroll & Salaries', desc: 'Process payroll and view grids' },
+        { id: 'attendance', label: 'Attendance Logs', desc: 'View and Sync biometric records' },
+        { id: 'reports', label: 'Reports & KPIs', desc: 'View monthly stats and analytics' },
+        { id: 'expenses', label: 'Company Expenses', desc: 'Track and manage costs' },
+        { id: 'performance', label: 'KPIs & Reviews', desc: 'Conduct performance reviews' },
+        { id: 'assets', label: 'Asset Management', desc: 'Manage company equipment' },
+        { id: 'warnings', label: 'Discipline & Warnings', desc: 'Issue and track warnings' },
+        { id: 'email', label: 'Marketing/Emails', desc: 'Broadcast emails and composer' },
+        { id: 'admin-leaves', label: 'Leave Approvals', desc: 'Review and approve leave requests' }
+    ];
+
+    const [selected, setSelected] = useState(user.permissions || []);
+
+    const toggle = (id) => {
+        if (selected.includes(id)) setSelected(selected.filter(x => x !== id));
+        else setSelected([...selected, id]);
+    };
+
+    return (
+        <div>
+            <h3>Manage Access: {user.email}</h3>
+            <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+                Select modules this user is allowed to access.
+            </p>
+
+            <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '20px' }}>
+                {modules.map(mod => (
+                    <div
+                        key={mod.id}
+                        onClick={() => toggle(mod.id)}
+                        style={{
+                            padding: '12px',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            marginBottom: '10px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            background: selected.includes(mod.id) ? '#f0f9ff' : 'white',
+                            borderColor: selected.includes(mod.id) ? 'var(--accent)' : '#ddd',
+                            transition: 'all 0.2s'
+                        }}>
+                        <input
+                            type="checkbox"
+                            checked={selected.includes(mod.id)}
+                            onChange={() => { }}
+                            style={{ width: '18px', height: '18px' }}
+                        />
+                        <div>
+                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{mod.label}</div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>{mod.desc}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="modal-actions" style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+                <button className="btn btn-primary" onClick={() => onSave(selected)}>Save Permissions</button>
+            </div>
         </div>
     );
 }

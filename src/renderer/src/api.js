@@ -337,6 +337,13 @@ const api = {
             body: JSON.stringify({ email, newPassword })
         });
     },
+    updateUserPermissions: async (userId, permissions) => {
+        return await api.fetchJson(`${API_BASE}/users/${userId}/permissions`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ permissions })
+        });
+    },
 
     // Original Payslip Methods (Extended)
     getPayslips: async (employeeId = null) => {

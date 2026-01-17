@@ -153,6 +153,14 @@ export default function App() {
     }
 
     const isEmployee = user.role === 'employee';
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const hasPermission = (id) => {
+        if (isSuperAdmin) return true;
+        if (user.role === 'admin') return true; // Admins also have all permissions currently, or we can restrict them too
+        if (user.permissions && Array.isArray(user.permissions) && user.permissions.includes(id)) return true;
+        return false;
+    };
 
     return (
         <div className="app-container">
@@ -168,34 +176,33 @@ export default function App() {
                     <h2>EurosHub</h2>
                 </div>
 
-                {isEmployee ? (
+                <div className="nav-group">USER PORTAL</div>
+                <NavItem id="portal" label="My Dashboard" />
+                <NavItem id="my-leaves" label="My Leaves" />
+                <NavItem id="my-performance" label="My Performance" />
+                <NavItem id="my-payslips" label="My Payslips" />
+
+                {(isSuperAdmin || user.role === 'admin' || (user.permissions && user.permissions.length > 0)) && (
                     <>
-                        <NavItem id="portal" label="EurosHub Portal" />
-                        <NavItem id="my-leaves" label="My Leaves" />
-                        <NavItem id="my-performance" label="My Performance" />
-                        <NavItem id="my-payslips" label="My Payslips" />
-                    </>
-                ) : (
-                    <>
-                        <NavItem id="dashboard" label={user.role === 'super_admin' ? 'Super Admin' : 'HR Dashboard'} />
-                        <div className="nav-group">PAYROLL & HR</div>
-                        <NavItem id="employees" label="Employees" />
-                        <NavItem id="payroll" label="Payroll Grid" />
-                        <NavItem id="single-payslip" label="Create Single Payslip" />
-                        <NavItem id="admin-leaves" label="Leave Requests" />
-                        <NavItem id="assets" label="Asset Management" />
+                        <div className="nav-group">ADMINISTRATION</div>
+                        {!isEmployee && <NavItem id="dashboard" label="Analytics" />}
+                        {hasPermission('employees') && <NavItem id="employees" label="Employees" />}
+                        {hasPermission('payroll') && <NavItem id="payroll" label="Payroll Grid" />}
+                        {hasPermission('payroll') && <NavItem id="single-payslip" label="Single Payslip" />}
+                        {hasPermission('admin-leaves') && <NavItem id="admin-leaves" label="Leave Requests" />}
+                        {hasPermission('assets') && <NavItem id="assets" label="Asset Management" />}
 
                         <div className="nav-group">OPERATIONS</div>
-                        <NavItem id="attendance" label="Attendance" />
-                        <NavItem id="reports" label="Reports & KPIs" />
-                        <NavItem id="expenses" label="Expenses" />
-                        <NavItem id="performance" label="KPIs & Reviews" />
-                        <NavItem id="warnings" label="Discipline" />
-                        <NavItem id="email" label="Broadcast Emails" />
+                        {hasPermission('attendance') && <NavItem id="attendance" label="Attendance" />}
+                        {hasPermission('reports') && <NavItem id="reports" label="Reports & KPIs" />}
+                        {hasPermission('expenses') && <NavItem id="expenses" label="Expenses" />}
+                        {hasPermission('performance') && <NavItem id="performance" label="KPIs & Reviews" />}
+                        {hasPermission('warnings') && <NavItem id="warnings" label="Discipline" />}
+                        {hasPermission('email') && <NavItem id="email" label="Broadcast Emails" />}
 
-                        {user.role === 'super_admin' && (
+                        {isSuperAdmin && (
                             <>
-                                <div className="nav-group">SYSTEM (Super Admin)</div>
+                                <div className="nav-group">SYSTEM CONFIG</div>
                                 <NavItem id="user-management" label="User Management" />
                                 <NavItem id="whitelist" label="Whitelist" />
                                 <NavItem id="logs" label="Activity Logs" />
@@ -239,38 +246,35 @@ export default function App() {
                 </div>
 
                 <div className="view-container">
-                    {isEmployee ? (
-                        <>
-                            {view === 'portal' && <EmployeePortal user={user} />}
-                            {view === 'my-leaves' && <LeaveManagement user={user} />}
-                            {view === 'my-performance' && <MyPerformance user={user} />}
-                            {view === 'my-payslips' && <PayslipHistory user={user} />}
-                            {view === 'settings' && <Settings user={user} />}
-                        </>
-                    ) : (
-                        <>
-                            {view === 'dashboard' && <AdminDashboard onNav={handleNavClick} />}
-                            {view === 'employees' && !editingEmp && <EmployeeList onEdit={setEditingEmp} />}
-                            {view === 'employees' && editingEmp && <EmployeeForm employee={editingEmp.id ? editingEmp : null} onSave={() => setEditingEmp(null)} onCancel={() => setEditingEmp(null)} />}
-                            {view === 'attendance' && <Attendance />}
-                            {view === 'payroll' && <PayrollGrid user={user} onNavigate={setView} />}
-                            {view === 'single-payslip' && <PayslipGenerator user={user} onComplete={() => setView('history')} />}
-                            {view === 'history' && <PayslipHistory user={user} />}
-                            {view === 'reports' && <AttendanceReport />}
-                            {view === 'expenses' && <Expenses />}
-                            {view === 'performance' && <PerformanceReviews user={user} />}
-                            {view === 'assets' && <AssetManagement />}
-                            {view === 'warnings' && <Discipline />}
-                            {view === 'email' && <EmailComposer />}
+                    {/* Common Views */}
+                    {view === 'portal' && <EmployeePortal user={user} />}
+                    {view === 'settings' && <Settings user={user} />}
+                    {view === 'my-leaves' && <LeaveManagement user={user} />}
+                    {view === 'my-performance' && <MyPerformance user={user} />}
+                    {view === 'my-payslips' && <PayslipHistory user={user} />}
 
-                            {view === 'user-management' && (user.role === 'super_admin' ? <UserManagement /> : <div className="p-20">Access Denied</div>)}
-                            {view === 'whitelist' && (user.role === 'super_admin' ? <Whitelist /> : <div className="p-20">Access Denied</div>)}
-                            {view === 'logs' && (user.role === 'super_admin' ? <AdminLogs /> : <div className="p-20">Access Denied</div>)}
-
-                            {view === 'settings' && <Settings />}
-                            {view === 'admin-leaves' && <LeaveManagement user={user} />}
-                        </>
+                    {/* Permission Managed Views (Admins or Privileged Employees) */}
+                    {view === 'dashboard' && <AdminDashboard onNav={handleNavClick} />}
+                    {view === 'employees' && hasPermission('employees') && (
+                        !editingEmp ? <EmployeeList onEdit={setEditingEmp} /> :
+                            <EmployeeForm employee={editingEmp.id ? editingEmp : null} onSave={() => setEditingEmp(null)} onCancel={() => setEditingEmp(null)} />
                     )}
+                    {view === 'attendance' && hasPermission('attendance') && <Attendance />}
+                    {view === 'payroll' && hasPermission('payroll') && <PayrollGrid user={user} onNavigate={setView} />}
+                    {view === 'single-payslip' && hasPermission('payroll') && <PayslipGenerator user={user} onComplete={() => setView('history')} />}
+                    {view === 'history' && (hasPermission('payroll') || true) && <PayslipHistory user={user} />}
+                    {view === 'reports' && hasPermission('reports') && <AttendanceReport />}
+                    {view === 'expenses' && hasPermission('expenses') && <Expenses />}
+                    {view === 'performance' && hasPermission('performance') && <PerformanceReviews user={user} />}
+                    {view === 'assets' && hasPermission('assets') && <AssetManagement />}
+                    {view === 'warnings' && hasPermission('warnings') && <Discipline />}
+                    {view === 'email' && hasPermission('email') && <EmailComposer />}
+                    {view === 'admin-leaves' && hasPermission('admin-leaves') && <LeaveManagement user={user} />}
+
+                    {/* Super Admin Only */}
+                    {view === 'user-management' && (isSuperAdmin ? <UserManagement /> : <div className="p-20">Access Denied</div>)}
+                    {view === 'whitelist' && (isSuperAdmin ? <Whitelist /> : <div className="p-20">Access Denied</div>)}
+                    {view === 'logs' && (isSuperAdmin ? <AdminLogs /> : <div className="p-20">Access Denied</div>)}
                 </div>
             </div>
 

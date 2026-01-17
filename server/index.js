@@ -126,7 +126,8 @@ app.post('/api/auth/setup', async (req, res) => {
             email,
             password_hash: hash,
             master_password_hash: hash, // Same password for both initially
-            role: 'super_admin'
+            role: 'super_admin',
+            permissions: ['employees', 'payroll', 'attendance', 'reports', 'expenses', 'performance', 'assets', 'warnings', 'email', 'admin-leaves'] // All permissions for super_admin
         });
         if (userError) throw userError;
 
@@ -178,7 +179,8 @@ app.post('/api/auth/signup', async (req, res) => {
         const userInsert = {
             email,
             password_hash: passwordHash,
-            role: assignedRole
+            role: assignedRole,
+            permissions: []
         };
 
         // Add master password hash for admin users
@@ -228,7 +230,15 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         await logActivity(email, 'LOGIN_SUCCESS', 'SUCCESS', `Logged in as ${user.role}`, req);
-        res.json({ success: true, user: { email: user.email, role: user.role } });
+        res.json({
+            success: true,
+            user: {
+                email: user.email,
+                role: user.role,
+                name: user.name, // If you have it
+                permissions: Array.isArray(user.permissions) ? user.permissions : []
+            }
+        });
     } catch (e) {
         await logActivity(req.body.email || 'unknown', 'LOGIN_ATTEMPT', 'ERROR', `Login failed: ${e.message}`, req);
         res.status(500).json({ error: e.message });
@@ -378,6 +388,25 @@ app.post('/api/users/reset-login-password', async (req, res) => {
         res.json({ success: true });
     } catch (e) {
         await logActivity(req.headers['x-user-email'] || 'unknown', 'RESET_LOGIN_PASSWORD', 'ERROR', `Failed to reset login password: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/users/:id/permissions', async (req, res) => {
+    try {
+        const { permissions } = req.body;
+        const adminEmail = req.headers['x-user-email'] || 'unknown';
+
+        const { error } = await supabase
+            .from('users')
+            .update({ permissions })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+
+        await logActivity(adminEmail, 'UPDATE_USER_PERMISSIONS', 'SUCCESS', `Updated permissions for user ID ${req.params.id}`, req);
+        res.json({ success: true });
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
