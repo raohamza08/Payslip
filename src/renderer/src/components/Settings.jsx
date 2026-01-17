@@ -86,6 +86,7 @@ export default function Settings({ user }) {
         localStorage.setItem('accentColor', color);
         document.documentElement.style.setProperty('--accent', color);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(color, -20));
+        document.documentElement.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
         setMessage('Accent color updated!');
         setTimeout(() => setMessage(''), 3000);
     };
@@ -286,35 +287,39 @@ export default function Settings({ user }) {
                             <div
                                 onClick={() => handleThemeChange('light')}
                                 style={{
-                                    padding: '20px 40px',
-                                    border: `3px solid ${theme === 'light' ? accentColor : '#ddd'}`,
-                                    borderRadius: '12px',
+                                    padding: '8px 24px',
+                                    border: `2px solid ${theme === 'light' ? accentColor : 'var(--glass-border)'}`,
+                                    borderRadius: '10px',
                                     cursor: 'pointer',
-                                    background: '#fff',
-                                    textAlign: 'center',
+                                    background: theme === 'light' ? 'rgba(255,255,255,0.9)' : 'var(--glass-bg)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
                                     transition: 'all 0.3s',
-                                    boxShadow: theme === 'light' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                                    boxShadow: theme === 'light' ? `0 4px 15px ${accentColor}33` : 'none'
                                 }}
                             >
-                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>☀️</div>
-                                <div style={{ fontWeight: 'bold' }}>Light</div>
+                                <div style={{ fontSize: '18px' }}>☀️</div>
+                                <div style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Light</div>
                             </div>
                             <div
                                 onClick={() => handleThemeChange('dark')}
                                 style={{
-                                    padding: '20px 40px',
-                                    border: `3px solid ${theme === 'dark' ? accentColor : '#ddd'}`,
-                                    borderRadius: '12px',
+                                    padding: '8px 24px',
+                                    border: `2px solid ${theme === 'dark' ? accentColor : 'var(--glass-border)'}`,
+                                    borderRadius: '10px',
                                     cursor: 'pointer',
-                                    background: '#2d3748',
-                                    color: '#fff',
-                                    textAlign: 'center',
+                                    background: theme === 'dark' ? 'rgba(26, 32, 44, 0.9)' : 'var(--glass-bg)',
+                                    color: theme === 'dark' ? '#fff' : 'inherit',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
                                     transition: 'all 0.3s',
-                                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                                    boxShadow: theme === 'dark' ? `0 4px 15px ${accentColor}33` : 'none'
                                 }}
                             >
-                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🌙</div>
-                                <div style={{ fontWeight: 'bold' }}>Dark</div>
+                                <div style={{ fontSize: '18px' }}>🌙</div>
+                                <div style={{ fontWeight: '700', fontSize: '14px' }}>Dark</div>
                             </div>
                         </div>
                     </div>
