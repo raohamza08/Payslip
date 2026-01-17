@@ -1,4 +1,4 @@
-/* Google Fonts Import */
+﻿/* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Dynamic Theme System (Nebula Vision) */
@@ -71,6 +71,18 @@ body.dark {
   --warning: #FFD60A;
 }
 
+/* Global Select/Option Theme-aware fixes */
+select {
+  background: var(--card-bg);
+  color: var(--text-heading);
+  border: 1px solid var(--glass-border);
+}
+
+select option {
+  background: var(--bg-top);
+  color: var(--text-heading);
+}
+
 /* Base Styles & Optimization */
 * {
   box-sizing: border-box;
@@ -86,6 +98,7 @@ body {
   padding: 0;
   height: 100vh;
   overflow: hidden;
+  overflow-x: hidden;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -451,6 +464,7 @@ h3 {
 .main-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1037,7 +1051,7 @@ tr:last-child td {
   border-radius: 14px;
   width: fit-content;
   max-width: 100%;
-  overflow-x: auto;
+  flex-wrap: wrap;
 }
 
 .tab-nav::-webkit-scrollbar {
@@ -1067,4 +1081,26 @@ tr:last-child td {
   color: var(--accent);
   box-shadow: 0 4px 15px var(--accent-glow);
   border: 1px solid var(--glass-border);
+}
+ 
+
+/* FINAL BRANDING & VIEWPORT OVERRIDES */
+.tab-btn.active { 
+  background: var(--accent) !important; 
+  color: #FFFFFF !important; 
+  box-shadow: 0 4px 15px var(--accent-glow) !important; 
+  border: 1px solid var(--accent) !important; 
+}
+.nav-item.active {
+  background: var(--accent) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 20px var(--accent-glow) !important;
+  border: 1px solid var(--accent) !important;
+}
+.main-content { overflow-x: hidden !important; }
+body { overflow-x: hidden !important; }
+select, option { 
+  background: var(--bg-top) !important; 
+  color: var(--text-heading) !important; 
+  border: 1px solid var(--glass-border) !important; 
 }

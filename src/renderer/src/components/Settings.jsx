@@ -211,33 +211,18 @@ export default function Settings({ user }) {
                 <button
                     className={`tab-btn ${activeTab === 'appearance' ? 'active' : ''}`}
                     onClick={() => setActiveTab('appearance')}
-                    style={activeTab === 'appearance' ? {
-                        color: 'white',
-                        background: accentColor,
-                        boxShadow: `0 0 15px ${accentColor}66`
-                    } : {}}
                 >
                     Appearance
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveTab('security')}
-                    style={activeTab === 'security' ? {
-                        color: 'white',
-                        background: accentColor,
-                        boxShadow: `0 0 15px ${accentColor}66`
-                    } : {}}
                 >
                     Security
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
                     onClick={() => setActiveTab('support')}
-                    style={activeTab === 'support' ? {
-                        color: 'white',
-                        background: accentColor,
-                        boxShadow: `0 0 15px ${accentColor}66`
-                    } : {}}
                 >
                     Need Support?
                 </button>
@@ -245,11 +230,6 @@ export default function Settings({ user }) {
                     <button
                         className={`tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
                         onClick={() => setActiveTab('pdf')}
-                        style={activeTab === 'pdf' ? {
-                            color: 'white',
-                            background: accentColor,
-                            boxShadow: `0 0 15px ${accentColor}66`
-                        } : {}}
                     >
                         PDF Customization
                     </button>
@@ -332,16 +312,18 @@ export default function Settings({ user }) {
                                         width: '100%',
                                         padding: '12px 45px 12px 45px',
                                         fontSize: '15px',
-                                        border: '2px solid #e0e0e0',
-                                        borderRadius: '8px',
-                                        background: '#fff',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '10px',
+                                        background: 'var(--bg-top)',
+                                        color: 'var(--text-heading)',
                                         cursor: 'pointer',
                                         appearance: 'none',
-                                        fontWeight: '500'
+                                        fontWeight: '700',
+                                        boxShadow: 'var(--shadow)'
                                     }}
                                 >
                                     {predefinedColors.map(color => (
-                                        <option key={color.value} value={color.value}>
+                                        <option key={color.value} value={color.value} style={{ background: 'var(--bg-top)', color: 'var(--text-heading)' }}>
                                             {color.name}
                                         </option>
                                     ))}
@@ -414,7 +396,7 @@ export default function Settings({ user }) {
                                             key={shape.id}
                                             className={`tab-btn ${neonShape === shape.id ? 'active' : ''}`}
                                             onClick={() => updateNeonSetting('shape', shape.id)}
-                                            style={neonShape === shape.id ? { color: 'white', background: 'var(--accent)', boxShadow: '0 0 15px var(--accent-glow)' } : {}}
+                                            style={{}}
                                         >
                                             <span style={{ marginRight: '8px' }}>{shape.icon}</span>
                                             {shape.label}
