@@ -35,7 +35,7 @@ export default function Settings({ user }) {
     // Apply saved theme and color on mount
     React.useEffect(() => {
         loadPdfSettings();
-        updateBodyClass(theme, neonShape, neonAnimation);
+        updateBodyClass(theme, neonShape);
         document.documentElement.style.setProperty('--accent', accentColor);
         document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
 
