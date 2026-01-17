@@ -80,7 +80,7 @@ body.dark {
 
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  background: transparent;
+  background: var(--bg-gradient);
   color: var(--text);
   margin: 0;
   padding: 0;
@@ -118,7 +118,10 @@ body {
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
-  background: var(--bg-gradient);
+}
+
+.atmosphere-canvas.is-static {
+  display: none;
 }
 
 /* 1. Cyber Waves (Aurora) */

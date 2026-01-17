@@ -27,10 +27,8 @@ import ToastManager, { showToast } from './components/ToastManager';
 import api from './api';
 
 const AtmosphereCanvas = ({ animation, shape }) => {
-    if (animation === 'none' || !animation) return null;
-
     return (
-        <div className="atmosphere-canvas">
+        <div className={`atmosphere-canvas ${animation === 'none' ? 'is-static' : ''}`}>
             {animation === 'aurora' && (
                 <>
                     <div className="aurora-layer"></div>
@@ -82,6 +80,7 @@ export default function App() {
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
 
         document.documentElement.style.setProperty('--accent', savedAccent);
+        document.documentElement.style.setProperty('--accent-glow', `${savedAccent}66`);
         // Load Neon Atmosphere
         const neonColor = localStorage.getItem('neonColor') || '#0075FF';
         const neonIntensity = localStorage.getItem('neonIntensity') || '0.15';
