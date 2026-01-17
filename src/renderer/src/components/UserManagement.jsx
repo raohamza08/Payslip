@@ -63,15 +63,18 @@ export default function UserManagement() {
         }
     };
 
-    const handleSavePermissions = async (userId, permissions) => {
+    const handleUpdateAccess = async (userId, role, permissions) => {
         try {
-            await api.updateUserPermissions(userId, permissions);
-            setMessage('Permissions updated successfully');
+            await Promise.all([
+                api.updateUserRole(userId, role),
+                api.updateUserPermissions(userId, permissions)
+            ]);
+            setMessage('User access updated successfully');
             loadUsers();
             setEditingUser(null);
             setTimeout(() => setMessage(''), 3000);
         } catch (e) {
-            setMessage('Error updating permissions: ' + e.message);
+            setMessage('Error updating access: ' + e.message);
         }
     };
 
@@ -179,9 +182,9 @@ export default function UserManagement() {
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '500px' }}>
                         {resetType === 'permissions' ? (
-                            <PermissionEditor
+                            <AccessEditor
                                 user={editingUser}
-                                onSave={(perms) => handleSavePermissions(editingUser.id, perms)}
+                                onSave={(role, perms) => handleUpdateAccess(editingUser.id, role, perms)}
                                 onCancel={() => setEditingUser(null)}
                             />
                         ) : (
@@ -239,7 +242,7 @@ export default function UserManagement() {
     );
 }
 
-function PermissionEditor({ user, onSave, onCancel }) {
+function AccessEditor({ user, onSave, onCancel }) {
     const modules = [
         { id: 'employees', label: 'Employee Management', desc: 'Add/Edit/Delete workers' },
         { id: 'payroll', label: 'Payroll & Salaries', desc: 'Process payroll and view grids' },
@@ -253,6 +256,7 @@ function PermissionEditor({ user, onSave, onCancel }) {
         { id: 'admin-leaves', label: 'Leave Approvals', desc: 'Review and approve leave requests' }
     ];
 
+    const [role, setRole] = useState(user.role || 'employee');
     const [selected, setSelected] = useState(user.permissions || []);
 
     const toggle = (id) => {
@@ -262,21 +266,51 @@ function PermissionEditor({ user, onSave, onCancel }) {
 
     return (
         <div>
-            <h3>Manage Access: {user.email}</h3>
-            <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
-                Select modules this user is allowed to access.
-            </p>
+            <h3>Access Management: {user.email}</h3>
 
-            <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '20px' }}>
+            <div style={{ marginBottom: '25px', padding: '15px', background: '#f8fafc', borderRadius: '8px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px' }}>System Role</label>
+                <div className="flex-row" style={{ gap: '10px' }}>
+                    <button
+                        className={`btn ${role === 'employee' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setRole('employee')}
+                        style={{ flex: 1 }}
+                    >
+                        Employee
+                    </button>
+                    <button
+                        className={`btn ${role === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setRole('admin')}
+                        style={{ flex: 1 }}
+                    >
+                        Admin
+                    </button>
+                    <button
+                        className={`btn ${role === 'super_admin' ? 'btn-danger' : 'btn-secondary'}`}
+                        onClick={() => setRole('super_admin')}
+                        style={{ flex: 1 }}
+                    >
+                        Super Admin
+                    </button>
+                </div>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                    {role === 'super_admin' && 'Full system access including user management.'}
+                    {role === 'admin' && 'Standard HR access (Requires Master PIN for sensitive areas).'}
+                    {role === 'employee' && 'Default portal access (Add module permissions below).'}
+                </p>
+            </div>
+
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px' }}>Module Permissions</label>
+            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px' }}>
                 {modules.map(mod => (
                     <div
                         key={mod.id}
                         onClick={() => toggle(mod.id)}
                         style={{
-                            padding: '12px',
+                            padding: '10px',
                             border: '1px solid #ddd',
                             borderRadius: '8px',
-                            marginBottom: '10px',
+                            marginBottom: '6px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -289,11 +323,11 @@ function PermissionEditor({ user, onSave, onCancel }) {
                             type="checkbox"
                             checked={selected.includes(mod.id)}
                             onChange={() => { }}
-                            style={{ width: '18px', height: '18px' }}
+                            style={{ width: '16px', height: '16px' }}
                         />
                         <div>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{mod.label}</div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>{mod.desc}</div>
+                            <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{mod.label}</div>
+                            <div style={{ fontSize: '11px', color: '#666' }}>{mod.desc}</div>
                         </div>
                     </div>
                 ))}
@@ -301,7 +335,7 @@ function PermissionEditor({ user, onSave, onCancel }) {
 
             <div className="modal-actions" style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
                 <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-                <button className="btn btn-primary" onClick={() => onSave(selected)}>Save Permissions</button>
+                <button className="btn btn-primary" onClick={() => onSave(role, selected)}>Save Changes</button>
             </div>
         </div>
     );

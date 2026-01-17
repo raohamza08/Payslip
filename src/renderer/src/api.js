@@ -344,6 +344,13 @@ const api = {
             body: JSON.stringify({ permissions })
         });
     },
+    updateUserRole: async (userId, role) => {
+        return await api.fetchJson(`${API_BASE}/users/${userId}/role`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role })
+        });
+    },
 
     // Original Payslip Methods (Extended)
     getPayslips: async (employeeId = null) => {

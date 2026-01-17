@@ -407,6 +407,36 @@ app.post('/api/users/reset-login-password', async (req, res) => {
     }
 });
 
+app.put('/api/users/:id/role', async (req, res) => {
+    try {
+        const { role } = req.body;
+        const adminEmail = req.headers['x-user-email'] || 'unknown';
+
+        // 1. Update user role
+        const { data: updatedUser, error: userError } = await supabase
+            .from('users')
+            .update({ role })
+            .eq('id', req.params.id)
+            .select('email')
+            .single();
+
+        if (userError) throw userError;
+
+        // 2. Also update whitelist for consistency
+        if (updatedUser && updatedUser.email) {
+            await supabase
+                .from('whitelist')
+                .update({ role })
+                .eq('email', updatedUser.email);
+        }
+
+        await logActivity(adminEmail, 'UPDATE_USER_ROLE', 'SUCCESS', `Updated role for ${updatedUser.email} to ${role}`, req);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.put('/api/users/:id/permissions', async (req, res) => {
     try {
         const { permissions } = req.body;
