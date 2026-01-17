@@ -11,6 +11,10 @@ export default function Attendance() {
     const [csvUrl, setCsvUrl] = useState(localStorage.getItem('attendance_sheet_url') || DEFAULT_URL);
     const [showConfig, setShowConfig] = useState(false);
 
+    // Absentees View State
+    const [absentees, setAbsentees] = useState([]);
+    const [loadingAbsentees, setLoadingAbsentees] = useState(false);
+
     // Logs View State
     const [logs, setLogs] = useState([]);
     const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
@@ -105,8 +109,44 @@ export default function Attendance() {
         try {
             const data = await api.getBiometricLogs(logDate);
             setLogs(data);
+            if (view === 'absentees') calculateAbsentees(data);
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const calculateAbsentees = async (currentLogs) => {
+        setLoadingAbsentees(true);
+        try {
+            const employees = await api.getEmployees();
+            const leaves = await api.getLeaves(); // Get all leaves to filter
+
+            // Get unique biometric IDs from logs for the selected date
+            const presentIds = new Set(currentLogs.map(l => l.biometric_id?.toString().toLowerCase().trim()));
+
+            const missing = employees.filter(emp => {
+                const bioId = emp.biometric_id?.toString().toLowerCase().trim();
+
+                // If they punched in, they are not absent
+                if (bioId && presentIds.has(bioId)) return false;
+
+                // Check if they are on approved leave today
+                const isOnLeave = (leaves || []).some(leave => {
+                    if (leave.employee_id !== emp.id || leave.status !== 'Approved') return false;
+                    const start = new Date(leave.start_date);
+                    const end = new Date(leave.end_date);
+                    const current = new Date(logDate);
+                    return current >= start && current <= end;
+                });
+
+                return !isOnLeave;
+            });
+
+            setAbsentees(missing);
+        } catch (e) {
+            console.error('Failed to calculate absentees:', e);
+        } finally {
+            setLoadingAbsentees(false);
         }
     };
 
@@ -131,6 +171,7 @@ export default function Attendance() {
                 <div className="toolbar-group">
                     <button className={`btn ${view === 'sync' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('sync')}>Sync Dashboard</button>
                     <button className={`btn ${view === 'logs' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('logs')}>View Logs</button>
+                    <button className={`btn ${view === 'absentees' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setView('absentees'); loadLogs(); }}>Daily Absentees</button>
                 </div>
             </div>
 
@@ -241,6 +282,65 @@ export default function Attendance() {
                                         </td>
                                     </tr>
                                 ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {view === 'absentees' && (
+                <div>
+                    <div className="card shadow" style={{ marginBottom: 15, padding: '15px' }}>
+                        <div className="toolbar" style={{ border: 'none', padding: 0 }}>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Select Date to Check Absentees</label>
+                                <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', marginLeft: 'auto' }}>
+                                <button className="btn btn-primary" onClick={loadLogs}>Refresh List</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Employee Name</th>
+                                    <th>Employee ID</th>
+                                    <th>Biometric ID</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loadingAbsentees ? (
+                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>Calculating daily absentees...</td></tr>
+                                ) : (
+                                    <>
+                                        {absentees.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--success)' }}>
+                                                    🎉 Everyone is present or on approved leave today!
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {absentees.map(emp => (
+                                            <tr key={emp.id}>
+                                                <td><strong>{emp.name}</strong></td>
+                                                <td>{emp.employee_id}</td>
+                                                <td><code>{emp.biometric_id || 'Not Set'}</code></td>
+                                                <td>{emp.department}</td>
+                                                <td>
+                                                    <span style={{
+                                                        padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
+                                                        background: '#fee2e2', color: '#991b1b'
+                                                    }}>ABSENT</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </>
+                                )}
                             </tbody>
                         </table>
                     </div>
