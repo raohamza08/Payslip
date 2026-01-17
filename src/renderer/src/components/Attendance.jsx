@@ -166,9 +166,12 @@ export default function Attendance() {
     });
 
     return (
-        <div className="p-20">
-            <div className="toolbar" style={{ marginBottom: 20 }}>
-                <h1>Attendance Management</h1>
+        <div className="view-container">
+            <div className="toolbar">
+                <div>
+                    <h1>Attendance Management</h1>
+                    <p className="text-light">Synchronize biometric logs and monitor daily attendance patterns.</p>
+                </div>
                 <div className="toolbar-group">
                     <button className={`btn ${view === 'sync' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('sync')}>Sync Dashboard</button>
                     <button className={`btn ${view === 'logs' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('logs')}>View Logs</button>
@@ -177,114 +180,106 @@ export default function Attendance() {
             </div>
 
             {view === 'sync' && (
-                <div>
-                    <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: 20 }}>
-                        <div className="flex-row" style={{ alignItems: 'center', gap: 10 }}>
-                            <h3>Auto-Sync Status</h3>
-                            <button className="btn btn-sm btn-secondary" onClick={() => setShowConfig(!showConfig)}>⚙️ Config</button>
+                <div className="flex-column">
+                    <div className="flex-row flex-between" style={{ alignItems: 'center' }}>
+                        <div className="flex-row" style={{ alignItems: 'center' }}>
+                            <h3>Synchronization Engine</h3>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setShowConfig(!showConfig)}>⚙️ Config</button>
                         </div>
                         <button className="btn btn-primary" onClick={runAutoSync} disabled={status === 'Syncing...' || !csvUrl}>
-                            {status === 'Syncing...' ? 'Syncing...' : 'Force Sync Now'}
+                            {status === 'Syncing...' ? 'Syncing...' : 'Start Manual Sync'}
                         </button>
                     </div>
 
                     {showConfig && (
-                        <div className="card shadow" style={{ marginBottom: 20, borderLeft: '4px solid #6366f1' }}>
+                        <div className="card">
                             <div className="form-group">
-                                <label>Published CSV Link</label>
-                                <input className="form-control" value={csvUrl} onChange={handleUrlChange} />
+                                <label>Published CSV Endpoint (Google Sheets)</label>
+                                <input value={csvUrl} onChange={handleUrlChange} placeholder="Enter URL..." />
                             </div>
                         </div>
                     )}
 
-                    <div className="card shadow" style={{ padding: 30, textAlign: 'center' }}>
-                        <div style={{ fontSize: 40, marginBottom: 10 }}>
+                    <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '4rem', marginBottom: '20px' }}>
                             {status === 'Syncing...' ? '🔄' : status === 'Error' ? '❌' : status === 'Config Needed' ? '⚙️' : '✅'}
                         </div>
-                        <h3>{status === 'Syncing...' ? 'Syncing...' : status === 'Error' ? 'Sync Failed' : status === 'Config Needed' ? 'Setup Required' : 'Up to Date'}</h3>
-                        {lastSyncTime && <p style={{ fontSize: 12, color: '#888' }}>Last successful sync: {lastSyncTime.toLocaleString()}</p>}
+                        <h2 style={{ marginBottom: '10px' }}>{status === 'Syncing...' ? 'Processing Logs...' : status === 'Error' ? 'Sync Failed' : status === 'Config Needed' ? 'Configuration Required' : 'Engine Standardized'}</h2>
+                        {lastSyncTime && <p className="text-light">Last successful heartbeat: {lastSyncTime.toLocaleString()}</p>}
                     </div>
 
-                    <div className="card shadow" style={{ marginTop: 20 }}>
-                        <h3>Sync Log</h3>
-                        <div style={{ padding: 15, background: '#1e1e1e', color: '#fff', borderRadius: 8, marginTop: 10, fontFamily: 'monospace' }}>
-                            {report.map((line, i) => <div key={i} style={{ marginBottom: 5 }}>{line}</div>)}
+                    <div className="card">
+                        <h3 style={{ marginBottom: '15px' }}>Terminal Output</h3>
+                        <div style={{ padding: '20px', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', color: '#00F5D4', borderRadius: '12px', fontFamily: 'monospace', fontSize: '13px' }}>
+                            {report.map((line, i) => <div key={i} style={{ marginBottom: '5px' }}>{i === 0 ? '> ' : ''}{line}</div>)}
+                            {report.length === 0 && <div className="text-light">Ready for synchronization...</div>}
                         </div>
                     </div>
                 </div>
             )}
 
             {view === 'logs' && (
-                <div>
-                    <div className="card shadow" style={{ marginBottom: 15, padding: '15px' }}>
-                        <div className="toolbar" style={{ border: 'none', padding: 0, gap: '15px', flexWrap: 'wrap' }}>
-                            <div className="form-group" style={{ margin: 0 }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Date</label>
-                                <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
-                            </div>
+                <div className="flex-column">
+                    <div className="filter-bar">
+                        <div className="form-group" style={{ margin: 0 }}>
+                            <label>Date Filter</label>
+                            <input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: '180px' }} />
+                        </div>
 
-                            <div className="form-group" style={{ margin: 0, flex: 1, minWidth: '200px' }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Search Name / ID</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Search employee or ID..."
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
+                        <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                            <label>Quick Search</label>
+                            <input
+                                type="text"
+                                placeholder="Employee name, ID, or time..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                            <div className="form-group" style={{ margin: 0 }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Direction</label>
-                                <select className="form-control" value={directionFilter} onChange={e => setDirectionFilter(e.target.value)}>
-                                    <option value="ALL">All Directions</option>
-                                    <option value="IN">IN Only</option>
-                                    <option value="OUT">OUT Only</option>
-                                </select>
-                            </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                            <label>Log Direction</label>
+                            <select value={directionFilter} onChange={e => setDirectionFilter(e.target.value)} style={{ width: '160px' }}>
+                                <option value="ALL">All Entries</option>
+                                <option value="IN">In Only</option>
+                                <option value="OUT">Out Only</option>
+                            </select>
+                        </div>
 
-                            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                                <button className="btn btn-primary" onClick={loadLogs}>Refresh</button>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+                            <button className="btn btn-secondary" onClick={loadLogs}>Refresh</button>
                         </div>
                     </div>
 
                     <div className="table-container">
-                        <table>
+                        <table className="table">
                             <thead>
                                 <tr>
                                     <th>Time</th>
                                     <th>Employee</th>
-                                    <th>Shift</th>
+                                    <th>Shift Info</th>
                                     <th>Biometric ID</th>
-                                    <th>Emp Code</th>
-                                    <th>Direction</th>
+                                    <th>System Code</th>
+                                    <th className="text-center">Direction</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredLogs.length === 0 && (
-                                    <tr>
-                                        <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                                            No logs found for the current filters.
-                                        </td>
-                                    </tr>
-                                )}
                                 {filteredLogs.map(log => (
                                     <tr key={log.id}>
                                         <td>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                         <td><strong>{log.name || 'Unknown'}</strong></td>
-                                        <td><span className="badge secondary" style={{ fontSize: '10px' }}>{log.shift || '-'}</span></td>
-                                        <td><code>{log.biometric_id}</code></td>
+                                        <td><span className="badge warning" style={{ fontSize: '10px' }}>{log.shift || '-'}</span></td>
+                                        <td><code className="text-light">{log.biometric_id}</code></td>
                                         <td>{log.empCode || '-'}</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
-                                                background: log.direction === 'IN' ? '#dcfce7' : '#fee2e2',
-                                                color: log.direction === 'IN' ? '#166534' : '#991b1b'
-                                            }}>{log.direction}</span>
+                                        <td className="text-center">
+                                            <span className={`badge ${log.direction === 'IN' ? 'success' : 'danger'}`}>
+                                                {log.direction}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
+                                {filteredLogs.length === 0 && (
+                                    <tr><td colSpan="6" className="text-center">No biometric logs found for the selected criteria.</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -292,67 +287,62 @@ export default function Attendance() {
             )}
 
             {view === 'absentees' && (
-                <div>
-                    <div className="card shadow" style={{ marginBottom: 15, padding: '15px' }}>
-                        <div className="toolbar" style={{ border: 'none', padding: 0, gap: '15px', flexWrap: 'wrap' }}>
-                            <div className="form-group" style={{ margin: 0 }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Date</label>
-                                <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
-                            </div>
+                <div className="flex-column">
+                    <div className="filter-bar">
+                        <div className="form-group" style={{ margin: 0 }}>
+                            <label>Reference Date</label>
+                            <input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: '180px' }} />
+                        </div>
 
-                            <div className="form-group" style={{ margin: 0 }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Filter by Shift</label>
-                                <select className="form-control" value={shiftFilter} onChange={e => setShiftFilter(e.target.value)}>
-                                    <option value="ALL">All Shifts</option>
-                                    <option value="Morning">Morning (8AM - 4PM)</option>
-                                    <option value="Evening">Evening (4PM - 12AM)</option>
-                                    <option value="Night">Night (12AM - 8AM)</option>
-                                </select>
-                            </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                            <label>Shift Filter</label>
+                            <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} style={{ width: '220px' }}>
+                                <option value="ALL">All Departments</option>
+                                <option value="Morning">Morning Operations</option>
+                                <option value="Evening">Evening Operations</option>
+                                <option value="Night">Night Operations</option>
+                            </select>
+                        </div>
 
-                            <div style={{ display: 'flex', alignItems: 'flex-end', marginLeft: 'auto' }}>
-                                <button className="btn btn-primary" onClick={loadLogs}>Refresh List</button>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <button className="btn btn-primary" onClick={loadLogs}>Recalculate Absentees</button>
                         </div>
                     </div>
 
                     <div className="table-container">
-                        <table>
+                        <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Employee Name</th>
+                                    <th>Full Name</th>
                                     <th>Employee ID</th>
-                                    <th>Shift</th>
+                                    <th>Shift Type</th>
                                     <th>Department</th>
-                                    <th>Status</th>
+                                    <th className="text-center">Incident Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loadingAbsentees ? (
-                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>Calculating daily absentees...</td></tr>
+                                    <tr><td colSpan="5" className="text-center">Scanning database for biometric mismatches...</td></tr>
                                 ) : (
                                     <>
-                                        {(absentees || []).filter(emp => shiftFilter === 'ALL' || (emp.shift_type || '').includes(shiftFilter)).length === 0 && (
-                                            <tr>
-                                                <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--success)' }}>
-                                                    🎉 Everyone in this category is present or on approved leave today!
-                                                </td>
-                                            </tr>
-                                        )}
                                         {(absentees || []).filter(emp => shiftFilter === 'ALL' || (emp.shift_type || '').includes(shiftFilter)).map(emp => (
                                             <tr key={emp.id}>
                                                 <td><strong>{emp.name}</strong></td>
                                                 <td>{emp.employee_id}</td>
-                                                <td><span className="badge secondary">{emp.shift_type || 'Morning'}</span></td>
+                                                <td><span className="badge warning">{emp.shift_type || 'Morning'}</span></td>
                                                 <td>{emp.department}</td>
-                                                <td>
-                                                    <span style={{
-                                                        padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 'bold',
-                                                        background: '#fee2e2', color: '#991b1b'
-                                                    }}>ABSENT</span>
+                                                <td className="text-center">
+                                                    <span className="badge danger">UNREPORTED ABSENCE</span>
                                                 </td>
                                             </tr>
                                         ))}
+                                        {(absentees || []).filter(emp => shiftFilter === 'ALL' || (emp.shift_type || '').includes(shiftFilter)).length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="text-center" style={{ color: 'var(--success)', fontWeight: '700' }}>
+                                                    🎯 100% Attendance: No discrepancies detected for today.
+                                                </td>
+                                            </tr>
+                                        )}
                                     </>
                                 )}
                             </tbody>
