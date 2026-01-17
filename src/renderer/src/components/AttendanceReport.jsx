@@ -148,6 +148,7 @@ export default function AttendanceReport() {
                             <tr>
                                 <th>Employee ID</th>
                                 <th>Name</th>
+                                <th>Shift</th>
                                 <th>Present</th>
                                 <th>Absent</th>
                                 <th>Leaves</th>
@@ -160,6 +161,7 @@ export default function AttendanceReport() {
                                 <tr key={row.id}>
                                     <td>{row.employee_id || row.id.substring(0, 8)}</td>
                                     <td><strong>{row.name}</strong></td>
+                                    <td><span className="badge secondary">{row.shift_type || 'Morning'}</span></td>
                                     <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>{row.present}</td>
                                     <td style={{ color: 'var(--danger)', fontWeight: 'bold' }}>{row.absent}</td>
                                     <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>{row.leave}</td>

@@ -1557,7 +1557,7 @@ app.post('/api/biometric/sync', async (req, res) => {
 app.get('/api/attendance/report', async (req, res) => {
     try {
         const { month, year } = req.query;
-        const { data: employees } = await supabase.from('employees').select('id, name, biometric_id, employee_id');
+        const { data: employees } = await supabase.from('employees').select('id, name, biometric_id, employee_id, shift_type');
 
         const m = parseInt(month);
         const y = parseInt(year);
@@ -1617,7 +1617,8 @@ app.get('/api/attendance/report', async (req, res) => {
                 leave: leave || 0,
                 absent,
                 total,
-                sitting_hours: sittingHours.toFixed(2)
+                sitting_hours: sittingHours.toFixed(2),
+                shift_type: emp.shift_type
             };
         }));
 
@@ -1760,8 +1761,8 @@ app.get('/api/biometric/all', async (req, res) => {
         const { data: logs, error } = await query;
         if (error) throw error;
 
-        // Fetch employees map for names
-        const { data: employees } = await supabase.from('employees').select('name, biometric_id, employee_id');
+        // Fetch employees map for names and shifts
+        const { data: employees } = await supabase.from('employees').select('name, biometric_id, employee_id, shift_type');
         const bioMap = {};
         employees.forEach(e => {
             if (e.biometric_id) bioMap[e.biometric_id] = e;
@@ -1772,7 +1773,8 @@ app.get('/api/biometric/all', async (req, res) => {
             return {
                 ...l,
                 name: emp ? emp.name : 'Unknown',
-                empCode: emp ? emp.employee_id : '-'
+                empCode: emp ? emp.employee_id : '-',
+                shift: emp ? emp.shift_type : '-'
             };
         });
 

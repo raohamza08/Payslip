@@ -14,6 +14,7 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
         contact_number: '', home_contact: '', personal_email: '',
         present_address: '', permanent_address: '',
         office_number: '', shift_start: '', shift_end: '', gender: '',
+        shift_type: 'Morning',
         // Merge existing
         ...employee
     });
@@ -102,6 +103,16 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
 
                             <div className="form-group"><label>Shift Start Time</label><input className="form-control" type="time" name="shift_start" value={form.shift_start || ''} onChange={handleChange} /></div>
                             <div className="form-group"><label>Shift End Time</label><input className="form-control" type="time" name="shift_end" value={form.shift_end || ''} onChange={handleChange} /></div>
+
+                            <div className="form-group">
+                                <label>Work Shift</label>
+                                <select className="form-control" name="shift_type" value={form.shift_type || 'Morning'} onChange={handleChange}>
+                                    <option>Morning (8AM - 4PM)</option>
+                                    <option>Evening (4PM - 12AM)</option>
+                                    <option>Night (12AM - 8AM)</option>
+                                    <option>Custom</option>
+                                </select>
+                            </div>
                         </div>
                     )}
 

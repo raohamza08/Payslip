@@ -14,6 +14,7 @@ export default function Attendance() {
     // Absentees View State
     const [absentees, setAbsentees] = useState([]);
     const [loadingAbsentees, setLoadingAbsentees] = useState(false);
+    const [shiftFilter, setShiftFilter] = useState('ALL');
 
     // Logs View State
     const [logs, setLogs] = useState([]);
@@ -254,6 +255,7 @@ export default function Attendance() {
                                 <tr>
                                     <th>Time</th>
                                     <th>Employee</th>
+                                    <th>Shift</th>
                                     <th>Biometric ID</th>
                                     <th>Emp Code</th>
                                     <th>Direction</th>
@@ -271,6 +273,7 @@ export default function Attendance() {
                                     <tr key={log.id}>
                                         <td>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                         <td><strong>{log.name || 'Unknown'}</strong></td>
+                                        <td><span className="badge secondary" style={{ fontSize: '10px' }}>{log.shift || '-'}</span></td>
                                         <td><code>{log.biometric_id}</code></td>
                                         <td>{log.empCode || '-'}</td>
                                         <td>
@@ -291,11 +294,22 @@ export default function Attendance() {
             {view === 'absentees' && (
                 <div>
                     <div className="card shadow" style={{ marginBottom: 15, padding: '15px' }}>
-                        <div className="toolbar" style={{ border: 'none', padding: 0 }}>
+                        <div className="toolbar" style={{ border: 'none', padding: 0, gap: '15px', flexWrap: 'wrap' }}>
                             <div className="form-group" style={{ margin: 0 }}>
-                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Select Date to Check Absentees</label>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Date</label>
                                 <input type="date" className="form-control" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: 'auto' }} />
                             </div>
+
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Filter by Shift</label>
+                                <select className="form-control" value={shiftFilter} onChange={e => setShiftFilter(e.target.value)}>
+                                    <option value="ALL">All Shifts</option>
+                                    <option value="Morning">Morning (8AM - 4PM)</option>
+                                    <option value="Evening">Evening (4PM - 12AM)</option>
+                                    <option value="Night">Night (12AM - 8AM)</option>
+                                </select>
+                            </div>
+
                             <div style={{ display: 'flex', alignItems: 'flex-end', marginLeft: 'auto' }}>
                                 <button className="btn btn-primary" onClick={loadLogs}>Refresh List</button>
                             </div>
@@ -308,7 +322,7 @@ export default function Attendance() {
                                 <tr>
                                     <th>Employee Name</th>
                                     <th>Employee ID</th>
-                                    <th>Biometric ID</th>
+                                    <th>Shift</th>
                                     <th>Department</th>
                                     <th>Status</th>
                                 </tr>
@@ -318,18 +332,18 @@ export default function Attendance() {
                                     <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>Calculating daily absentees...</td></tr>
                                 ) : (
                                     <>
-                                        {absentees.length === 0 && (
+                                        {(absentees || []).filter(emp => shiftFilter === 'ALL' || (emp.shift_type || '').includes(shiftFilter)).length === 0 && (
                                             <tr>
                                                 <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--success)' }}>
-                                                    🎉 Everyone is present or on approved leave today!
+                                                    🎉 Everyone in this category is present or on approved leave today!
                                                 </td>
                                             </tr>
                                         )}
-                                        {absentees.map(emp => (
+                                        {(absentees || []).filter(emp => shiftFilter === 'ALL' || (emp.shift_type || '').includes(shiftFilter)).map(emp => (
                                             <tr key={emp.id}>
                                                 <td><strong>{emp.name}</strong></td>
                                                 <td>{emp.employee_id}</td>
-                                                <td><code>{emp.biometric_id || 'Not Set'}</code></td>
+                                                <td><span className="badge secondary">{emp.shift_type || 'Morning'}</span></td>
                                                 <td>{emp.department}</td>
                                                 <td>
                                                     <span style={{
