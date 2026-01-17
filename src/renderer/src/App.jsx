@@ -70,7 +70,7 @@ export default function App() {
         };
     }, []);
 
-    const restoreSession = () => {
+    const restoreSession = async () => {
         try {
             const savedUser = localStorage.getItem('currentUser');
             const savedView = localStorage.getItem('currentView');
@@ -89,10 +89,21 @@ export default function App() {
                 } else {
                     setView('dashboard');
                 }
+
+                // Refresh user data from server to get latest permissions
+                try {
+                    const freshUser = await api.getMe();
+                    if (freshUser) {
+                        const updated = { ...userData, ...freshUser };
+                        setUser(updated);
+                        localStorage.setItem('currentUser', JSON.stringify(updated));
+                    }
+                } catch (e) {
+                    console.warn('Failed to refresh user session:', e);
+                }
             }
         } catch (e) {
             console.error('Failed to restore session:', e);
-            // Clear corrupted session data
             localStorage.removeItem('currentUser');
             localStorage.removeItem('currentView');
         }
@@ -108,12 +119,17 @@ export default function App() {
 
     const handleNavClick = (id) => {
         const protectedViews = ['attendance', 'reports', 'bulk', 'admin-leaves', 'assets', 'warnings'];
-        if (protectedViews.includes(id)) {
+
+        // If it's a protected view AND user is an admin, show PIN prompt.
+        // If it's an employee with specific permission, we allow them through without PIN 
+        // (as they don't have a Master Password/PIN configured).
+        const needsPin = protectedViews.includes(id) && (user.role === 'admin' || user.role === 'super_admin');
+
+        if (needsPin) {
             setPendingView(id);
             setShowPasswordConfirm(true);
         } else {
             setView(id);
-            // Save current view to localStorage
             localStorage.setItem('currentView', id);
         }
         if (window.innerWidth <= 768) setSidebarOpen(false);

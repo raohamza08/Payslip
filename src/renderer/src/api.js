@@ -450,6 +450,9 @@ const api = {
     },
     getMyBiometricLogs: async () => {
         return await api.fetchJson(`${API_BASE}/biometric/me`);
+    },
+    getMe: async () => {
+        return await api.fetchJson(`${API_BASE}/auth/me`);
     }
 };
 

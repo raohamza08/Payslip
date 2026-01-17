@@ -102,15 +102,6 @@ app.get('/api/auth/is-setup', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Auth Routes
-app.get('/api/auth/is-setup', async (req, res) => {
-    try {
-        const { data, error } = await supabase.from('config').select('is_setup').eq('id', 1).maybeSingle();
-        if (error && error.code !== 'PGRST116') throw error;
-        res.json({ isSetup: data?.is_setup || false });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 app.post('/api/auth/setup', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -245,6 +236,30 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.get('/api/auth/me', async (req, res) => {
+    try {
+        const email = req.headers['x-user-email'];
+        if (!email) return res.status(401).json({ error: 'Not authenticated' });
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email, role, permissions')
+            .eq('email', email)
+            .single();
+
+        if (error || !user) throw new Error('User not found');
+
+        res.json({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            permissions: Array.isArray(user.permissions) ? user.permissions : []
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/auth/confirm', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -317,7 +332,7 @@ app.get('/api/users', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('id, email, role, created_at')
+            .select('id, email, role, created_at, permissions')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
