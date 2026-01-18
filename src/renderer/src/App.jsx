@@ -45,8 +45,8 @@ export default function App() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedAccent = localStorage.getItem('accentColor') || '#0FB8AF';
 
-        document.documentElement.style.setProperty('--accent', savedAccent);
-        document.documentElement.style.setProperty('--accent-glow', `${savedAccent}66`);
+        document.body.style.setProperty('--accent', savedAccent);
+        document.body.style.setProperty('--accent-glow', `${savedAccent}66`);
         // Load Neon Atmosphere
         const neonColor = localStorage.getItem('neonColor') || '#0075FF';
         const neonIntensity = localStorage.getItem('neonIntensity') || '0.15';
@@ -56,10 +56,10 @@ export default function App() {
         const neonShape = localStorage.getItem('neonShape') || 'circular';
 
         document.body.className = `${savedTheme} neon-${neonShape}`;
-        document.documentElement.style.setProperty('--neon-color', neonColor);
-        document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
-        document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
-        document.documentElement.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
+        document.body.style.setProperty('--neon-color', neonColor);
+        document.body.style.setProperty('--neon-intensity', neonIntensity);
+        document.body.style.setProperty('--neon-size', `${neonSize}%`);
+        document.body.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
 
         // Override default alert with professional toast
         window.alert = (message) => {
@@ -329,21 +329,21 @@ export default function App() {
 function AdminDashboard({ onNav }) {
     return (
         <div className="view-container">
-            <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
-                <div className="card clickable" onClick={() => onNav('payroll')}>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>💰</div>
-                    <h3 style={{ margin: '0 0 10px 0' }}>Run Payroll</h3>
-                    <p className="text-light text-sm">Review financials and generate monthly payslips for the team.</p>
+            <div className="dash-grid">
+                <div className="dash-card clickable" onClick={() => onNav('payroll')}>
+                    <div className="dash-icon">💰</div>
+                    <h3>Run Payroll</h3>
+                    <p>Review financials and generate monthly payslips for the team.</p>
                 </div>
-                <div className="card clickable" onClick={() => onNav('admin-leaves')}>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>📅</div>
-                    <h3 style={{ margin: '0 0 10px 0' }}>Leave Requests</h3>
-                    <p className="text-light text-sm">Manage employee absence requests and vacation approvals.</p>
+                <div className="dash-card clickable" onClick={() => onNav('admin-leaves')}>
+                    <div className="dash-icon">📅</div>
+                    <h3>Leave Requests</h3>
+                    <p>Manage employee absence requests and vacation approvals.</p>
                 </div>
-                <div className="card clickable" onClick={() => onNav('attendance')}>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🕒</div>
-                    <h3 style={{ margin: '0 0 10px 0' }}>Live Attendance</h3>
-                    <p className="text-light text-sm">Monitor daily check-ins and track real-time sitting hours.</p>
+                <div className="dash-card clickable" onClick={() => onNav('attendance')}>
+                    <div className="dash-icon">🕒</div>
+                    <h3>Live Attendance</h3>
+                    <p>Monitor daily check-ins and track real-time sitting hours.</p>
                 </div>
             </div>
         </div>

@@ -36,14 +36,14 @@ export default function Settings({ user }) {
     React.useEffect(() => {
         loadPdfSettings();
         updateBodyClass(theme, neonShape);
-        document.documentElement.style.setProperty('--accent', accentColor);
-        document.documentElement.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
+        document.body.style.setProperty('--accent', accentColor);
+        document.body.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
 
         // Load Neon Settings
-        document.documentElement.style.setProperty('--neon-color', neonColor);
-        document.documentElement.style.setProperty('--neon-intensity', neonIntensity);
-        document.documentElement.style.setProperty('--neon-size', `${neonSize}%`);
-        document.documentElement.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
+        document.body.style.setProperty('--neon-color', neonColor);
+        document.body.style.setProperty('--neon-intensity', neonIntensity);
+        document.body.style.setProperty('--neon-size', `${neonSize}%`);
+        document.body.style.setProperty('--neon-position', `${neonX}% ${neonY}%`);
     }, []);
 
     const adjustColor = (color, amount) => {
@@ -83,9 +83,9 @@ export default function Settings({ user }) {
     const handleColorChange = (color) => {
         setAccentColor(color);
         localStorage.setItem('accentColor', color);
-        document.documentElement.style.setProperty('--accent', color);
-        document.documentElement.style.setProperty('--accent-hover', adjustColor(color, -20));
-        document.documentElement.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
+        document.body.style.setProperty('--accent', color);
+        document.body.style.setProperty('--accent-hover', adjustColor(color, -20));
+        document.body.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
         setMessage('Accent color updated!');
         setTimeout(() => setMessage(''), 3000);
     };
@@ -95,27 +95,27 @@ export default function Settings({ user }) {
             case 'color':
                 setNeonColor(value);
                 localStorage.setItem('neonColor', value);
-                document.documentElement.style.setProperty('--neon-color', value);
+                document.body.style.setProperty('--neon-color', value);
                 break;
             case 'intensity':
                 setNeonIntensity(value);
                 localStorage.setItem('neonIntensity', value);
-                document.documentElement.style.setProperty('--neon-intensity', value);
+                document.body.style.setProperty('--neon-intensity', value);
                 break;
             case 'size':
                 setNeonSize(value);
                 localStorage.setItem('neonSize', value);
-                document.documentElement.style.setProperty('--neon-size', `${value}%`);
+                document.body.style.setProperty('--neon-size', `${value}%`);
                 break;
             case 'x':
                 setNeonX(value);
                 localStorage.setItem('neonX', value);
-                document.documentElement.style.setProperty('--neon-position', `${value}% ${neonY}%`);
+                document.body.style.setProperty('--neon-position', `${value}% ${neonY}%`);
                 break;
             case 'y':
                 setNeonY(value);
                 localStorage.setItem('neonY', value);
-                document.documentElement.style.setProperty('--neon-position', `${neonX}% ${value}%`);
+                document.body.style.setProperty('--neon-position', `${neonX}% ${value}%`);
                 break;
             case 'shape':
                 setNeonShape(value);
