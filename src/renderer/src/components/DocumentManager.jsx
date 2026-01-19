@@ -108,9 +108,9 @@ export default function DocumentManager({ employee, onClose }) {
                                                 rel="noreferrer"
                                                 className="btn btn-sm btn-secondary"
                                             >
-                                                👁️
+                                                View
                                             </a>
-                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(doc.id)}>🗑️</button>
+                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(doc.id)}>Delete</button>
                                         </div>
                                     </div>
                                 </div>

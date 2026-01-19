@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { AddIcon, ViewIcon, CheckIcon, CloseIcon, CancelIcon, SaveIcon } from './Icons';
 
 export default function LeaveManagement({ user }) {
     const [leaves, setLeaves] = useState([]);
@@ -169,6 +170,7 @@ export default function LeaveManagement({ user }) {
                         <option value="Rejected">Rejected</option>
                     </select>
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                        <AddIcon />
                         Request Leave
                     </button>
                 </div>
@@ -176,19 +178,19 @@ export default function LeaveManagement({ user }) {
 
             {/* Summary Cards */}
             <div className="grid-3" style={{ marginBottom: '20px' }}>
-                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)', color: '--accent' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Total Requests</h3>
-                    <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{leaves.length}</div>
+                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--accent)' }}>{leaves.length}</div>
                 </div>
-                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)', color: '--accent' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Pending</h3>
-                    <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
+                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--accent)' }}>
                         {leaves.filter(l => l.status === 'Pending').length}
                     </div>
                 </div>
-                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)', color: '--accent' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%)' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Approved</h3>
-                    <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
+                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--accent)' }}>
                         {leaves.filter(l => l.status === 'Approved').length}
                     </div>
                 </div>
@@ -252,27 +254,25 @@ export default function LeaveManagement({ user }) {
                                         <td>
                                             <div style={{ display: 'flex', gap: '5px' }}>
                                                 <button
-                                                    className="btn btn-secondary"
-                                                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                                                    className="btn btn-secondary btn-sm"
                                                     onClick={() => { setSelectedLeave(leave); setShowViewModal(true); }}
                                                 >
+                                                    <ViewIcon />
                                                     View
                                                 </button>
                                                 {leave.status === 'Pending' && (
                                                     <>
                                                         <button
-                                                            className="btn btn-success"
-                                                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                                                            className="btn btn-success btn-sm"
                                                             onClick={() => handleStatusUpdate(leave.id, 'Approved')}
                                                         >
-                                                            ✓
+                                                            <CheckIcon />
                                                         </button>
                                                         <button
-                                                            className="btn btn-danger"
-                                                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                                                            className="btn btn-danger btn-sm"
                                                             onClick={() => handleStatusUpdate(leave.id, 'Rejected')}
                                                         >
-                                                            ✗
+                                                            <CloseIcon />
                                                         </button>
                                                     </>
                                                 )}

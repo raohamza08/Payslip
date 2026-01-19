@@ -33,7 +33,6 @@ export default function EmployeeList({ onEdit }) {
         <tr key={emp.id}>
             <td>{emp.name}</td>
             <td>{emp.email}</td>
-            <td>{emp.job_title}</td>
             <td>{emp.department}</td>
             <td><span style={{
                 padding: '4px 12px',
@@ -89,7 +88,6 @@ export default function EmployeeList({ onEdit }) {
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Role</th>
                                 <th>Dept</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -97,7 +95,7 @@ export default function EmployeeList({ onEdit }) {
                         </thead>
                         <tbody>
                             {activeEmployees.map(renderEmployeeRow)}
-                            {activeEmployees.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center' }}>No active employees found.</td></tr>}
+                            {activeEmployees.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center' }}>No active employees found.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -134,7 +132,6 @@ export default function EmployeeList({ onEdit }) {
                                     <tr>
                                         <th>Name</th>
                                         <th>Email</th>
-                                        <th>Role</th>
                                         <th>Dept</th>
                                         <th>Status</th>
                                         <th>Actions</th>
