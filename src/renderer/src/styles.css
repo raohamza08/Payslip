@@ -620,148 +620,129 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
-/* Buttons - Modern Pill Design with Icon Sections */
+/* Buttons - Modern Pill Design with SVG Icons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 8px 20px 8px 16px;
   border-radius: 50px;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  gap: 0;
-  text-transform: capitalize;
+  gap: 10px;
+  text-transform: none;
   letter-spacing: 0.3px;
   position: relative;
-  overflow: visible;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-height: 32px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-height: 40px;
   white-space: nowrap;
 }
 
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
 .btn::before {
-  content: attr(data-icon);
+  content: '';
   position: absolute;
-  left: 0;
+  left: 4px;
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  font-size: 0.9rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: #FFFFFF;
-  padding: 0 16px 0 40px;
+  padding-left: 48px;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0);
 }
 
 .btn-secondary {
   background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
   color: #FFFFFF;
-  padding: 0 16px 0 40px;
+  padding-left: 48px;
 }
 
 .btn-secondary:hover {
   background: linear-gradient(135deg, #4B5563 0%, #374151 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .btn-danger {
   background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: #FFFFFF;
-  padding: 0 16px 0 40px;
+  padding-left: 48px;
 }
 
 .btn-danger:hover {
   background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
 }
 
 .btn-success {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: #FFFFFF;
-  padding: 0 16px 0 40px;
+  padding-left: 48px;
 }
 
 .btn-success:hover {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #FFFFFF;
+  padding-left: 48px;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
 }
 
 .btn-sm {
-  min-height: 28px;
-  font-size: 0.7rem;
-  padding: 0 14px 0 36px;
+  min-height: 32px;
+  font-size: 0.8125rem;
+  padding: 6px 16px 6px 14px;
+  padding-left: 42px;
 }
 
 .btn-sm::before {
   width: 28px;
   height: 28px;
-  font-size: 0.8rem;
+  left: 3px;
 }
 
-/* Icon-specific button styles */
-.btn-edit::before {
-  content: '✏️';
-}
-
-.btn-docs::before {
-  content: '📄';
-}
-
-.btn-delete::before {
-  content: '🗑️';
-}
-
-.btn-add::before {
-  content: '➕';
-}
-
-.btn-export::before {
-  content: '📊';
-}
-
-.btn-save::before {
-  content: '💾';
-}
-
-.btn-cancel::before {
-  content: '✖️';
-}
-
-.btn-search::before {
-  content: '🔍';
-}
-
-.btn-download::before {
-  content: '⬇️';
-}
-
-.btn-upload::before {
-  content: '⬆️';
+.btn-sm svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Tables Professional Minimalist */

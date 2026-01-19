@@ -164,42 +164,55 @@ export default function Settings({ user }) {
     };
 
     const predefinedColors = [
-        // Professional Blues
-        { name: 'EuroShub', value: '#0FB8AF' },
-        { name: 'Ocean Blue', value: '#0077B6' },
-        { name: 'Corporate Blue', value: '#1E3A8A' },
-        { name: 'Sky Blue', value: '#0EA5E9' },
+        // Blues
+        { name: 'Azure', value: '#0078D4' },
+        { name: 'Ocean', value: '#0077B6' },
+        { name: 'Royal Blue', value: '#4169E1' },
         { name: 'Navy', value: '#1E40AF' },
+        { name: 'Sky', value: '#0EA5E9' },
+        { name: 'Cobalt', value: '#0047AB' },
 
-        // Professional Teals & Cyans
-        { name: 'Teal', value: '#17a2b8' },
-        { name: 'Cyan', value: '#06B6D4' },
-        { name: 'Turquoise', value: '#14B8A6' },
-
-        // Professional Greens
-        { name: 'Forest Green', value: '#059669' },
+        // Greens
         { name: 'Emerald', value: '#10B981' },
-        { name: 'Sage', value: '#22C55E' },
+        { name: 'Forest', value: '#059669' },
+        { name: 'Mint', value: '#22C55E' },
+        { name: 'Jade', value: '#00A86B' },
+        { name: 'Lime', value: '#84CC16' },
 
-        // Professional Purples
-        { name: 'Deep Purple', value: '#7C3AED' },
+        // Purples & Violets
+        { name: 'Purple', value: '#7C3AED' },
         { name: 'Violet', value: '#8B5CF6' },
         { name: 'Indigo', value: '#6366F1' },
+        { name: 'Lavender', value: '#9333EA' },
+        { name: 'Plum', value: '#A855F7' },
 
-        // Professional Grays
+        // Reds & Pinks
+        { name: 'Crimson', value: '#DC143C' },
+        { name: 'Ruby', value: '#E11D48' },
+        { name: 'Rose', value: '#F43F5E' },
+        { name: 'Pink', value: '#EC4899' },
+        { name: 'Magenta', value: '#D946EF' },
+
+        // Oranges & Yellows
+        { name: 'Amber', value: '#F59E0B' },
+        { name: 'Orange', value: '#F97316' },
+        { name: 'Tangerine', value: '#FB923C' },
+        { name: 'Gold', value: '#EAB308' },
+        { name: 'Sunset', value: '#EA580C' },
+
+        // Teals & Cyans
+        { name: 'EurosHub', value: '#0FB8AF' },
+        { name: 'Teal', value: '#14B8A6' },
+        { name: 'Cyan', value: '#06B6D4' },
+        { name: 'Turquoise', value: '#2DD4BF' },
+        { name: 'Aqua', value: '#22D3EE' },
+
+        // Neutrals & Darks
         { name: 'Charcoal', value: '#374151' },
         { name: 'Slate', value: '#475569' },
         { name: 'Steel', value: '#64748B' },
-
-        // Warm Professional Tones
-        { name: 'Amber', value: '#F59E0B' },
-        { name: 'Bronze', value: '#D97706' },
-        { name: 'Rust', value: '#EA580C' },
-
-        // Sophisticated Neutrals
         { name: 'Graphite', value: '#1F2937' },
-        { name: 'Onyx', value: '#111827' },
-        { name: 'Pearl', value: '#F3F4F6' }
+        { name: 'Onyx', value: '#111827' }
     ];
 
     return (

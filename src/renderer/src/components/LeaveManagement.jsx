@@ -176,17 +176,17 @@ export default function LeaveManagement({ user }) {
 
             {/* Summary Cards */}
             <div className="grid-3" style={{ marginBottom: '20px' }}>
-                <div className="card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, #7a60ffff 0%, #000000ff 100%)', color: 'white' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Total Requests</h3>
                     <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{leaves.length}</div>
                 </div>
-                <div className="card" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, #7a60ffff 0%, #000000ff 100%)', color: 'white' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Pending</h3>
                     <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
                         {leaves.filter(l => l.status === 'Pending').length}
                     </div>
                 </div>
-                <div className="card" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+                <div className="card" style={{ background: 'linear-gradient(135deg, #7a60ffff 0%, #000000ff 100%)', color: 'white' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>Approved</h3>
                     <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
                         {leaves.filter(l => l.status === 'Approved').length}
