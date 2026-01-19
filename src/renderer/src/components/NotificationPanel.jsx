@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';
-import { CloseIcon } from './Icons';
+import { CloseIcon, BellIcon } from './Icons';
 
 export default function NotificationPanel({ onNavigate }) {
     const [notifications, setNotifications] = useState([]);
@@ -52,17 +52,28 @@ export default function NotificationPanel({ onNavigate }) {
         <div style={{ position: 'relative' }}>
             <button
                 onClick={() => setShowList(!showList)}
-                className="btn-icon"
-                style={{ position: 'relative', width: '40px', height: '40px' }}
+                style={{
+                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '50%',
+                    width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                    position: 'relative'
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#d1d5db'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
                 title="Notifications"
             >
-                🔔
+                <div style={{ transform: 'scale(1.2)' }}>
+                    <BellIcon />
+                </div>
                 {unreadCount > 0 && (
                     <span style={{
-                        position: 'absolute', top: -2, right: -2, background: '#ef4444', color: 'white',
-                        fontSize: '10px', fontWeight: 'bold', height: '18px', minWidth: '18px',
+                        position: 'absolute', top: 0, right: 0,
+                        background: '#ef4444', color: 'white',
+                        fontSize: '10px', fontWeight: 'bold',
+                        height: '18px', minWidth: '18px', padding: '0 4px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: '9px', border: '2px solid white'
+                        borderRadius: '10px', border: '2px solid white',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                     }}>
                         {unreadCount}
                     </span>
@@ -96,9 +107,12 @@ export default function NotificationPanel({ onNavigate }) {
 
                         <div style={{ overflowY: 'auto', padding: '0' }}>
                             {notifications.length === 0 ? (
-                                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af' }}>
-                                    <div style={{ fontSize: '24px', marginBottom: '10px' }}>📭</div>
-                                    <p style={{ margin: 0, fontSize: '14px' }}>No new notifications</p>
+                                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#9ca3af' }}>
+                                    <div style={{ opacity: 0.5, marginBottom: '15px' }}>
+                                        <BellIcon className="w-8 h-8" />
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '15px', fontWeight: '500', color: '#374151' }}>No notifications</p>
+                                    <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#9ca3af' }}>We'll let you know when something arrives.</p>
                                 </div>
                             ) : (
                                 notifications.map(n => (
@@ -130,7 +144,8 @@ export default function NotificationPanel({ onNavigate }) {
                                         <p style={{ margin: 0, fontSize: '13px', color: '#4b5563', lineHeight: '1.5' }}>{n.message}</p>
                                     </div>
                                 ))
-                            )}
+                            )
+                            }
                         </div>
                     </div>
                 </>,

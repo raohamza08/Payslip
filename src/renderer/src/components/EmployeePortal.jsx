@@ -66,7 +66,7 @@ export default function EmployeePortal({ user }) {
                 <div className="grid-3" style={{ gap: '20px' }}>
                     <div className="card">
                         <h3>Attendance & Sitting</h3>
-                        <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', margin: '15px 0' }}>
+                        <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', opacity: '0.5', margin: '15px 0' }}>
                             {profile.sitting_hours || '0.0'} hrs
                         </p>
                         <p className="text-light text-sm">Total sitting hours this month</p>
