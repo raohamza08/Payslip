@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { RefreshIcon } from './Icons';
 
 export default function AdminLogs() {
     const [logs, setLogs] = useState([]);
@@ -52,6 +53,7 @@ export default function AdminLogs() {
                         <option value="ERROR">Error</option>
                     </select>
                     <button className="btn btn-secondary" onClick={loadLogs} disabled={loading}>
+                        <RefreshIcon />
                         {loading ? 'Refreshing...' : 'Refresh'}
                     </button>
                 </div>

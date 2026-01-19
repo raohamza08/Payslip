@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { AddIcon, DeleteIcon } from './Icons';
 
 export default function Whitelist() {
     const [emails, setEmails] = useState([]);
@@ -72,6 +73,7 @@ export default function Whitelist() {
                         <option value="super_admin">Super Admin</option>
                     </select>
                     <button type="submit" className="btn btn-primary" disabled={loading}>
+                        <AddIcon />
                         {loading ? 'Adding...' : 'Add to Whitelist'}
                     </button>
                 </form>
@@ -102,6 +104,7 @@ export default function Whitelist() {
                                         className="btn btn-danger btn-sm"
                                         onClick={() => handleDelete(item.id)}
                                     >
+                                        <DeleteIcon />
                                         Remove
                                     </button>
                                 </td>

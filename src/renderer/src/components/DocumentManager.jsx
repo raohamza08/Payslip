@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { UploadIcon, ViewIcon, DeleteIcon, CloseIcon } from './Icons';
 
 export default function DocumentManager({ employee, onClose }) {
     const [docs, setDocs] = useState([]);
@@ -83,6 +84,7 @@ export default function DocumentManager({ employee, onClose }) {
                                 />
                             </div>
                             <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: '100%', marginTop: '10px' }}>
+                                <UploadIcon />
                                 {uploading ? 'Uploading...' : 'Upload Document'}
                             </button>
                         </form>
@@ -108,9 +110,13 @@ export default function DocumentManager({ employee, onClose }) {
                                                 rel="noreferrer"
                                                 className="btn btn-sm btn-secondary"
                                             >
+                                                <ViewIcon />
                                                 View
                                             </a>
-                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(doc.id)}>Delete</button>
+                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(doc.id)}>
+                                                <DeleteIcon />
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { UserIcon, LockIcon, SaveIcon, CancelIcon } from './Icons';
 
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
@@ -133,6 +134,7 @@ export default function UserManagement() {
                                             setResetType('permissions');
                                         }}
                                     >
+                                        <UserIcon />
                                         Permissions
                                     </button>
                                     <button
@@ -143,6 +145,7 @@ export default function UserManagement() {
                                             setResetType('login');
                                         }}
                                     >
+                                        <LockIcon />
                                         RLP
                                     </button>
                                     {(user.role === 'admin' || user.role === 'super_admin') && (
@@ -153,6 +156,7 @@ export default function UserManagement() {
                                                 setResetType('master');
                                             }}
                                         >
+                                            <LockIcon />
                                             RMP
                                         </button>
                                     )}
