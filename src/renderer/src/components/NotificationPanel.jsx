@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { CloseIcon } from './Icons';
 
-export default function NotificationPanel() {
+export default function NotificationPanel({ onNavigate }) {
     const [notifications, setNotifications] = useState([]);
     const [showList, setShowList] = useState(false);
 
@@ -22,30 +23,38 @@ export default function NotificationPanel() {
         }
     };
 
-    const handleMarkRead = async (id) => {
-        try {
-            await api.markNotificationRead(id);
-            setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
-        } catch (e) {
-            console.error(e);
+    const handleNotificationClick = (n) => {
+        handleMarkRead(n.id);
+
+        if (onNavigate) {
+            const text = ((n.title || '') + ' ' + (n.message || '')).toLowerCase();
+
+            if (text.includes('leave')) onNavigate('admin-leaves');
+            else if (text.includes('attendance') || text.includes('punch') || text.includes('late')) onNavigate('attendance');
+            else if (text.includes('payroll') || text.includes('salary') || text.includes('payslip')) onNavigate('payroll');
+            else if (text.includes('asset')) onNavigate('assets');
+            else if (text.includes('performance') || text.includes('review') || text.includes('kpi')) onNavigate('performance');
+            else if (text.includes('expense')) onNavigate('expenses');
+            else if (text.includes('warning') || text.includes('disciplinary')) onNavigate('warnings');
         }
+        setShowList(false);
     };
 
     return (
         <div style={{ position: 'relative' }}>
             <button
                 onClick={() => setShowList(!showList)}
-                style={{
-                    background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', position: 'relative',
-                    padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}
+                className="btn-icon"
+                style={{ position: 'relative', width: '40px', height: '40px' }}
                 title="Notifications"
             >
                 🔔
                 {unreadCount > 0 && (
                     <span style={{
-                        position: 'absolute', top: '0', right: '0', background: '#e11d48', color: 'white',
-                        fontSize: '10px', padding: '2px 5px', borderRadius: '10px', minWidth: '15px'
+                        position: 'absolute', top: -2, right: -2, background: '#ef4444', color: 'white',
+                        fontSize: '10px', fontWeight: 'bold', height: '18px', minWidth: '18px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '9px', border: '2px solid white'
                     }}>
                         {unreadCount}
                     </span>
@@ -53,47 +62,69 @@ export default function NotificationPanel() {
             </button>
 
             {showList && (
-                <div style={{
-                    position: 'absolute', top: '40px', right: '0', width: '320px', maxHeight: '450px',
-                    background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                    zIndex: 1000, overflowY: 'auto', border: '1px solid #eee'
-                }}>
-                    <div style={{ padding: '15px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ margin: 0 }}>Notifications</h4>
-                        <button onClick={() => setShowList(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>✕</button>
-                    </div>
+                <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setShowList(false)} />
+                    <div style={{
+                        position: 'absolute', top: '50px', right: '-10px', width: '360px', maxHeight: '500px',
+                        background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                        zIndex: 999, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}>
+                        <div style={{
+                            padding: '16px 20px', borderBottom: '1px solid #f3f4f6',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            background: '#f9fafb'
+                        }}>
+                            <h4 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Notifications</h4>
+                            <button
+                                onClick={() => setShowList(false)}
+                                className="btn-icon"
+                                style={{ width: '28px', height: '28px', color: '#6b7280' }}
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
 
-                    <div style={{ padding: '5px' }}>
-                        {notifications.length === 0 ? (
-                            <p style={{ textAlign: 'center', color: '#888', padding: '30px 0', fontSize: '13px' }}>No new notifications</p>
-                        ) : (
-                            notifications.map(n => (
-                                <div
-                                    key={n.id}
-                                    onClick={() => handleMarkRead(n.id)}
-                                    style={{
-                                        padding: '12px 15px', borderBottom: '1px solid #f9f9f9', cursor: 'pointer',
-                                        background: n.is_read ? 'white' : '#f0f9ff', borderRadius: '8px', margin: '2px 0',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                        <strong style={{ fontSize: '13px', color: '#1f2937' }}>{n.title}</strong>
-                                        <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-                                            {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                    <p style={{ margin: 0, fontSize: '12px', color: '#4b5563', lineHeight: '1.4' }}>{n.message}</p>
-                                    {!n.is_read && (
-                                        <div style={{ textAlign: 'right', marginTop: '5px' }}>
-                                            <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: 'bold' }}>Mark as read</span>
-                                        </div>
-                                    )}
+                        <div style={{ overflowY: 'auto', padding: '0' }}>
+                            {notifications.length === 0 ? (
+                                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af' }}>
+                                    <div style={{ fontSize: '24px', marginBottom: '10px' }}>📭</div>
+                                    <p style={{ margin: 0, fontSize: '14px' }}>No new notifications</p>
                                 </div>
-                            ))
-                        )}
+                            ) : (
+                                notifications.map(n => (
+                                    <div
+                                        key={n.id}
+                                        onClick={() => handleNotificationClick(n)}
+                                        style={{
+                                            padding: '16px 20px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer',
+                                            background: n.is_read ? 'white' : '#eff6ff',
+                                            transition: 'background 0.2s',
+                                            position: 'relative'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                                        onMouseLeave={e => e.currentTarget.style.background = n.is_read ? 'white' : '#eff6ff'}
+                                    >
+                                        {!n.is_read && (
+                                            <div style={{
+                                                position: 'absolute', left: '0', top: '0', bottom: '0', width: '4px', background: '#3b82f6'
+                                            }} />
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <strong style={{ fontSize: '14px', color: '#1f2937', fontWeight: n.is_read ? '500' : '600' }}>
+                                                {n.title}
+                                            </strong>
+                                            <span style={{ fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap', marginLeft: '10px' }}>
+                                                {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <p style={{ margin: 0, fontSize: '13px', color: '#4b5563', lineHeight: '1.5' }}>{n.message}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </div>
     );

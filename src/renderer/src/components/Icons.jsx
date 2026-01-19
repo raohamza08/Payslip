@@ -228,3 +228,56 @@ export const ViewIcon = ({ className = "" }) => (
         <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="url(#viewGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
+
+export const ProcessIcon = ({ className = "" }) => (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="processGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FB923C" />
+                <stop offset="100%" stopColor="#EA580C" />
+            </linearGradient>
+        </defs>
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="url(#processGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+export const SettingsIcon = ({ className = "" }) => (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="settingsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9CA3AF" />
+                <stop offset="100%" stopColor="#4B5563" />
+            </linearGradient>
+        </defs>
+        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="url(#settingsGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M19.4 15C19.46 14.33 19.5 13.67 19.5 13H22C22.55 13 23 12.55 23 12C23 11.45 22.55 11 22 11H19.5C19.5 10.33 19.46 9.67 19.4 9L21.5 6.9C21.9 6.5 21.9 5.9 21.5 5.5L20 4C19.6 3.6 19 3.6 18.6 4L16.5 6.1C15.83 6.04 15.17 6 14.5 6V3.5C14.5 2.95 14.05 2.5 13.5 2.5H10.5C9.95 2.5 9.5 2.95 9.5 3.5V6C8.83 6 8.17 6.04 7.5 6.1L5.4 4C5 3.6 4.4 3.6 4 4L2.5 5.5C2.1 5.9 2.1 6.5 2.5 6.9L4.6 9C4.54 9.67 4.5 10.33 4.5 11H2C1.45 11 1 11.45 1 12C1 12.55 1.45 13 2 13H4.5C4.5 13.67 4.54 14.33 4.6 15L2.5 17.1C2.1 17.5 2.1 18.1 2.5 18.5L4 20C4.4 20.4 5 20.4 5.4 20L7.5 17.9C8.17 17.96 8.83 18 9.5 18V20.5C9.5 21.05 9.95 21.5 10.5 21.5H13.5C14.05 21.5 14.5 21.05 14.5 20.5V18C15.17 18 15.83 17.96 16.5 17.9L18.6 20C19 20.4 19.6 20.4 20 20L21.5 18.5C21.9 18.1 21.9 17.5 21.5 17.1L19.4 15Z" stroke="url(#settingsGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+export const SyncIcon = ({ className = "" }) => (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="syncGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6366F1" />
+                <stop offset="100%" stopColor="#8B5CF6" />
+            </linearGradient>
+        </defs>
+        <path d="M1 4V10H7" stroke="url(#syncGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M23 20V14H17" stroke="url(#syncGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20.49 9C19.9828 7.56678 19.1209 6.28536 17.9845 5.27542C16.8482 4.26548 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1112 10.0083 20.7757C8.52547 20.4402 7.1518 19.7345 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15" stroke="url(#syncGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+export const WarningIcon = ({ className = "" }) => (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="warningGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#D97706" />
+            </linearGradient>
+        </defs>
+        <path d="M10.29 3.86L1.82 18C1.64538 18.3024 1.55296 18.6453 1.55196 18.9945C1.55096 19.3437 1.64141 19.6871 1.81437 19.9905C1.98732 20.294 2.23678 20.5467 2.53815 20.7225C2.83953 20.8983 3.18203 20.991 3.53 20.99H20.47C20.818 20.991 21.1605 20.8983 21.4618 20.7225C21.7632 20.5467 22.0127 20.294 22.1856 19.9905C22.3586 19.6871 22.449 19.3437 22.448 18.9945C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.86C13.5317 3.56611 13.2807 3.32312 12.9813 3.15392C12.6819 2.98471 12.3442 2.89487 12 2.89487C11.6558 2.89487 11.3181 2.98471 11.0187 3.15392C10.7193 3.32312 10.4683 3.56611 10.29 3.86Z" stroke="url(#warningGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 9V13" stroke="url(#warningGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 17H12.01" stroke="url(#warningGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);

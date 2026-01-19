@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api';
 import IncrementManager from './IncrementManager';
+import { SaveIcon, CancelIcon } from './Icons';
 
 export default function EmployeeForm({ employee, onSave, onCancel }) {
     const [activeTab, setActiveTab] = useState('personal');
@@ -133,8 +134,12 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
 
                     {activeTab !== 'increments' && (
                         <div className="flex-row flex-end" style={{ marginTop: 20, gap: '10px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                            <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-                            <button type="submit" className="btn btn-primary">Save Employee</button>
+                            <button type="button" className="btn btn-secondary" onClick={onCancel}>
+                                <CancelIcon /> Cancel
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                <SaveIcon /> Save Employee
+                            </button>
                         </div>
                     )}
                 </form>

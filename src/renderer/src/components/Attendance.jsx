@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { SyncIcon, ViewIcon, WarningIcon, SettingsIcon, RefreshIcon } from './Icons';
 
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhxvyDalfBTJrGtts4KF51x8rP2Cm-dPVb9u_3S2IiD9SH-1-8LQtxuNO5zNELhps0gxV0K6_Zmjwo/pub?gid=719528164&single=true&output=csv';
 
@@ -173,9 +174,15 @@ export default function Attendance() {
                     <p className="text-light">Synchronize biometric logs and monitor daily attendance patterns.</p>
                 </div>
                 <div className="toolbar-group">
-                    <button className={`btn ${view === 'sync' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('sync')}>Sync Dashboard</button>
-                    <button className={`btn ${view === 'logs' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('logs')}>View Logs</button>
-                    <button className={`btn ${view === 'absentees' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setView('absentees'); loadLogs(); }}>Daily Absentees</button>
+                    <button className={`btn ${view === 'sync' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('sync')}>
+                        <SyncIcon /> Sync Dashboard
+                    </button>
+                    <button className={`btn ${view === 'logs' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('logs')}>
+                        <ViewIcon /> View Logs
+                    </button>
+                    <button className={`btn ${view === 'absentees' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setView('absentees'); loadLogs(); }}>
+                        <WarningIcon /> Daily Absentees
+                    </button>
                 </div>
             </div>
 
@@ -184,9 +191,12 @@ export default function Attendance() {
                     <div className="flex-row flex-between" style={{ alignItems: 'center' }}>
                         <div className="flex-row" style={{ alignItems: 'center' }}>
                             <h3>Synchronization Engine</h3>
-                            <button className="btn btn-secondary btn-sm" onClick={() => setShowConfig(!showConfig)}>⚙️ Config</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setShowConfig(!showConfig)}>
+                                <SettingsIcon /> Config
+                            </button>
                         </div>
                         <button className="btn btn-primary" onClick={runAutoSync} disabled={status === 'Syncing...' || !csvUrl}>
+                            <SyncIcon />
                             {status === 'Syncing...' ? 'Syncing...' : 'Start Manual Sync'}
                         </button>
                     </div>
@@ -246,7 +256,9 @@ export default function Attendance() {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
-                            <button className="btn btn-secondary" onClick={loadLogs}>Refresh</button>
+                            <button className="btn btn-secondary" onClick={loadLogs}>
+                                <RefreshIcon /> Refresh
+                            </button>
                         </div>
                     </div>
 
@@ -305,7 +317,9 @@ export default function Attendance() {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                            <button className="btn btn-primary" onClick={loadLogs}>Recalculate Absentees</button>
+                            <button className="btn btn-primary" onClick={loadLogs}>
+                                <RefreshIcon /> Recalculate Absentees
+                            </button>
                         </div>
                     </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { AddIcon } from './Icons';
 
 export default function IncrementManager({ employee, onClose }) {
     const [increments, setIncrements] = useState([]);
@@ -69,7 +70,9 @@ export default function IncrementManager({ employee, onClose }) {
                         <span style={{ color: 'green', fontWeight: 'bold' }}> New: {(Number(employee.monthly_salary) * (1 + Number(newIncrement.percentage) / 100)).toLocaleString()}</span>
                     </div>
 
-                    <button className="btn btn-primary" type="submit">Apply Increment</button>
+                    <button className="btn btn-primary" type="submit">
+                        <AddIcon /> Apply Increment
+                    </button>
                 </form>
             </div>
 

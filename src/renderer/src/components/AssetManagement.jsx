@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { AddIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon } from './Icons';
 
 export default function AssetManagement() {
     const [assets, setAssets] = useState([]);
@@ -111,7 +112,7 @@ export default function AssetManagement() {
                 <h1>Asset Management</h1>
                 <div className="toolbar-group">
                     <button className="btn btn-primary" onClick={() => { setEditingAsset(null); setShowModal(true); }}>
-                        Add New Asset
+                        <AddIcon /> Add New Asset
                     </button>
                 </div>
             </div>
@@ -178,8 +179,8 @@ export default function AssetManagement() {
                                     <td>{asset.return_date}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button className="btn-icon" onClick={() => handleEdit(asset)} title="Edit">✏️</button>
-                                            <button className="btn-icon" onClick={() => handleDelete(asset.id)} title="Delete">🗑️</button>
+                                            <button className="btn btn-sm btn-secondary" onClick={() => handleEdit(asset)} title="Edit"><EditIcon /></button>
+                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(asset.id)} title="Delete"><DeleteIcon /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -283,8 +284,12 @@ export default function AssetManagement() {
                                     value={formData.return_date} onChange={e => setFormData({ ...formData, return_date: e.target.value })} />
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); setEditingAsset(null); }}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">{editingAsset ? 'Update Asset' : 'Save Asset'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); setEditingAsset(null); }}>
+                                    <CancelIcon /> Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    <SaveIcon /> {editingAsset ? 'Update Asset' : 'Save Asset'}
+                                </button>
                             </div>
                         </form>
                     </div>

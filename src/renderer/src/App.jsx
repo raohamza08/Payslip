@@ -262,7 +262,7 @@ export default function App() {
                         {view === 'portal' ? 'EurosHub Portal' : view.replace('-', ' ')}
                     </h2>
                     <div className="top-bar-actions">
-                        <NotificationPanel />
+                        <NotificationPanel onNavigate={handleNavClick} />
                         <div className="user-profile">
                             <div className="user-info">
                                 <div className="user-name">{user.name || user.email}</div>

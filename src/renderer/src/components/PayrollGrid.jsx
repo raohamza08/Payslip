@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { SaveIcon, ProcessIcon, EditIcon, CancelIcon, DownloadIcon, ViewIcon, DeleteIcon, AddIcon } from './Icons';
 import { numberToWords } from '../utils/numToWords';
 
 export default function PayrollGrid({ onNavigate }) {
@@ -162,10 +163,11 @@ export default function PayrollGrid({ onNavigate }) {
                     <div className="form-group" style={{ margin: 0 }}>
                         <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ width: '160px' }} />
                     </div>
-                    <button className="btn btn-secondary" onClick={handleSave}>Save Defaults</button>
+                    <button className="btn btn-secondary" onClick={handleSave}>
+                        <SaveIcon /> Save Defaults
+                    </button>
                     <button className="btn btn-primary" onClick={() => setView('review')}>
-                        <span style={{ fontSize: '1.1rem', marginRight: '5px' }}>⚡</span>
-                        Generate Payslips
+                        <ProcessIcon /> Generate Payslips
                     </button>
                 </div>
             </div>
@@ -223,13 +225,17 @@ export default function PayrollGrid({ onNavigate }) {
                                         <td className="text-center">
                                             <div className="flex-row flex-center" style={{ gap: '10px' }}>
                                                 <span style={{ fontWeight: '700' }}>{gross.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')}>Edit</button>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')}>
+                                                    <EditIcon /> Edit
+                                                </button>
                                             </div>
                                         </td>
                                         <td className="text-center">
                                             <div className="flex-row flex-center" style={{ gap: '10px' }}>
                                                 <span style={{ fontWeight: '700', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')}>Edit</button>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')}>
+                                                    <EditIcon /> Edit
+                                                </button>
                                             </div>
                                         </td>
                                         <td>
@@ -274,8 +280,12 @@ export default function PayrollGrid({ onNavigate }) {
                         </tbody>
                     </table>
                     <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                        <button className="btn btn-secondary" onClick={() => setView('grid')}>Back to Edit</button>
-                        <button className="btn btn-primary" onClick={startGeneration}>Confirm & Generate All</button>
+                        <button className="btn btn-secondary" onClick={() => setView('grid')}>
+                            <CancelIcon /> Back to Edit
+                        </button>
+                        <button className="btn btn-primary" onClick={startGeneration}>
+                            <ProcessIcon /> Confirm & Generate All
+                        </button>
                     </div>
                 </div>
             )}
@@ -309,13 +319,13 @@ export default function PayrollGrid({ onNavigate }) {
                     {progress.current === progress.total && (
                         <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'center' }}>
                             <button className="btn btn-success" onClick={() => api.downloadBulkPayslips(progress.ids, `Payslips_${month}.zip`)}>
-                                Download All (ZIP)
+                                <DownloadIcon /> Download All (ZIP)
                             </button>
                             <button className="btn btn-primary" onClick={() => onNavigate('history')}>
-                                View All Payslips
+                                <ViewIcon /> View All Payslips
                             </button>
                             <button className="btn btn-secondary" onClick={() => setView('grid')}>
-                                Back to Grid
+                                <CancelIcon /> Back to Grid
                             </button>
                         </div>
                     )}
@@ -330,17 +340,24 @@ export default function PayrollGrid({ onNavigate }) {
                             <div key={i} className="flex-row" style={{ marginBottom: 10 }}>
                                 <input value={item.name} onChange={e => updateModalItem(i, 'name', e.target.value)} placeholder="Name" style={{ flex: 2, marginRight: 5 }} />
                                 <input type="number" value={item.amount} onChange={e => updateModalItem(i, 'amount', e.target.value)} placeholder="Amount" style={{ flex: 1, marginRight: 5 }} />
-                                <button className="btn btn-danger" onClick={() => removeModalItem(i)}>Remove</button>
+                                <button className="btn btn-danger btn-sm" onClick={() => removeModalItem(i)}><DeleteIcon /></button>
                             </div>
                         ))}
-                        <button className="btn btn-secondary" onClick={addModalItem}>Add Item</button>
+                        <button className="btn btn-secondary" onClick={addModalItem}>
+                            <AddIcon /> Add Item
+                        </button>
                         <div className="flex-row flex-end" style={{ marginTop: 20 }}>
-                            <button className="btn btn-secondary" onClick={() => setEditingCell(null)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={saveModal}>Save</button>
+                            <button className="btn btn-secondary" onClick={() => setEditingCell(null)}>
+                                <CancelIcon /> Cancel
+                            </button>
+                            <button className="btn btn-primary" onClick={saveModal}>
+                                <SaveIcon /> Save
+                            </button>
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
