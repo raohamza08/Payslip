@@ -621,11 +621,12 @@ textarea:focus {
 }
 
 /* Buttons - Modern Pill Design with SVG Icons */
+/* Buttons - Modern Pill Design (Clean) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px 8px 48px;
+  padding: 8px 24px;
   border-radius: 50px;
   font-weight: 600;
   font-size: 0.875rem;
@@ -643,29 +644,10 @@ textarea:focus {
 }
 
 .btn svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
+  display: none !important;
 }
 
-.btn::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-}
+/* Removed .btn::before circle */
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
@@ -728,19 +710,7 @@ textarea:focus {
 .btn-sm {
   min-height: 32px;
   font-size: 0.8125rem;
-  padding: 6px 16px 6px 42px;
-}
-
-.btn-sm::before {
-  width: 28px;
-  height: 28px;
-  left: 3px;
-}
-
-.btn-sm svg {
-  width: 16px;
-  height: 16px;
-  left: 9px;
+  padding: 6px 16px;
 }
 
 /* Tables Professional Minimalist */

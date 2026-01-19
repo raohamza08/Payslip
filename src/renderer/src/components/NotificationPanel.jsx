@@ -65,9 +65,9 @@ export default function NotificationPanel({ onNavigate }) {
                 <>
                     <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setShowList(false)} />
                     <div style={{
-                        position: 'absolute', top: '50px', right: '-10px', width: '360px', maxHeight: '500px',
-                        background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
-                        zIndex: 999, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        position: 'fixed', top: '60px', right: '20px', width: '360px', maxHeight: '500px',
+                        background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)',
+                        zIndex: 10000, overflow: 'hidden', display: 'flex', flexDirection: 'column',
                         animation: 'fadeIn 0.2s ease-out'
                     }}>
                         <div style={{
