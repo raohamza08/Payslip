@@ -106,14 +106,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
+  background: var(--accent);
   border-radius: 10px;
   border: 2px solid var(--bg-top);
   transition: var(--transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: var(--accent-hover);
 }
 
 /* Atmosphere Engine - Advanced Cine-FX */
