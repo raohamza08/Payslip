@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../api';
 import { CloseIcon } from './Icons';
 
@@ -21,6 +22,13 @@ export default function NotificationPanel({ onNavigate }) {
         } catch (e) {
             console.error('[NOTIF] Load error:', e);
         }
+    };
+
+    const handleMarkRead = async (id) => {
+        try {
+            await api.markNotificationRead(id);
+            setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+        } catch (e) { console.error(e); }
     };
 
     const handleNotificationClick = (n) => {
@@ -61,13 +69,14 @@ export default function NotificationPanel({ onNavigate }) {
                 )}
             </button>
 
-            {showList && (
+            {showList && createPortal(
                 <>
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setShowList(false)} />
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 99998 }} onClick={() => setShowList(false)} />
                     <div style={{
-                        position: 'fixed', top: '60px', right: '20px', width: '360px', maxHeight: '500px',
-                        background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)',
-                        zIndex: 10000, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        position: 'fixed', top: '70px', right: '20px', width: '360px', maxHeight: '80vh',
+                        background: 'white', borderRadius: '16px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)',
+                        zIndex: 99999, overflow: 'hidden', display: 'flex', flexDirection: 'column',
                         animation: 'fadeIn 0.2s ease-out'
                     }}>
                         <div style={{
@@ -124,7 +133,8 @@ export default function NotificationPanel({ onNavigate }) {
                             )}
                         </div>
                     </div>
-                </>
+                </>,
+                document.body
             )}
         </div>
     );

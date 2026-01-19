@@ -331,17 +331,14 @@ function AdminDashboard({ onNav }) {
         <div className="view-container">
             <div className="dash-grid">
                 <div className="dash-card clickable" onClick={() => onNav('payroll')}>
-                    <div className="dash-icon">💰</div>
                     <h3>Run Payroll</h3>
                     <p>Review financials and generate monthly payslips for the team.</p>
                 </div>
                 <div className="dash-card clickable" onClick={() => onNav('admin-leaves')}>
-                    <div className="dash-icon">📅</div>
                     <h3>Leave Requests</h3>
                     <p>Manage employee absence requests and vacation approvals.</p>
                 </div>
                 <div className="dash-card clickable" onClick={() => onNav('attendance')}>
-                    <div className="dash-icon">🕒</div>
                     <h3>Live Attendance</h3>
                     <p>Monitor daily check-ins and track real-time sitting hours.</p>
                 </div>
