@@ -625,14 +625,14 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px 8px 16px;
+  padding: 8px 20px 8px 48px;
   border-radius: 50px;
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  gap: 10px;
+  gap: 8px;
   text-transform: none;
   letter-spacing: 0.3px;
   position: relative;
@@ -646,7 +646,10 @@ textarea:focus {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 2;
 }
 
@@ -667,7 +670,6 @@ textarea:focus {
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: #FFFFFF;
-  padding-left: 48px;
 }
 
 .btn-primary:hover {
@@ -682,7 +684,6 @@ textarea:focus {
 .btn-secondary {
   background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
   color: #FFFFFF;
-  padding-left: 48px;
 }
 
 .btn-secondary:hover {
@@ -694,7 +695,6 @@ textarea:focus {
 .btn-danger {
   background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: #FFFFFF;
-  padding-left: 48px;
 }
 
 .btn-danger:hover {
@@ -706,7 +706,6 @@ textarea:focus {
 .btn-success {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: #FFFFFF;
-  padding-left: 48px;
 }
 
 .btn-success:hover {
@@ -718,7 +717,6 @@ textarea:focus {
 .btn-warning {
   background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   color: #FFFFFF;
-  padding-left: 48px;
 }
 
 .btn-warning:hover {
@@ -730,8 +728,7 @@ textarea:focus {
 .btn-sm {
   min-height: 32px;
   font-size: 0.8125rem;
-  padding: 6px 16px 6px 14px;
-  padding-left: 42px;
+  padding: 6px 16px 6px 42px;
 }
 
 .btn-sm::before {
@@ -743,6 +740,7 @@ textarea:focus {
 .btn-sm svg {
   width: 16px;
   height: 16px;
+  left: 9px;
 }
 
 /* Tables Professional Minimalist */
