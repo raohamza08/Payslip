@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../api';
 import { CloseIcon, BellIcon } from './Icons';
@@ -6,6 +6,19 @@ import { CloseIcon, BellIcon } from './Icons';
 export default function NotificationPanel({ onNavigate }) {
     const [notifications, setNotifications] = useState([]);
     const [showList, setShowList] = useState(false);
+    const [coords, setCoords] = useState({ top: 0, right: 0 });
+    const btnRef = useRef(null);
+
+    const togglePanel = () => {
+        if (!showList && btnRef.current) {
+            const rect = btnRef.current.getBoundingClientRect();
+            setCoords({
+                top: rect.bottom + 12,
+                right: window.innerWidth - rect.right
+            });
+        }
+        setShowList(!showList);
+    };
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -51,12 +64,13 @@ export default function NotificationPanel({ onNavigate }) {
     return (
         <div style={{ position: 'relative' }}>
             <button
-                onClick={() => setShowList(!showList)}
+                ref={btnRef}
+                onClick={togglePanel}
                 style={{
                     background: 'white', border: '1px solid #e5e7eb', borderRadius: '50%',
                     width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                    position: 'relative'
+                    position: 'relative', outline: 'none'
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = '#d1d5db'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
@@ -82,24 +96,29 @@ export default function NotificationPanel({ onNavigate }) {
 
             {showList && createPortal(
                 <>
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 99998 }} onClick={() => setShowList(false)} />
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 99998, cursor: 'default' }} onClick={() => setShowList(false)} />
                     <div style={{
-                        position: 'fixed', top: '70px', right: '20px', width: '360px', maxHeight: '80vh',
+                        position: 'fixed', top: coords.top, right: coords.right, width: '380px', maxHeight: '70vh',
                         background: 'white', borderRadius: '16px',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05)',
                         zIndex: 99999, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                        animation: 'fadeIn 0.2s ease-out'
+                        animation: 'fadeIn 0.15s ease-out', transformOrigin: 'top right'
                     }}>
                         <div style={{
                             padding: '16px 20px', borderBottom: '1px solid #f3f4f6',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            background: '#f9fafb'
+                            background: '#ffffff'
                         }}>
-                            <h4 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Notifications</h4>
+                            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#111827' }}>Notifications</h4>
                             <button
                                 onClick={() => setShowList(false)}
-                                className="btn-icon"
-                                style={{ width: '28px', height: '28px', color: '#6b7280' }}
+                                style={{
+                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                    padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', color: '#9ca3af', transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#374151'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9ca3af'; }}
                             >
                                 <CloseIcon />
                             </button>
