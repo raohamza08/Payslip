@@ -95,6 +95,10 @@ body {
   line-height: 1.6;
 }
 
+p {
+  color: #FFFFFF !important;
+}
+
 /* Theme Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
