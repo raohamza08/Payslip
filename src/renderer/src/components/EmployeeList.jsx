@@ -44,9 +44,9 @@ export default function EmployeeList({ onEdit }) {
             }}>{emp.status}</span></td>
             <td>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn btn-secondary btn-sm" onClick={() => onEdit(emp)}>✏️ Edit</button>
-                    <button className="btn btn-primary btn-sm" onClick={() => setSelectedForDocs(emp)}>📄 Docs</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(emp.id)}>🗑️ Delete</button>
+                    <button className="btn btn-secondary btn-sm btn-edit" onClick={() => onEdit(emp)}>Edit</button>
+                    <button className="btn btn-primary btn-sm btn-docs" onClick={() => setSelectedForDocs(emp)}>Docs</button>
+                    <button className="btn btn-danger btn-sm btn-delete" onClick={() => handleDelete(emp.id)}>Delete</button>
                 </div>
             </td>
         </tr>
@@ -57,8 +57,8 @@ export default function EmployeeList({ onEdit }) {
             <div className="toolbar">
                 <h1>Employees</h1>
                 <div className="toolbar-group">
-                    <button className="btn btn-secondary" onClick={() => exportToCSV(employees, 'employees_list')}>📊 Export CSV</button>
-                    <button className="btn btn-primary" onClick={() => onEdit({})}>➕ Add Employee</button>
+                    <button className="btn btn-secondary btn-export" onClick={() => exportToCSV(employees, 'employees_list')}>Export CSV</button>
+                    <button className="btn btn-primary btn-add" onClick={() => onEdit({})}>Add Employee</button>
                 </div>
             </div>
 

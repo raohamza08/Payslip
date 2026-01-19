@@ -143,7 +143,7 @@ export default function UserManagement() {
                                             setResetType('login');
                                         }}
                                     >
-                                        Reset Login PW
+                                        RLP
                                     </button>
                                     {(user.role === 'admin' || user.role === 'super_admin') && (
                                         <button
@@ -153,7 +153,7 @@ export default function UserManagement() {
                                                 setResetType('master');
                                             }}
                                         >
-                                            Reset Master PW
+                                            RMP
                                         </button>
                                     )}
                                 </td>
@@ -173,8 +173,8 @@ export default function UserManagement() {
             <div className="card shadow" style={{ marginTop: '20px', padding: '20px' }}>
                 <h3>Quick Guide</h3>
                 <ul>
-                    <li><strong>Reset Login PW</strong>: Resets the password used to log in to the system.</li>
-                    <li><strong>Reset Master PW</strong>: Resets the security PIN for sensitive admin sections (Admins only).</li>
+                    <li><strong>RLP</strong>: Resets the password used to log in to the system.</li>
+                    <li><strong>RMP</strong>: Resets the security PIN for sensitive admin sections (Admins only).</li>
                 </ul>
             </div>
 
