@@ -95,15 +95,46 @@ export default function PayrollGrid({ onNavigate }) {
         return { gross, totalDed, net: gross - totalDed };
     };
 
+
+    const getPayload = (emp, financials) => {
+        const { gross, totalDed, net } = calculateNet(financials);
+        const [year, mth] = month.split('-');
+        const startDate = `${month}-01`;
+        const endDate = new Date(year, mth, 0).toISOString().split('T')[0];
+
+        return {
+            pay_period_start: startDate,
+            pay_period_end: endDate,
+            issue_date: new Date().toISOString().split('T')[0],
+            pay_frequency: 'Monthly',
+            payment_method: 'Bank Transfer',
+            earnings: financials.earnings,
+            deductions: financials.deductions,
+            gross_pay: gross,
+            total_deductions: totalDed,
+            net_pay: net,
+            net_pay_words: numberToWords(net),
+            currency: emp.currency || 'PKR',
+            notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`
+        };
+    };
+
+    const handlePreview = async (emp) => {
+        try {
+            const financials = gridData[emp.id];
+            const payload = getPayload(emp, financials);
+            const url = await api.previewPayslip(payload, emp);
+            window.open(url, '_blank');
+        } catch (e) {
+            alert('Preview failed: ' + e.message);
+        }
+    };
+
     const startGeneration = async () => {
         setView('progress');
         setLogs([]);
         setProgress({ current: 0, total: employees.length, success: 0, failed: 0 });
         const generatedIds = [];
-
-        const [year, mth] = month.split('-');
-        const startDate = `${month}-01`;
-        const endDate = new Date(year, mth, 0).toISOString().split('T')[0];
 
         // Save defaults first to ensure persistence
         await api.savePayrollDefaults(gridData);
@@ -111,26 +142,12 @@ export default function PayrollGrid({ onNavigate }) {
         for (let i = 0; i < employees.length; i++) {
             const emp = employees[i];
             const financials = gridData[emp.id];
-            const { gross, totalDed, net } = calculateNet(financials);
-
-            const payload = {
-                pay_period_start: startDate,
-                pay_period_end: endDate,
-                issue_date: new Date().toISOString().split('T')[0],
-                pay_frequency: 'Monthly',
-                payment_method: 'Bank Transfer',
-                earnings: financials.earnings,
-                deductions: financials.deductions,
-                gross_pay: gross,
-                total_deductions: totalDed,
-                net_pay: net,
-                net_pay_words: numberToWords(net),
-                currency: emp.currency || 'PKR',
-                notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`
-            };
 
             try {
+                const payload = getPayload(emp, financials);
+
                 // 1. Generate Payslip
+
                 const result = await api.generatePayslip(payload, emp, true); // Silent = true
                 if (result.id) generatedIds.push(result.id);
 
@@ -192,19 +209,32 @@ export default function PayrollGrid({ onNavigate }) {
                                 const { gross, totalDed, net } = calculateNet(data);
 
                                 const changeBasic = (val) => {
-                                    const newData = { ...gridData };
-                                    const newEarnings = [...newData[emp.id].earnings];
-                                    const idx = newEarnings.findIndex(e => e.name === 'Basic Salary');
-                                    if (idx >= 0) newEarnings[idx].amount = Number(val);
-                                    else newEarnings.unshift({ name: 'Basic Salary', amount: Number(val) });
-                                    newData[emp.id].earnings = newEarnings;
-                                    setGridData(newData);
+                                    setGridData(prev => {
+                                        const newEarnings = [...(prev[emp.id].earnings || [])];
+                                        const idx = newEarnings.findIndex(e => e.name === 'Basic Salary');
+                                        if (idx >= 0) {
+                                            newEarnings[idx] = { ...newEarnings[idx], amount: Number(val) };
+                                        } else {
+                                            newEarnings.unshift({ name: 'Basic Salary', amount: Number(val) });
+                                        }
+                                        return {
+                                            ...prev,
+                                            [emp.id]: {
+                                                ...prev[emp.id],
+                                                earnings: newEarnings
+                                            }
+                                        };
+                                    });
                                 };
 
                                 const changeNotes = (val) => {
-                                    const newData = { ...gridData };
-                                    newData[emp.id].notes = val;
-                                    setGridData(newData);
+                                    setGridData(prev => ({
+                                        ...prev,
+                                        [emp.id]: {
+                                            ...prev[emp.id],
+                                            notes: val
+                                        }
+                                    }));
                                 };
 
                                 return (
@@ -248,6 +278,14 @@ export default function PayrollGrid({ onNavigate }) {
                                         </td>
                                         <td className="text-right" style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1.1rem' }}>
                                             {net.toLocaleString()}
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ marginLeft: '10px', padding: '4px 8px' }}
+                                                onClick={() => handlePreview(emp)}
+                                                title="Preview Payslip"
+                                            >
+                                                <ViewIcon />
+                                            </button>
                                         </td>
                                     </tr>
                                 );

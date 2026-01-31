@@ -742,6 +742,34 @@ app.get('/api/payslips', async (req, res) => {
     }
 });
 
+// Payslip Preview (No DB Insert)
+app.post('/api/payslip/preview', async (req, res) => {
+    try {
+        const data = req.body;
+        // Use a temp file for preview
+        const tempFilename = `preview_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`;
+        const tempPath = path.join(os.tmpdir(), tempFilename);
+
+        await generatePDF(data, tempPath);
+
+        // Stream back the file
+        const fileStream = fs.createReadStream(tempPath);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+        fileStream.pipe(res);
+
+        // Cleanup temp file after response
+        fileStream.on('close', () => {
+            fs.unlink(tempPath, (err) => {
+                if (err) console.error('Failed to delete temp preview PDF:', err);
+            });
+        });
+    } catch (e) {
+        console.error('Preview Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/payslip/generate', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
@@ -1943,14 +1971,20 @@ app.get('/api/payroll/defaults', async (req, res) => {
 
 app.post('/api/payroll/defaults', async (req, res) => {
     try {
+        console.log('[PAYROLL DEFAULTS] Saving...', JSON.stringify(req.body.defaults).length, 'bytes');
         const { error } = await supabase.from('app_config').upsert({
             key: 'payroll_defaults',
             value: req.body.defaults,
             updated_at: new Date()
         });
-        if (error) throw error;
+        if (error) {
+            console.error('[PAYROLL DEFAULTS] Error:', error);
+            throw error;
+        }
+        console.log('[PAYROLL DEFAULTS] Saved successfully.');
         res.json({ success: true });
     } catch (e) {
+        console.error('[PAYROLL DEFAULTS] Exception:', e);
         res.status(500).json({ error: e.message });
     }
 });

@@ -367,6 +367,17 @@ const api = {
         if (result.url && !silent) window.open(result.url, '_blank');
         return result;
     },
+    previewPayslip: async (data, employee) => {
+        const payload = { ...data, employee };
+        const res = await fetch(`${API_BASE}/payslip/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Preview failed');
+        const blob = await res.blob();
+        return window.URL.createObjectURL(blob);
+    },
     sendPayslipEmail: async (payslipId) => {
         const data = await api.fetchJson(`${API_BASE}/email/send`, {
             method: 'POST',
