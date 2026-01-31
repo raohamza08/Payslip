@@ -137,7 +137,19 @@ BEGIN
     END IF;
 END $$;
 
-
+-- Fix app_config permissions (often missing, causes silent save failures)
+CREATE TABLE IF NOT EXISTS app_config (
+    key TEXT PRIMARY KEY,
+    value JSONB,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'app_config' AND policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON app_config FOR ALL USING (true);
+    END IF;
+END $$;
 
 -- Config Table for App Settings (SMTP, PDF, etc)
 CREATE TABLE IF NOT EXISTS config (

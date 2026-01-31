@@ -705,7 +705,8 @@ app.get('/api/payslips', async (req, res) => {
         // --- Supabase Fetch ---
         let query = supabase.from('payslips').select('*').order('created_at', { ascending: false });
         if (!isAdmin && employeeId) {
-            query = query.eq('employee_id', employeeId);
+            // Filter out drafts (where email_sent_at is NULL). Using gt('1970...') is a robust way to filter non-null timestamps.
+            query = query.eq('employee_id', employeeId).gt('email_sent_at', '1970-01-01');
         } else if (!isAdmin && !employeeId) {
             // Employee but no ID found => return empty
             return res.json([]);
