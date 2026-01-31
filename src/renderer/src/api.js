@@ -425,6 +425,17 @@ const api = {
             body: JSON.stringify({ defaults })
         });
     },
+    // SMTP Config
+    getSmtpConfig: async () => {
+        return await api.fetchJson(`${API_BASE}/config/smtp`);
+    },
+    saveSmtpConfig: async (config) => {
+        return await api.fetchJson(`${API_BASE}/config/smtp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+    },
     getAttendance: async (date) => {
         const query = date ? `?date=${date}` : '';
         return await api.fetchJson(`${API_BASE}/attendance${query}`);

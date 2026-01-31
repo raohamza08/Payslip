@@ -163,6 +163,7 @@ export default function PayslipHistory({ user }) {
                             <th>Date</th>
                             <th>Employee</th>
                             <th>Period</th>
+                            <th>Notes</th>
                             <th>Net Pay</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -181,6 +182,9 @@ export default function PayslipHistory({ user }) {
                                 <td>{p.issue_date}</td>
                                 <td>{p.employee_name}</td>
                                 <td>{p.pay_period_start}</td>
+                                <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.notes}>
+                                    {p.notes || '-'}
+                                </td>
                                 <td>{p.net_pay.toFixed(2)}</td>
                                 <td>{p.email_sent_at ? 'Sent' : 'Draft'}</td>
                                 <td className="flex-row">
@@ -194,7 +198,7 @@ export default function PayslipHistory({ user }) {
                             </tr>
                         ))}
                         {filteredPayslips.length === 0 && (
-                            <tr><td colSpan="7" style={{ textAlign: 'center' }}>
+                            <tr><td colSpan="8" style={{ textAlign: 'center' }}>
                                 {searchTerm ? 'No payslips match your search' : 'No payslips found'}
                             </td></tr>
                         )}

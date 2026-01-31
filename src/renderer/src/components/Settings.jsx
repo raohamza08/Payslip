@@ -21,6 +21,15 @@ export default function Settings({ user }) {
         accentColor: '#17a2b8'
     });
 
+    // SMTP Settings State
+    const [smtpSettings, setSmtpSettings] = useState({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: { user: '', pass: '' }
+    });
+    const [showSmtpPassword, setShowSmtpPassword] = useState(false);
+
     const [neonColor, setNeonColor] = useState(localStorage.getItem('neonColor') || '#0075FF');
     const [neonIntensity, setNeonIntensity] = useState(localStorage.getItem('neonIntensity') || '0.15');
     const [neonSize, setNeonSize] = useState(localStorage.getItem('neonSize') || '40');
@@ -34,7 +43,11 @@ export default function Settings({ user }) {
 
     // Apply saved theme and color on mount
     React.useEffect(() => {
+
         loadPdfSettings();
+        if (user?.role !== 'employee') {
+            loadSmtpSettings();
+        }
         updateBodyClass(theme, neonShape);
         document.body.style.setProperty('--accent', accentColor);
         document.body.style.setProperty('--accent-hover', adjustColor(accentColor, -20));
@@ -70,6 +83,24 @@ export default function Settings({ user }) {
             setMessage('PDF Settings saved successfully!');
             setTimeout(() => setMessage(''), 3000);
         } catch (e) { setMessage('Error saving PDF settings: ' + e.message); }
+    };
+
+    const loadSmtpSettings = async () => {
+        try {
+            const config = await api.getSmtpConfig();
+            if (config && config.host) {
+                setSmtpSettings(config);
+            }
+        } catch (e) { console.error('Failed to load SMTP settings', e); }
+    };
+
+    const handleSmtpSave = async (e) => {
+        e.preventDefault();
+        try {
+            await api.saveSmtpConfig(smtpSettings);
+            setMessage('SMTP Settings saved successfully! Please restart app if running locally.');
+            setTimeout(() => setMessage(''), 3000);
+        } catch (e) { setMessage('Error saving SMTP settings: ' + e.message); }
     };
 
     const handleThemeChange = (newTheme) => {
@@ -245,6 +276,14 @@ export default function Settings({ user }) {
                         onClick={() => setActiveTab('pdf')}
                     >
                         PDF Customization
+                    </button>
+                )}
+                {user?.role !== 'employee' && (
+                    <button
+                        className={`tab-btn ${activeTab === 'email' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('email')}
+                    >
+                        Email Config
                     </button>
                 )}
             </div>
@@ -759,6 +798,106 @@ export default function Settings({ user }) {
                     </form>
                 </div>
             )}
+
+            {/* Email Settings Tab */}
+            {activeTab === 'email' && (
+
+                <div className="card">
+                    <h2 style={{ marginTop: 0 }}>Email Configuration (SMTP)</h2>
+                    <p style={{ color: 'var(--text-light)', marginBottom: '25px' }}>
+                        Configure the email server settings for sending payslips and notifications.
+                    </p>
+
+                    <form onSubmit={handleSmtpSave}>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>SMTP Host</label>
+                                <input
+                                    type="text"
+                                    value={smtpSettings.host}
+                                    onChange={(e) => setSmtpSettings({ ...smtpSettings, host: e.target.value })}
+                                    placeholder="e.g. smtp.gmail.com"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Port</label>
+                                <input
+                                    type="number"
+                                    value={smtpSettings.port}
+                                    onChange={(e) => setSmtpSettings({ ...smtpSettings, port: parseInt(e.target.value) })}
+                                    placeholder="e.g. 587"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Email Address (User)</label>
+                                <input
+                                    type="email"
+                                    value={smtpSettings.auth.user}
+                                    onChange={(e) => setSmtpSettings({ ...smtpSettings, auth: { ...smtpSettings.auth, user: e.target.value } })}
+                                    placeholder="company@gmail.com"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Password / App Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showSmtpPassword ? "text" : "password"}
+                                        value={smtpSettings.auth.pass}
+                                        onChange={(e) => setSmtpSettings({ ...smtpSettings, auth: { ...smtpSettings.auth, pass: e.target.value } })}
+                                        placeholder="Enter password or App Password"
+                                        style={{ paddingRight: '40px' }}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '16px'
+                                        }}
+                                    >
+                                        {showSmtpPassword ? '🙈' : '👁️'}
+                                    </button>
+                                </div>
+                                <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+                                    For Gmail, use an <strong>App Password</strong> if 2FA is enabled.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={smtpSettings.secure}
+                                    onChange={(e) => setSmtpSettings({ ...smtpSettings, secure: e.target.checked })}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                Use Secure Connection (SSL/TLS)
+                            </label>
+                        </div>
+
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
+                            <button type="submit" className="btn btn-primary">
+                                Save Email Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )
+            }
         </div >
     );
 }

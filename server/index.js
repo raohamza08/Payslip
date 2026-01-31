@@ -23,7 +23,7 @@ app.use(fileUpload());
 app.use(express.static(path.join(__dirname, '../dist')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-const PDF_DIR = path.join(os.tmpdir(), 'payslips_generated');
+const PDF_DIR = path.join(__dirname, '../uploads/payslips');
 if (!fs.existsSync(PDF_DIR)) fs.mkdirSync(PDF_DIR, { recursive: true });
 
 const UPLOADS_DIR = path.join(__dirname, '../uploads');
@@ -54,6 +54,13 @@ const fonts = {
                 public: false // Restricted, we serve via proxy
             });
             if (createError) console.error('[INIT] Failed to create bucket:', createError.message);
+        }
+        if (!buckets.find(b => b.name === 'payslips')) {
+            console.log('[INIT] Creating "payslips" bucket...');
+            const { error: createError } = await supabase.storage.createBucket('payslips', {
+                public: false
+            });
+            if (createError) console.error('[INIT] Failed to create payslips bucket:', createError.message);
         }
     } catch (e) {
         console.error('[INIT] Bucket check failed:', e.message);
@@ -752,8 +759,7 @@ app.post('/api/payslip/generate', async (req, res) => {
 
         if (uploadError) {
             console.error('[STORAGE] Upload error:', uploadError);
-            // We can continue even if storage fails if local file exists, 
-            // but for Vercel it's better to know if it failed.
+            console.warn('Continuing with local file...');
         }
 
         const payslipRecord = {
@@ -816,27 +822,59 @@ app.get('/api/payslips/:filename/download', async (req, res) => {
 });
 
 // Config Routes
+// Config Routes
 app.get('/api/config/smtp', async (req, res) => {
     try {
-        // Return hardcoded config for display purposes
-        res.json({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: { user: 'hamzabadar.euroshub@gmail.com', pass: '****' }
-        });
+        const { data: config } = await supabase.from('config').select('smtp_settings').eq('id', 1).single();
+        if (config && config.smtp_settings) {
+            res.json(config.smtp_settings);
+        } else {
+            // Return empty or defaults if not set (don't return hardcoded sensitive data)
+            res.json({
+                host: 'smtp.gmail.com',
+                port: 587,
+                secure: false,
+                auth: { user: '', pass: '' }
+            });
+        }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/config/smtp', async (req, res) => {
-    // Accept but ignore - config is hardcoded
-    res.json({ success: true });
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        const smtpConfig = req.body;
+        // Upsert into config table (assuming id=1 exists, update smtp_settings column)
+        const { error } = await supabase.from('config').update({ smtp_settings: smtpConfig }).eq('id', 1);
+
+        if (error) {
+            // If update fails, maybe column missing? assuming it exists for now based on plan
+            throw error;
+        }
+
+        await logActivity(userEmail, 'UPDATE_SMTP_CONFIG', 'SUCCESS', 'Updated SMTP settings', req);
+        res.json({ success: true });
+    } catch (e) {
+        await logActivity(userEmail, 'UPDATE_SMTP_CONFIG', 'ERROR', `Failed to update SMTP: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Email Route
 app.post('/api/email/send', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
+        // Get SMTP Config FIRST to fail fast
+        const { data: config } = await supabase.from('config').select('smtp_settings').eq('id', 1).single();
+        if (!config || !config.smtp_settings || !config.smtp_settings.auth || !config.smtp_settings.auth.user) {
+            return res.status(400).json({ error: "SMTP Configuration missing. Please go to Settings > Email Settings to configure." });
+        }
+        const smtpConfig = config.smtp_settings;
+
+        // Auto-fix common SSL misconfigurations based on port
+        if (parseInt(smtpConfig.port) === 587) smtpConfig.secure = false;
+        if (parseInt(smtpConfig.port) === 465) smtpConfig.secure = true;
+
         const { payslipId } = req.body;
         const { data: payslip, error: pError } = await supabase.from('payslips').select('*').eq('id', payslipId).single();
         if (!payslip) {
@@ -851,32 +889,23 @@ app.post('/api/email/send', async (req, res) => {
         }
 
         const filePath = path.join(PDF_DIR, path.basename(payslip.pdf_path));
-        let finalPath = filePath;
 
         // Ensure file exists (download from storage if missing in /tmp)
         if (!fs.existsSync(filePath)) {
             const { data: storageData, error: sError } = await supabase.storage.from('payslips').download(path.basename(payslip.pdf_path));
-            if (sError || !storageData) throw sError || new Error('Could not download PDF for email');
-
+            if (sError || !storageData) {
+                console.error('[EMAIL] Failed to download PDF for email:', sError);
+                return res.status(404).json({ error: 'Payslip PDF file not found. Please regenerate.' });
+            }
             const arrayBuffer = await storageData.arrayBuffer();
             fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
         }
-
-        const smtpConfig = {
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: {
-                user: 'hamzabadar.euroshub@gmail.com',
-                pass: 'cajq tdba zjln iwrj'
-            }
-        };
 
         console.log('[EMAIL] Sending payslip to:', emp.email);
         const transporter = nodemailer.createTransport(smtpConfig);
 
         await transporter.sendMail({
-            from: '"EurosHub HR" <hamzabadar.euroshub@gmail.com>',
+            from: `"EurosHub HR" <${smtpConfig.auth.user}>`,
             to: emp.email,
             subject: `EurosHub - Payslip for ${payslip.pay_period_start} to ${payslip.pay_period_end}`,
             html: `
@@ -910,18 +939,15 @@ app.post('/api/email/custom', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
         const { to, subject, html } = req.body;
-        const smtpConfig = {
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: {
-                user: 'hamzabadar.euroshub@gmail.com',
-                pass: 'cajq tdba zjln iwrj'
-            }
-        };
+        // Get SMTP Config from DB
+        const { data: config } = await supabase.from('config').select('smtp_settings').eq('id', 1).single();
+        if (!config || !config.smtp_settings || !config.smtp_settings.auth || !config.smtp_settings.auth.user) {
+            throw new Error("SMTP Configuration missing.");
+        }
+        const smtpConfig = config.smtp_settings;
         const transporter = nodemailer.createTransport(smtpConfig);
         await transporter.sendMail({
-            from: '"EurosHub" <hamzabadar.euroshub@gmail.com>',
+            from: `"EurosHub" <${smtpConfig.auth.user}>`,
             to,
             subject,
             html

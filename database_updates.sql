@@ -137,3 +137,28 @@ BEGIN
     END IF;
 END $$;
 
+
+
+-- Config Table for App Settings (SMTP, PDF, etc)
+CREATE TABLE IF NOT EXISTS config (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Safely add columns if table exists but columns don't
+ALTER TABLE config ADD COLUMN IF NOT EXISTS smtp_settings JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE config ADD COLUMN IF NOT EXISTS is_setup BOOLEAN DEFAULT false;
+
+-- Ensure id=1 exists
+INSERT INTO config (id, smtp_settings)
+VALUES (1, '{}')
+ON CONFLICT (id) DO UPDATE 
+SET smtp_settings = COALESCE(config.smtp_settings, '{}');
+
+ALTER TABLE config ENABLE ROW LEVEL SECURITY;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'config' AND policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON config FOR ALL USING (true);
+    END IF;
+END $$;
