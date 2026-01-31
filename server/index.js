@@ -942,9 +942,9 @@ app.post('/api/email/send', async (req, res) => {
           <h2 style="color: #17a2b8;">EurosHub Payslip</h2>
           <p>Dear ${emp.name},</p>
           <p>Please find attached your payslip for the period <strong>${payslip.pay_period_start}</strong> to <strong>${payslip.pay_period_end}</strong>.</p>
-          <p>If you have any questions, please contact the HR department.</p>
+          <p>If you have any questions, please contact the HA department.</p>
           <br>
-          <p>Best regards,<br><strong>EurosHub HR Team</strong></p>
+          <p>Best regards,<br><strong>EurosHub HA Department</strong></p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="font-size: 12px; color: #888;">This is an automated email. Please do not reply.</p>
         </div>
