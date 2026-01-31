@@ -45,7 +45,8 @@ export default function Settings({ user }) {
     React.useEffect(() => {
 
         loadPdfSettings();
-        if (user?.role !== 'employee') {
+        loadPdfSettings();
+        if (user?.role === 'super_admin' || user?.role === 'admin') {
             loadSmtpSettings();
         }
         updateBodyClass(theme, neonShape);
@@ -278,7 +279,7 @@ export default function Settings({ user }) {
                         PDF Customization
                     </button>
                 )}
-                {user?.role !== 'employee' && (
+                {(user?.role === 'super_admin' || user?.role === 'admin') && (
                     <button
                         className={`tab-btn ${activeTab === 'email' ? 'active' : ''}`}
                         onClick={() => setActiveTab('email')}
