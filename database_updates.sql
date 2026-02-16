@@ -174,3 +174,32 @@ BEGIN
         CREATE POLICY "Public Access" ON config FOR ALL USING (true);
     END IF;
 END $$;
+
+-- Increments/Salary History Table
+CREATE TABLE IF NOT EXISTS increments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    amount NUMERIC(10, 2),
+    increment_percentage NUMERIC(5, 2),
+    old_salary NUMERIC(10, 2),
+    new_salary NUMERIC(10, 2),
+    description TEXT,
+    effective_date DATE NOT NULL,
+    date DATE, -- For compatibility with payslip display
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for increments
+ALTER TABLE increments ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'increments' AND policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON increments FOR ALL USING (true);
+    END IF;
+END $$;
+
+-- Create index for faster queries
+CREATE INDEX IF NOT EXISTS idx_increments_employee_id ON increments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_increments_effective_date ON increments(effective_date DESC);
+

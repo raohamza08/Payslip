@@ -661,19 +661,81 @@ app.get('/api/employees/:id/increments', async (req, res) => {
 app.post('/api/employees/:id/increments', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
-        const { increment_amount, reason, effective_date } = req.body;
+        console.log('[INCREMENT] Received data:', req.body);
+        console.log('[INCREMENT] Employee ID:', req.params.id);
+
+        const {
+            increment_percentage,
+            increment_amount,
+            old_salary,
+            new_salary,
+            reason,
+            effective_date
+        } = req.body;
+
+        // Validate required fields
+        if (!effective_date) {
+            throw new Error('Effective date is required');
+        }
+
+        if (!new_salary && !increment_amount) {
+            throw new Error('Either new_salary or increment_amount must be provided');
+        }
+
+        // Prepare increment record with all fields
         const increment = {
             employee_id: req.params.id,
-            amount: Number(increment_amount),
-            description: reason,
-            effective_date
+            amount: Number(increment_amount) || 0,
+            increment_percentage: increment_percentage ? Number(increment_percentage) : null,
+            old_salary: old_salary ? Number(old_salary) : null,
+            new_salary: new_salary ? Number(new_salary) : null,
+            description: reason || '',
+            effective_date,
+            date: effective_date // For compatibility with payslip display
         };
-        const { data, error } = await supabase.from('increments').insert(increment).select().single();
-        if (error) throw error;
 
-        await logActivity(userEmail, 'ADD_INCREMENT', 'SUCCESS', `Added increment for employee ${req.params.id}`, req);
+        console.log('[INCREMENT] Inserting record:', increment);
+
+        const { data, error } = await supabase.from('increments').insert(increment).select().single();
+        if (error) {
+            console.error('[INCREMENT] Database error:', error);
+            throw error;
+        }
+
+        console.log('[INCREMENT] Successfully inserted:', data);
+
+        // Update employee's monthly_salary if new_salary is provided
+        if (new_salary) {
+            console.log('[INCREMENT] Updating employee salary to:', new_salary);
+            const { error: updateError } = await supabase
+                .from('employees')
+                .update({ monthly_salary: Number(new_salary) })
+                .eq('id', req.params.id);
+
+            if (updateError) {
+                console.error('[INCREMENT] Failed to update employee salary:', updateError);
+                // Don't throw - increment was saved, just log the warning
+                console.warn('[INCREMENT] Increment saved but employee salary update failed');
+            } else {
+                console.log('[INCREMENT] Employee salary updated successfully');
+            }
+        }
+
+        await logActivity(
+            userEmail,
+            'ADD_INCREMENT',
+            'SUCCESS',
+            `Added ${increment_percentage ? increment_percentage + '%' : increment_amount} increment for employee ${req.params.id}. New salary: ${new_salary}`,
+            req
+        );
+
+        console.log('[INCREMENT] Complete!');
         res.json(data);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) {
+        console.error('[INCREMENT] Error:', e);
+        console.error('[INCREMENT] Stack:', e.stack);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Payslip Routes
