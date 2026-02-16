@@ -2295,6 +2295,34 @@ async function generatePDF(data, filePath) {
                         }
                     ]
                 } : {},
+
+                // Increments Section (New)
+                (data.increments && data.increments.length > 0) ? {
+                    stack: [
+                        { text: 'ANNUAL INCREMENTS', style: 'sectionHeader', margin: [0, 10, 0, 8] },
+                        {
+                            table: {
+                                widths: ['*', 'auto', 'auto'],
+                                body: [
+                                    [{ text: 'Date', style: 'tableHeader' }, { text: 'Amount', style: 'tableHeader' }, { text: 'New Basic Salary', style: 'tableHeader' }],
+                                    ...data.increments.map(inc => [
+                                        { text: inc.date, fontSize: 10 },
+                                        { text: (data.currency || 'USD') + ' ' + Number(inc.amount).toFixed(2), fontSize: 10, alignment: 'right' },
+                                        { text: (data.currency || 'USD') + ' ' + Number(inc.new_salary).toFixed(2), fontSize: 10, alignment: 'right' }
+                                    ])
+                                ]
+                            },
+                            layout: {
+                                hLineWidth: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : 0.5; },
+                                vLineWidth: function (i, node) { return 0; },
+                                hLineColor: function (i) { return '#e0e0e0'; },
+                                paddingLeft: function (i) { return 8; },
+                                paddingRight: function (i) { return 8; },
+                            },
+                            margin: [0, 0, 0, 20]
+                        }
+                    ]
+                } : {},
                 // Notes Section
                 data.notes ? {
                     stack: [

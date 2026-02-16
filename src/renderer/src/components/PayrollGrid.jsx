@@ -29,6 +29,21 @@ export default function PayrollGrid({ onNavigate }) {
             const activeEmps = emps.filter(e => e.status === 'Active');
             const defs = await api.getPayrollDefaults() || {};
 
+            // 2. Fetch increments for all employees in parallel
+            const incrementsMap = {};
+            await Promise.all(activeEmps.map(async (emp) => {
+                try {
+                    const incs = await api.getIncrements(emp.id);
+                    // Filter for current year increments only? Or all? User likely wants recent ones.
+                    // Let's filter for current year to keep it relevant to the payslip
+                    const currentYear = new Date().getFullYear();
+                    incrementsMap[emp.id] = incs.filter(i => new Date(i.date).getFullYear() === currentYear);
+                } catch (e) {
+                    console.warn(`Failed to fetch increments for ${emp.name}`, e);
+                    incrementsMap[emp.id] = [];
+                }
+            }));
+
             const data = {};
             activeEmps.forEach(emp => {
                 const def = defs[emp.id] || {};
@@ -37,10 +52,12 @@ export default function PayrollGrid({ onNavigate }) {
                     earnings.unshift({ name: 'Basic Salary', amount: Number(emp.monthly_salary) || 0 });
                 }
                 let deductions = Array.isArray(def.deductions) ? [...def.deductions] : [];
+
                 data[emp.id] = {
                     earnings,
                     deductions,
-                    notes: def.notes || ""
+                    notes: def.notes || "",
+                    increments: incrementsMap[emp.id] || []
                 };
             });
 
@@ -55,7 +72,13 @@ export default function PayrollGrid({ onNavigate }) {
 
     const handleSave = async () => {
         try {
-            await api.savePayrollDefaults(gridData);
+            // Don't save increments back to defaults as they are transactional
+            const defaultsToSave = {};
+            Object.keys(gridData).forEach(id => {
+                const { increments, ...rest } = gridData[id];
+                defaultsToSave[id] = rest;
+            });
+            await api.savePayrollDefaults(defaultsToSave);
             alert('Saved successfully!');
         } catch (e) { alert(e.message); }
     };
@@ -115,7 +138,8 @@ export default function PayrollGrid({ onNavigate }) {
             net_pay: net,
             net_pay_words: numberToWords(net),
             currency: emp.currency || 'PKR',
-            notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`
+            notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`,
+            increments: financials.increments || []
         };
     };
 
@@ -137,7 +161,12 @@ export default function PayrollGrid({ onNavigate }) {
         const generatedIds = [];
 
         // Save defaults first to ensure persistence
-        await api.savePayrollDefaults(gridData);
+        const defaultsToSave = {};
+        Object.keys(gridData).forEach(id => {
+            const { increments, ...rest } = gridData[id];
+            defaultsToSave[id] = rest;
+        });
+        await api.savePayrollDefaults(defaultsToSave);
 
         for (let i = 0; i < employees.length; i++) {
             const emp = employees[i];
@@ -199,6 +228,7 @@ export default function PayrollGrid({ onNavigate }) {
                                 <th className="text-center">Earnings</th>
                                 <th className="text-center">Deductions</th>
                                 <th>Notes</th>
+                                <th className="text-center">Increments</th>
                                 <th className="text-right">Net Pay (Est)</th>
                             </tr>
                         </thead>
@@ -275,6 +305,13 @@ export default function PayrollGrid({ onNavigate }) {
                                                 placeholder="..."
                                                 style={{ minHeight: '60px', padding: '8px', fontSize: '12px' }}
                                             />
+                                        </td>
+                                        <td className="text-center">
+                                            {data.increments && data.increments.length > 0 ? (
+                                                <span className="badge success">{data.increments.length} Active</span>
+                                            ) : (
+                                                <span className="text-light">-</span>
+                                            )}
                                         </td>
                                         <td className="text-right" style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1.1rem' }}>
                                             {net.toLocaleString()}
