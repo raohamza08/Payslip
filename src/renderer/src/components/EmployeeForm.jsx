@@ -129,7 +129,11 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
 
                     {/* INCREMENTS TAB */}
                     {activeTab === 'increments' && form.id && (
-                        <IncrementManager employee={form} onClose={() => { }} />
+                        <IncrementManager
+                            employee={form}
+                            onClose={() => { }}
+                            onUpdate={(updates) => setForm(prev => ({ ...prev, ...updates }))}
+                        />
                     )}
 
                     {activeTab !== 'increments' && (

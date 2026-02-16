@@ -2290,64 +2290,30 @@ async function generatePDF(data) {
                     {
                         columns: [
                             {
-                                width: '50%',
+                                width: '*',
                                 stack: [
                                     { text: 'EMPLOYEE INFORMATION', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                    { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Joining Date: ', bold: true, color: '#555' }, { text: data.employee.joining_date || 'N/A', color: settings.textColor }] }
+                                    { columns: [{ width: 90, text: 'Name:', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 90, text: 'Employee ID:', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 90, text: 'Department:', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 90, text: 'Designation:', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 90, text: 'Joining Date:', bold: true, color: '#555' }, { text: data.employee.joining_date || 'N/A', color: settings.textColor }] }
                                 ]
                             },
                             {
-                                width: '50%',
+                                width: '*',
                                 stack: [
                                     { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                    {
-                                        text: [
-                                            { text: 'Pay Period: ', bold: true, color: '#555', noWrap: true },
-                                            { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }
-                                        ],
-                                        margin: [0, 0, 0, 5]
-                                    },
-                                    {
-                                        text: [
-                                            { text: 'Issue Date: ', bold: true, color: '#555', noWrap: true },
-                                            { text: data.issue_date, color: settings.textColor }
-                                        ],
-                                        margin: [0, 0, 0, 5]
-                                    },
-                                    {
-                                        text: [
-                                            { text: 'Payment Method: ', bold: true, color: '#555', noWrap: true },
-                                            { text: data.payment_method || 'Bank Transfer', color: settings.textColor }
-                                        ],
-                                        margin: [0, 0, 0, 5]
-                                    },
-                                    ...(data.employee.bank_name ? [{
-                                        text: [
-                                            { text: 'Bank: ', bold: true, color: '#555', noWrap: true },
-                                            { text: data.employee.bank_name, color: settings.textColor }
-                                        ],
-                                        margin: [0, 0, 0, 5]
-                                    }] : []),
-                                    ...(data.employee.account_number ? [{
-                                        text: [
-                                            { text: 'Account: ', bold: true, color: '#555', noWrap: true },
-                                            { text: data.employee.account_number, color: settings.textColor, fontSize: 9 }
-                                        ],
-                                        margin: [0, 0, 0, 5]
-                                    }] : []),
-                                    {
-                                        text: [
-                                            { text: 'Frequency: ', bold: true, color: '#555', noWrap: true },
-                                            { text: data.pay_frequency || 'Monthly', color: settings.textColor }
-                                        ]
-                                    }
+                                    { columns: [{ width: 100, text: 'Pay Period:', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 100, text: 'Issue Date:', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 100, text: 'Payment Method:', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    ...(data.employee.bank_name ? [{ columns: [{ width: 100, text: 'Bank:', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
+                                    ...(data.employee.account_number ? [{ columns: [{ width: 100, text: 'Account:', bold: true, color: '#555' }, { text: String(data.employee.account_number), color: settings.textColor, fontSize: 9 }], margin: [0, 0, 0, 5] }] : []),
+                                    { columns: [{ width: 100, text: 'Frequency:', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }] }
                                 ]
                             }
                         ],
+                        columnGap: 20,
                         margin: [0, 0, 0, 25]
                     },
 

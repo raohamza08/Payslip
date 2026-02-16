@@ -48,7 +48,12 @@ export default function PayrollGrid({ onNavigate }) {
             activeEmps.forEach(emp => {
                 const def = defs[emp.id] || {};
                 let earnings = Array.isArray(def.earnings) ? [...def.earnings] : [];
-                if (!earnings.some(e => e.name === 'Basic Salary')) {
+
+                // Ensure Basic Salary matches employee record (source of truth)
+                const basicIndex = earnings.findIndex(e => e.name === 'Basic Salary');
+                if (basicIndex >= 0) {
+                    earnings[basicIndex] = { ...earnings[basicIndex], amount: Number(emp.monthly_salary) || 0 };
+                } else {
                     earnings.unshift({ name: 'Basic Salary', amount: Number(emp.monthly_salary) || 0 });
                 }
                 let deductions = Array.isArray(def.deductions) ? [...def.deductions] : [];

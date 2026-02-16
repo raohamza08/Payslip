@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { AddIcon } from './Icons';
 
-export default function IncrementManager({ employee, onClose }) {
+export default function IncrementManager({ employee, onClose, onUpdate }) {
     const [increments, setIncrements] = useState([]);
     const [newIncrement, setNewIncrement] = useState({ percentage: 10, reason: '', effective_date: new Date().toISOString().split('T')[0] });
 
@@ -36,6 +36,12 @@ export default function IncrementManager({ employee, onClose }) {
 
             alert(`Increment Applied! New Base Salary: ${finalSalary.toLocaleString()}`);
             loadIncrements();
+
+            // Notify parent component to update local state
+            if (onUpdate) {
+                onUpdate({ monthly_salary: finalSalary });
+            }
+
             if (onClose) onClose();
         } catch (e) { alert(e.message); }
     };
