@@ -994,18 +994,21 @@ app.post('/api/email/send', async (req, res) => {
             return res.status(400).json({ error: "Employee has no email" });
         }
 
-        const filePath = path.join(PDF_DIR, path.basename(payslip.pdf_path));
+        // Download PDF from Supabase Storage directly to memory (serverless-friendly)
+        console.log('[EMAIL] Downloading PDF from storage:', payslip.pdf_path);
+        const { data: storageData, error: sError } = await supabase.storage
+            .from('payslips')
+            .download(path.basename(payslip.pdf_path));
 
-        // Ensure file exists (download from storage if missing in /tmp)
-        if (!fs.existsSync(filePath)) {
-            const { data: storageData, error: sError } = await supabase.storage.from('payslips').download(path.basename(payslip.pdf_path));
-            if (sError || !storageData) {
-                console.error('[EMAIL] Failed to download PDF for email:', sError);
-                return res.status(404).json({ error: 'Payslip PDF file not found. Please regenerate.' });
-            }
-            const arrayBuffer = await storageData.arrayBuffer();
-            fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+        if (sError || !storageData) {
+            console.error('[EMAIL] Failed to download PDF for email:', sError);
+            return res.status(404).json({ error: 'Payslip PDF file not found. Please regenerate.' });
         }
+
+        // Convert to buffer for email attachment
+        const arrayBuffer = await storageData.arrayBuffer();
+        const pdfBuffer = Buffer.from(arrayBuffer);
+        console.log('[EMAIL] PDF downloaded, size:', pdfBuffer.length, 'bytes');
 
         console.log('[EMAIL] Sending payslip to:', emp.email);
         const transporter = nodemailer.createTransport(smtpConfig);
@@ -1026,7 +1029,11 @@ app.post('/api/email/send', async (req, res) => {
           <p style="font-size: 12px; color: #888;">This is an automated email. Please do not reply.</p>
         </div>
       `,
-            attachments: [{ filename: path.basename(filePath), path: filePath }]
+            attachments: [{
+                filename: path.basename(payslip.pdf_path),
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+            }]
         });
 
         console.log('[EMAIL] Successfully sent to:', emp.email);
