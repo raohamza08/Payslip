@@ -2304,7 +2304,7 @@ async function generatePDF(data) {
                                 width: '*',
                                 stack: [
                                     { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                    { columns: [{ width: 100, text: 'Pay Period:', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { columns: [{ width: 100, text: 'Pay Period:', bold: true, color: '#555' }, { text: new Date(data.pay_period_start).toLocaleString('default', { month: 'long', year: 'numeric' }), color: settings.textColor }], margin: [0, 0, 0, 5] },
                                     { columns: [{ width: 100, text: 'Issue Date:', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
                                     { columns: [{ width: 100, text: 'Payment Method:', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
                                     ...(data.employee.bank_name ? [{ columns: [{ width: 100, text: 'Bank:', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
