@@ -533,6 +533,16 @@ function PerformanceModule({ performanceHistory }) {
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
     const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
 
+    // Only render if we have data to prevent width(-1) errors
+    if (!performanceHistory || performanceHistory.length === 0) {
+        return (
+            <div className="card">
+                <h2>Performance Trend</h2>
+                <p className="text-light" style={{ padding: '40px', textAlign: 'center' }}>No performance data available to display.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="card">
             <div className="flex-row flex-between" style={{ marginBottom: '20px' }}>
@@ -542,7 +552,7 @@ function PerformanceModule({ performanceHistory }) {
                 </div>
             </div>
 
-            <div style={{ height: '340px', width: '100%', marginTop: '10px' }}>
+            <div style={{ height: '340px', width: '100%', marginTop: '10px', minHeight: '300px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />

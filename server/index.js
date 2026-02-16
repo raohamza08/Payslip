@@ -1761,8 +1761,10 @@ app.get('/api/attendance/sitting-hours', async (req, res) => {
         const { data: emp } = await supabase.from('employees').select('biometric_id').eq('id', employee_id).single();
         if (!emp || !emp.biometric_id) return res.json([]);
 
+        // Fix: Calculate actual last day of month to avoid invalid dates (e.g. Feb 30)
+        const lastDay = new Date(year, month, 0).getDate();
         const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+        const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
 
         const { data: logs, error } = await supabase.from('biometric_logs')
             .select('*')
