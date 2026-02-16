@@ -2304,12 +2304,47 @@ async function generatePDF(data) {
                                 width: '50%',
                                 stack: [
                                     { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                    { text: [{ text: 'Pay Period: ', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Issue Date: ', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    { text: [{ text: 'Payment Method: ', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                    ...(data.employee.bank_name ? [{ text: [{ text: 'Bank: ', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
-                                    ...(data.employee.account_number ? [{ text: [{ text: 'Account: ', bold: true, color: '#555' }, { text: data.employee.account_number, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
-                                    { text: [{ text: 'Frequency: ', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }] }
+                                    {
+                                        text: [
+                                            { text: 'Pay Period: ', bold: true, color: '#555', noWrap: true },
+                                            { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }
+                                        ],
+                                        margin: [0, 0, 0, 5]
+                                    },
+                                    {
+                                        text: [
+                                            { text: 'Issue Date: ', bold: true, color: '#555', noWrap: true },
+                                            { text: data.issue_date, color: settings.textColor }
+                                        ],
+                                        margin: [0, 0, 0, 5]
+                                    },
+                                    {
+                                        text: [
+                                            { text: 'Payment Method: ', bold: true, color: '#555', noWrap: true },
+                                            { text: data.payment_method || 'Bank Transfer', color: settings.textColor }
+                                        ],
+                                        margin: [0, 0, 0, 5]
+                                    },
+                                    ...(data.employee.bank_name ? [{
+                                        text: [
+                                            { text: 'Bank: ', bold: true, color: '#555', noWrap: true },
+                                            { text: data.employee.bank_name, color: settings.textColor }
+                                        ],
+                                        margin: [0, 0, 0, 5]
+                                    }] : []),
+                                    ...(data.employee.account_number ? [{
+                                        text: [
+                                            { text: 'Account: ', bold: true, color: '#555', noWrap: true },
+                                            { text: data.employee.account_number, color: settings.textColor, fontSize: 9 }
+                                        ],
+                                        margin: [0, 0, 0, 5]
+                                    }] : []),
+                                    {
+                                        text: [
+                                            { text: 'Frequency: ', bold: true, color: '#555', noWrap: true },
+                                            { text: data.pay_frequency || 'Monthly', color: settings.textColor }
+                                        ]
+                                    }
                                 ]
                             }
                         ],

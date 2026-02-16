@@ -24,6 +24,7 @@ export default function IncrementManager({ employee, onClose }) {
             const incAmount = currentSalary * (Number(newIncrement.percentage) / 100);
             const finalSalary = currentSalary + incAmount;
 
+            // Backend will automatically update the employee's monthly_salary
             await api.addIncrement(employee.id, {
                 increment_percentage: Number(newIncrement.percentage),
                 effective_date: newIncrement.effective_date,
@@ -32,9 +33,6 @@ export default function IncrementManager({ employee, onClose }) {
                 increment_amount: incAmount,
                 new_salary: finalSalary
             });
-
-            // Update Employee Base Salary to reflect the new reality
-            await api.saveEmployee({ ...employee, monthly_salary: finalSalary });
 
             alert(`Increment Applied! New Base Salary: ${finalSalary.toLocaleString()}`);
             loadIncrements();
