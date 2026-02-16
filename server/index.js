@@ -808,24 +808,15 @@ app.get('/api/payslips', async (req, res) => {
 app.post('/api/payslip/preview', async (req, res) => {
     try {
         const data = req.body;
-        // Use a temp file for preview
-        const tempFilename = `preview_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`;
-        const tempPath = path.join(os.tmpdir(), tempFilename);
 
-        await generatePDF(data, tempPath);
+        console.log('[PREVIEW] Generating PDF in memory...');
+        const pdfBuffer = await generatePDF(data);
+        console.log('[PREVIEW] PDF generated, size:', pdfBuffer.length, 'bytes');
 
-        // Stream back the file
-        const fileStream = fs.createReadStream(tempPath);
+        // Stream the buffer directly to response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
-        fileStream.pipe(res);
-
-        // Cleanup temp file after response
-        fileStream.on('close', () => {
-            fs.unlink(tempPath, (err) => {
-                if (err) console.error('Failed to delete temp preview PDF:', err);
-            });
-        });
+        res.send(pdfBuffer);
     } catch (e) {
         console.error('Preview Error:', e);
         res.status(500).json({ error: e.message });
@@ -847,22 +838,23 @@ app.post('/api/payslip/generate', async (req, res) => {
 
         const payslipId = uuidv4();
         const filename = `Payslip_${data.employee.name.replace(/\s+/g, '_')}_${data.issue_date}_${payslipId.substring(0, 6)}.pdf`;
-        const filePath = path.join(PDF_DIR, filename);
 
-        console.log('[PAYSLIP] Generating PDF...');
-        await generatePDF(data, filePath);
-        console.log('[PAYSLIP] PDF generated successfully');
+        console.log('[PAYSLIP] Generating PDF in memory...');
+        const pdfBuffer = await generatePDF(data);
+        console.log('[PAYSLIP] PDF generated successfully, size:', pdfBuffer.length, 'bytes');
 
-        // Upload to Supabase Storage
-        const fileBuffer = fs.readFileSync(filePath);
+        // Upload directly to Supabase Storage (no local file needed)
+        console.log('[PAYSLIP] Uploading to Supabase Storage...');
         const { error: uploadError } = await supabase.storage
             .from('payslips')
-            .upload(filename, fileBuffer, { contentType: 'application/pdf', upsert: true });
+            .upload(filename, pdfBuffer, { contentType: 'application/pdf', upsert: true });
 
         if (uploadError) {
             console.error('[STORAGE] Upload error:', uploadError);
-            console.warn('Continuing with local file...');
+            throw new Error(`Failed to upload PDF: ${uploadError.message}`);
         }
+
+        console.log('[PAYSLIP] Upload successful');
 
         const payslipRecord = {
             id: payslipId,
@@ -2230,8 +2222,8 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// PDF Generation Function
-async function generatePDF(data, filePath) {
+// PDF Generation Function - Returns Buffer for serverless compatibility
+async function generatePDF(data) {
     try {
         console.log('[PDF] Starting PDF generation...');
         console.log('[PDF] Employee:', data.employee?.name);
@@ -2262,15 +2254,8 @@ async function generatePDF(data, filePath) {
         return new Promise((resolve, reject) => {
             const printer = new PdfPrinter(fonts);
 
-            // Load logo
-            const logoPath = path.join(__dirname, 'assets', 'logo.png');
+            // Load logo from settings (base64 only for serverless)
             let logoImage = settings.logo || null;
-
-            // If no base64 logo in settings, try local file
-            if (!logoImage && fs.existsSync(logoPath)) {
-                const logoBuffer = fs.readFileSync(logoPath);
-                logoImage = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-            }
 
             const docDefinition = {
                 pageSize: 'A4',
@@ -2443,14 +2428,17 @@ async function generatePDF(data, filePath) {
             };
 
             const pdfDoc = printer.createPdfKitDocument(docDefinition);
-            const writeStream = fs.createWriteStream(filePath);
-            pdfDoc.pipe(writeStream);
-            pdfDoc.end();
-            writeStream.on('finish', () => {
-                console.log('[PDF] Generated successfully:', filePath);
-                resolve();
+
+            // Collect PDF data in memory instead of writing to disk
+            const chunks = [];
+            pdfDoc.on('data', (chunk) => chunks.push(chunk));
+            pdfDoc.on('end', () => {
+                const pdfBuffer = Buffer.concat(chunks);
+                console.log('[PDF] Generated successfully in memory, size:', pdfBuffer.length, 'bytes');
+                resolve(pdfBuffer);
             });
-            writeStream.on('error', reject);
+            pdfDoc.on('error', reject);
+            pdfDoc.end();
         });
     } catch (error) {
         console.error('[PDF] Generation failed:', error);
