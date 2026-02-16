@@ -774,11 +774,22 @@ app.post('/api/payslip/generate', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {
         const data = req.body;
+
+        // Validation
+        if (!data || !data.employee) {
+            throw new Error('Invalid payload: missing employee data');
+        }
+
+        console.log('[PAYSLIP] Starting generation for:', data.employee.name);
+        console.log('[PAYSLIP] Increments:', data.increments?.length || 0);
+
         const payslipId = uuidv4();
         const filename = `Payslip_${data.employee.name.replace(/\s+/g, '_')}_${data.issue_date}_${payslipId.substring(0, 6)}.pdf`;
         const filePath = path.join(PDF_DIR, filename);
 
+        console.log('[PAYSLIP] Generating PDF...');
         await generatePDF(data, filePath);
+        console.log('[PAYSLIP] PDF generated successfully');
 
         // Upload to Supabase Storage
         const fileBuffer = fs.readFileSync(filePath);
@@ -812,14 +823,26 @@ app.post('/api/payslip/generate', async (req, res) => {
             created_at: new Date()
         };
 
+        console.log('[PAYSLIP] Inserting record to database...');
         const { error } = await supabase.from('payslips').insert(payslipRecord);
-        if (error) throw error;
+        if (error) {
+            console.error('[PAYSLIP] Database insert error:', error);
+            throw error;
+        }
+
         await logActivity(userEmail, 'GENERATE_PAYSLIP', 'SUCCESS', `Generated payslip for ${data.employee.name} (${data.pay_period_start} to ${data.pay_period_end})`, req);
+        console.log('[PAYSLIP] Success!');
         res.json({ success: true, id: payslipId, filename, url: `/api/payslips/${filename}/download` });
     } catch (e) {
-        console.error('[PDF] Error:', e);
+        console.error('[PDF] FULL ERROR:', e);
+        console.error('[PDF] Error stack:', e.stack);
+        console.error('[PDF] Error details:', {
+            message: e.message,
+            name: e.name,
+            employee: req.body?.employee?.name
+        });
         await logActivity(userEmail, 'GENERATE_PAYSLIP', 'ERROR', `Failed to generate payslip for ${req.body.employee?.name || 'unknown employee'}: ${e.message}`, req);
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ error: e.message, stack: process.env.NODE_ENV === 'development' ? e.stack : undefined });
     }
 });
 
@@ -2147,219 +2170,231 @@ app.listen(PORT, () => {
 
 // PDF Generation Function
 async function generatePDF(data, filePath) {
-    // Load settings from Supabase
-    let settings = {
-        headerColor: '#17a2b8',
-        textColor: '#333333',
-        tableHeaderBg: '#17a2b8',
-        tableHeaderColor: '#ffffff',
-        companyName: 'EurosHub',
-        companySubtitle: 'Payroll Department',
-        accentColor: '#17a2b8'
-    };
-
     try {
-        const { data: configRows } = await supabase.from('app_config').select('value').eq('key', 'pdf_settings').single();
-        if (configRows && configRows.value) {
-            settings = { ...settings, ...configRows.value };
-        }
-    } catch (e) {
-        console.warn('Failed to load PDF settings from Supabase:', e.message);
-    }
+        console.log('[PDF] Starting PDF generation...');
+        console.log('[PDF] Employee:', data.employee?.name);
+        console.log('[PDF] Has increments:', !!data.increments, 'Count:', data.increments?.length || 0);
 
-    return new Promise((resolve, reject) => {
-        const printer = new PdfPrinter(fonts);
-
-        // Load logo
-        const logoPath = path.join(__dirname, 'assets', 'logo.png');
-        let logoImage = settings.logo || null;
-
-        // If no base64 logo in settings, try local file
-        if (!logoImage && fs.existsSync(logoPath)) {
-            const logoBuffer = fs.readFileSync(logoPath);
-            logoImage = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-        }
-
-        const docDefinition = {
-            pageSize: 'A4',
-            pageMargins: [40, 60, 40, 60],
-            content: [
-                // Professional Header
-                {
-                    columns: [
-                        logoImage ? { image: logoImage, width: 70, margin: [0, 0, 0, 10] } : { text: '' },
-                        {
-                            stack: [
-                                { text: settings.companyName, style: 'companyName', alignment: 'right' },
-                                { text: settings.companySubtitle, style: 'subtitle', alignment: 'right' },
-                                { text: 'SALARY SLIP', style: 'docTitle', alignment: 'right', margin: [0, 5, 0, 0] }
-                            ]
-                        }
-                    ],
-                    margin: [0, 0, 0, 15]
-                },
-
-                // Divider
-                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: settings.headerColor }], margin: [0, 0, 0, 20] },
-
-                // Employee & Period Info
-                {
-                    columns: [
-                        {
-                            width: '50%',
-                            stack: [
-                                { text: 'EMPLOYEE INFORMATION', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Joining Date: ', bold: true, color: '#555' }, { text: data.employee.joining_date || 'N/A', color: settings.textColor }] }
-                            ]
-                        },
-                        {
-                            width: '50%',
-                            stack: [
-                                { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
-                                { text: [{ text: 'Pay Period: ', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Issue Date: ', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                { text: [{ text: 'Payment Method: ', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
-                                ...(data.employee.bank_name ? [{ text: [{ text: 'Bank: ', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
-                                ...(data.employee.account_number ? [{ text: [{ text: 'Account: ', bold: true, color: '#555' }, { text: data.employee.account_number, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
-                                { text: [{ text: 'Frequency: ', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }] }
-                            ]
-                        }
-                    ],
-                    margin: [0, 0, 0, 25]
-                },
-
-                // Earnings & Deductions Table
-                {
-                    table: {
-                        headerRows: 1,
-                        widths: ['*', 'auto', 20, '*', 'auto'],
-                        body: [
-                            [
-                                { text: 'EARNINGS', style: 'tableHeader', colSpan: 2, alignment: 'left' }, {},
-                                { text: '', border: [false, false, false, false] },
-                                { text: 'DEDUCTIONS', style: 'tableHeader', colSpan: 2, alignment: 'left' }, {}
-                            ],
-                            ...buildEarningsDeductionsRows(data.earnings, data.deductions, settings),
-                            [
-                                { text: 'GROSS PAY', bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11 },
-                                { text: (data.currency || 'USD') + ' ' + data.gross_pay.toFixed(2), bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11, alignment: 'right' },
-                                { text: '', border: [false, false, false, false] },
-                                { text: 'TOTAL DEDUCTIONS', bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11 },
-                                { text: (data.currency || 'USD') + ' ' + data.total_deductions.toFixed(2), bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11, alignment: 'right' }
-                            ]
-                        ]
-                    },
-                    layout: {
-                        hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
-                        vLineWidth: () => 0,
-                        hLineColor: (i) => (i === 0 || i === 1) ? settings.tableHeaderBg : '#e0e0e0',
-                        paddingLeft: () => 10,
-                        paddingRight: () => 10,
-                        paddingTop: () => 8,
-                        paddingBottom: () => 8
-                    },
-                    margin: [0, 0, 0, 20]
-                },
-
-                // Net Pay Highlight
-                {
-                    table: {
-                        widths: ['*', 'auto'],
-                        body: [[
-                            { text: 'NET PAY', style: 'netPayLabel' },
-                            { text: (data.currency || 'USD') + ' ' + data.net_pay.toFixed(2), style: 'netPayAmount' }
-                        ]]
-                    },
-                    layout: 'noBorders',
-                    fillColor: '#e8f8f5',
-                    margin: [0, 0, 0, 5]
-                },
-                { text: `In Words: ${data.net_pay_words}`, style: 'netPayWords', margin: [0, 5, 0, 20] },
-
-                // Attendance Summary (if provided)
-                data.attendance ? {
-                    stack: [
-                        { text: 'ATTENDANCE SUMMARY', style: 'sectionHeader', margin: [0, 10, 0, 8] },
-                        {
-                            columns: [
-                                { text: `Total Days: ${data.attendance.total}`, fontSize: 10 },
-                                { text: `Present: ${data.attendance.present}`, fontSize: 10, color: 'green' },
-                                { text: `Absent: ${data.attendance.absent}`, fontSize: 10, color: 'red' },
-                                { text: `Leaves: ${data.attendance.leave}`, fontSize: 10, color: 'orange' }
-                            ],
-                            margin: [0, 0, 0, 20]
-                        }
-                    ]
-                } : {},
-
-                // Increments Section (New)
-                (data.increments && data.increments.length > 0) ? {
-                    stack: [
-                        { text: 'ANNUAL INCREMENTS', style: 'sectionHeader', margin: [0, 10, 0, 8] },
-                        {
-                            table: {
-                                widths: ['*', 'auto', 'auto'],
-                                body: [
-                                    [{ text: 'Date', style: 'tableHeader' }, { text: 'Amount', style: 'tableHeader' }, { text: 'New Basic Salary', style: 'tableHeader' }],
-                                    ...data.increments.map(inc => [
-                                        { text: inc.date, fontSize: 10 },
-                                        { text: (data.currency || 'USD') + ' ' + Number(inc.amount).toFixed(2), fontSize: 10, alignment: 'right' },
-                                        { text: (data.currency || 'USD') + ' ' + Number(inc.new_salary).toFixed(2), fontSize: 10, alignment: 'right' }
-                                    ])
-                                ]
-                            },
-                            layout: {
-                                hLineWidth: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : 0.5; },
-                                vLineWidth: function (i, node) { return 0; },
-                                hLineColor: function (i) { return '#e0e0e0'; },
-                                paddingLeft: function (i) { return 8; },
-                                paddingRight: function (i) { return 8; },
-                            },
-                            margin: [0, 0, 0, 20]
-                        }
-                    ]
-                } : {},
-                // Notes Section
-                data.notes ? {
-                    stack: [
-                        { text: 'NOTES', style: 'sectionHeader', margin: [0, 10, 0, 8] },
-                        { text: data.notes, fontSize: 10, color: '#555', margin: [0, 0, 0, 20] }
-                    ]
-                } : {},
-
-                // Footer
-                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 15] },
-                { text: 'This is a computer-generated payslip and does not require a signature.', style: 'footer', alignment: 'center' },
-                { text: '© 2026 EurosHub. All rights reserved.', style: 'footer', alignment: 'center', margin: [0, 5, 0, 0] }
-            ],
-            styles: {
-                companyName: { fontSize: 22, bold: true, color: settings.headerColor },
-                subtitle: { fontSize: 10, color: '#666', italics: true },
-                docTitle: { fontSize: 14, bold: true, color: '#333' },
-                sectionHeader: { fontSize: 11, bold: true, color: settings.headerColor, decoration: 'underline' },
-                tableHeader: { fontSize: 10, bold: true, fillColor: settings.tableHeaderBg, color: settings.tableHeaderColor },
-                netPayLabel: { fontSize: 16, bold: true, color: settings.accentColor },
-                netPayAmount: { fontSize: 20, bold: true, color: settings.accentColor, alignment: 'right' },
-                netPayWords: { fontSize: 10, italics: true, color: '#666' },
-                footer: { fontSize: 8, color: '#888' }
-            },
-            defaultStyle: { font: 'Helvetica', fontSize: 10 }
+        // Load settings from Supabase
+        let settings = {
+            headerColor: '#17a2b8',
+            textColor: '#333333',
+            tableHeaderBg: '#17a2b8',
+            tableHeaderColor: '#ffffff',
+            companyName: 'EurosHub',
+            companySubtitle: 'Payroll Department',
+            accentColor: '#17a2b8'
         };
 
-        const pdfDoc = printer.createPdfKitDocument(docDefinition);
-        const writeStream = fs.createWriteStream(filePath);
-        pdfDoc.pipe(writeStream);
-        pdfDoc.end();
-        writeStream.on('finish', () => {
-            console.log('[PDF] Generated successfully:', filePath);
-            resolve();
+        try {
+            const { data: configRows } = await supabase.from('app_config').select('value').eq('key', 'pdf_settings').single();
+            if (configRows && configRows.value) {
+                settings = { ...settings, ...configRows.value };
+            }
+        } catch (e) {
+            console.warn('Failed to load PDF settings from Supabase:', e.message);
+        }
+
+        console.log('[PDF] Settings loaded, creating document...');
+
+        return new Promise((resolve, reject) => {
+            const printer = new PdfPrinter(fonts);
+
+            // Load logo
+            const logoPath = path.join(__dirname, 'assets', 'logo.png');
+            let logoImage = settings.logo || null;
+
+            // If no base64 logo in settings, try local file
+            if (!logoImage && fs.existsSync(logoPath)) {
+                const logoBuffer = fs.readFileSync(logoPath);
+                logoImage = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+            }
+
+            const docDefinition = {
+                pageSize: 'A4',
+                pageMargins: [40, 60, 40, 60],
+                content: [
+                    // Professional Header
+                    {
+                        columns: [
+                            logoImage ? { image: logoImage, width: 70, margin: [0, 0, 0, 10] } : { text: '' },
+                            {
+                                stack: [
+                                    { text: settings.companyName, style: 'companyName', alignment: 'right' },
+                                    { text: settings.companySubtitle, style: 'subtitle', alignment: 'right' },
+                                    { text: 'SALARY SLIP', style: 'docTitle', alignment: 'right', margin: [0, 5, 0, 0] }
+                                ]
+                            }
+                        ],
+                        margin: [0, 0, 0, 15]
+                    },
+
+                    // Divider
+                    { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: settings.headerColor }], margin: [0, 0, 0, 20] },
+
+                    // Employee & Period Info
+                    {
+                        columns: [
+                            {
+                                width: '50%',
+                                stack: [
+                                    { text: 'EMPLOYEE INFORMATION', style: 'sectionHeader', margin: [0, 0, 0, 10] },
+                                    { text: [{ text: 'Name: ', bold: true, color: '#555' }, { text: data.employee.name, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Employee ID: ', bold: true, color: '#555' }, { text: data.employee.employee_id || data.employee.id, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Department: ', bold: true, color: '#555' }, { text: data.employee.department || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Designation: ', bold: true, color: '#555' }, { text: data.employee.job_title || 'N/A', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Joining Date: ', bold: true, color: '#555' }, { text: data.employee.joining_date || 'N/A', color: settings.textColor }] }
+                                ]
+                            },
+                            {
+                                width: '50%',
+                                stack: [
+                                    { text: 'PAYMENT DETAILS', style: 'sectionHeader', margin: [0, 0, 0, 10] },
+                                    { text: [{ text: 'Pay Period: ', bold: true, color: '#555' }, { text: `${data.pay_period_start} to ${data.pay_period_end}`, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Issue Date: ', bold: true, color: '#555' }, { text: data.issue_date, color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    { text: [{ text: 'Payment Method: ', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [0, 0, 0, 5] },
+                                    ...(data.employee.bank_name ? [{ text: [{ text: 'Bank: ', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
+                                    ...(data.employee.account_number ? [{ text: [{ text: 'Account: ', bold: true, color: '#555' }, { text: data.employee.account_number, color: settings.textColor }], margin: [0, 0, 0, 5] }] : []),
+                                    { text: [{ text: 'Frequency: ', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }] }
+                                ]
+                            }
+                        ],
+                        margin: [0, 0, 0, 25]
+                    },
+
+                    // Earnings & Deductions Table
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', 'auto', 20, '*', 'auto'],
+                            body: [
+                                [
+                                    { text: 'EARNINGS', style: 'tableHeader', colSpan: 2, alignment: 'left' }, {},
+                                    { text: '', border: [false, false, false, false] },
+                                    { text: 'DEDUCTIONS', style: 'tableHeader', colSpan: 2, alignment: 'left' }, {}
+                                ],
+                                ...buildEarningsDeductionsRows(data.earnings, data.deductions, settings),
+                                [
+                                    { text: 'GROSS PAY', bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11 },
+                                    { text: (data.currency || 'USD') + ' ' + data.gross_pay.toFixed(2), bold: true, fillColor: '#f0f9ff', color: settings.accentColor, fontSize: 11, alignment: 'right' },
+                                    { text: '', border: [false, false, false, false] },
+                                    { text: 'TOTAL DEDUCTIONS', bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11 },
+                                    { text: (data.currency || 'USD') + ' ' + data.total_deductions.toFixed(2), bold: true, fillColor: '#fff5f5', color: '#dc3545', fontSize: 11, alignment: 'right' }
+                                ]
+                            ]
+                        },
+                        layout: {
+                            hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
+                            vLineWidth: () => 0,
+                            hLineColor: (i) => (i === 0 || i === 1) ? settings.tableHeaderBg : '#e0e0e0',
+                            paddingLeft: () => 10,
+                            paddingRight: () => 10,
+                            paddingTop: () => 8,
+                            paddingBottom: () => 8
+                        },
+                        margin: [0, 0, 0, 20]
+                    },
+
+                    // Net Pay Highlight
+                    {
+                        table: {
+                            widths: ['*', 'auto'],
+                            body: [[
+                                { text: 'NET PAY', style: 'netPayLabel' },
+                                { text: (data.currency || 'USD') + ' ' + data.net_pay.toFixed(2), style: 'netPayAmount' }
+                            ]]
+                        },
+                        layout: 'noBorders',
+                        fillColor: '#e8f8f5',
+                        margin: [0, 0, 0, 5]
+                    },
+                    { text: `In Words: ${data.net_pay_words}`, style: 'netPayWords', margin: [0, 5, 0, 20] },
+
+                    // Attendance Summary (if provided)
+                    data.attendance ? {
+                        stack: [
+                            { text: 'ATTENDANCE SUMMARY', style: 'sectionHeader', margin: [0, 10, 0, 8] },
+                            {
+                                columns: [
+                                    { text: `Total Days: ${data.attendance.total}`, fontSize: 10 },
+                                    { text: `Present: ${data.attendance.present}`, fontSize: 10, color: 'green' },
+                                    { text: `Absent: ${data.attendance.absent}`, fontSize: 10, color: 'red' },
+                                    { text: `Leaves: ${data.attendance.leave}`, fontSize: 10, color: 'orange' }
+                                ],
+                                margin: [0, 0, 0, 20]
+                            }
+                        ]
+                    } : {},
+
+                    // Increments Section (New)
+                    (data.increments && Array.isArray(data.increments) && data.increments.length > 0) ? {
+                        stack: [
+                            { text: 'ANNUAL INCREMENTS', style: 'sectionHeader', margin: [0, 10, 0, 8] },
+                            {
+                                table: {
+                                    widths: ['*', 'auto', 'auto'],
+                                    body: [
+                                        [{ text: 'Date', style: 'tableHeader' }, { text: 'Amount', style: 'tableHeader' }, { text: 'New Basic Salary', style: 'tableHeader' }],
+                                        ...data.increments.filter(inc => inc && inc.date).map(inc => [
+                                            { text: inc.date || '-', fontSize: 10 },
+                                            { text: (data.currency || 'USD') + ' ' + (Number(inc.amount) || 0).toFixed(2), fontSize: 10, alignment: 'right' },
+                                            { text: (data.currency || 'USD') + ' ' + (Number(inc.new_salary) || 0).toFixed(2), fontSize: 10, alignment: 'right' }
+                                        ])
+                                    ]
+                                },
+                                layout: {
+                                    hLineWidth: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : 0.5; },
+                                    vLineWidth: function (i, node) { return 0; },
+                                    hLineColor: function (i) { return '#e0e0e0'; },
+                                    paddingLeft: function (i) { return 8; },
+                                    paddingRight: function (i) { return 8; },
+                                },
+                                margin: [0, 0, 0, 20]
+                            }
+                        ]
+                    } : {},
+                    // Notes Section
+                    data.notes ? {
+                        stack: [
+                            { text: 'NOTES', style: 'sectionHeader', margin: [0, 10, 0, 8] },
+                            { text: data.notes, fontSize: 10, color: '#555', margin: [0, 0, 0, 20] }
+                        ]
+                    } : {},
+
+                    // Footer
+                    { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#cccccc' }], margin: [0, 0, 0, 15] },
+                    { text: 'This is a computer-generated payslip and does not require a signature.', style: 'footer', alignment: 'center' },
+                    { text: '© 2026 EurosHub. All rights reserved.', style: 'footer', alignment: 'center', margin: [0, 5, 0, 0] }
+                ],
+                styles: {
+                    companyName: { fontSize: 22, bold: true, color: settings.headerColor },
+                    subtitle: { fontSize: 10, color: '#666', italics: true },
+                    docTitle: { fontSize: 14, bold: true, color: '#333' },
+                    sectionHeader: { fontSize: 11, bold: true, color: settings.headerColor, decoration: 'underline' },
+                    tableHeader: { fontSize: 10, bold: true, fillColor: settings.tableHeaderBg, color: settings.tableHeaderColor },
+                    netPayLabel: { fontSize: 16, bold: true, color: settings.accentColor },
+                    netPayAmount: { fontSize: 20, bold: true, color: settings.accentColor, alignment: 'right' },
+                    netPayWords: { fontSize: 10, italics: true, color: '#666' },
+                    footer: { fontSize: 8, color: '#888' }
+                },
+                defaultStyle: { font: 'Helvetica', fontSize: 10 }
+            };
+
+            const pdfDoc = printer.createPdfKitDocument(docDefinition);
+            const writeStream = fs.createWriteStream(filePath);
+            pdfDoc.pipe(writeStream);
+            pdfDoc.end();
+            writeStream.on('finish', () => {
+                console.log('[PDF] Generated successfully:', filePath);
+                resolve();
+            });
+            writeStream.on('error', reject);
         });
-        writeStream.on('error', reject);
-    });
+    } catch (error) {
+        console.error('[PDF] Generation failed:', error);
+        console.error('[PDF] Error stack:', error.stack);
+        throw error;
+    }
 }
 
 function buildEarningsDeductionsRows(earnings, deductions, settings) {
