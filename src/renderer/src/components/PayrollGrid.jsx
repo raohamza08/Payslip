@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-import { SaveIcon, ProcessIcon, EditIcon, CancelIcon, DownloadIcon, ViewIcon, DeleteIcon, AddIcon } from './Icons';
+import { SaveIcon, ProcessIcon, EditIcon, CancelIcon, DownloadIcon, ViewIcon, DeleteIcon, AddIcon, RefreshIcon } from './Icons';
 import { numberToWords } from '../utils/numToWords';
 
 export default function PayrollGrid({ onNavigate }) {
@@ -214,6 +214,9 @@ export default function PayrollGrid({ onNavigate }) {
                     <div className="form-group" style={{ margin: 0 }}>
                         <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ width: '160px' }} />
                     </div>
+                    <button className="btn btn-secondary" onClick={loadData} title="Reload employees and increments">
+                        <RefreshIcon /> Refresh
+                    </button>
                     <button className="btn btn-secondary" onClick={handleSave}>
                         <SaveIcon /> Save Defaults
                     </button>

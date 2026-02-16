@@ -2261,8 +2261,23 @@ async function generatePDF(data) {
         return new Promise((resolve, reject) => {
             const printer = new PdfPrinter(fonts);
 
-            // Load logo from settings (base64 only for serverless)
+            // Load logo from settings OR local file as fallback
             let logoImage = settings.logo || null;
+
+            if (!logoImage) {
+                try {
+                    const logoPath = path.join(__dirname, 'assets', 'logo.png');
+                    if (fs.existsSync(logoPath)) {
+                        const logoBuffer = fs.readFileSync(logoPath);
+                        logoImage = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+                        console.log('[PDF] Using local logo file fallback');
+                    } else {
+                        console.warn('[PDF] No local logo found at:', logoPath);
+                    }
+                } catch (err) {
+                    console.warn('[PDF] Failed to load local logo:', err.message);
+                }
+            }
 
             const docDefinition = {
                 pageSize: 'A4',
