@@ -203,3 +203,13 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_increments_employee_id ON increments(employee_id);
 CREATE INDEX IF NOT EXISTS idx_increments_effective_date ON increments(effective_date DESC);
 
+-- Ensure Employees table has RLS enabled
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'employees' AND policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON employees FOR ALL USING (true);
+    END IF;
+END $$;
+

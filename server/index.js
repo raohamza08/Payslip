@@ -707,17 +707,20 @@ app.post('/api/employees/:id/increments', async (req, res) => {
         // Update employee's monthly_salary if new_salary is provided
         if (new_salary) {
             console.log('[INCREMENT] Updating employee salary to:', new_salary);
-            const { error: updateError } = await supabase
+            const { data: updatedEmployee, error: updateError } = await supabase
                 .from('employees')
                 .update({ monthly_salary: Number(new_salary) })
-                .eq('id', req.params.id);
+                .eq('id', req.params.id)
+                .select();
 
             if (updateError) {
                 console.error('[INCREMENT] Failed to update employee salary:', updateError);
                 // Don't throw - increment was saved, just log the warning
                 console.warn('[INCREMENT] Increment saved but employee salary update failed');
+            } else if (!updatedEmployee || updatedEmployee.length === 0) {
+                console.warn(`[INCREMENT] Update executed but no employee updated for ID: ${req.params.id}. Possibly RLS or ID not found.`);
             } else {
-                console.log('[INCREMENT] Employee salary updated successfully');
+                console.log('[INCREMENT] Employee salary updated successfully. New salary:', updatedEmployee[0].monthly_salary);
             }
         }
 
