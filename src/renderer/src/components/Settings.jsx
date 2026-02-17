@@ -105,11 +105,45 @@ export default function Settings({ user }) {
         } catch (e) { setMessage('Error saving SMTP settings: ' + e.message); }
     };
 
+    // Convert HSL to HEX for system compatibility
+    const hslToHex = (h, s, l) => {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+    };
+
+    // Convert HEX to HUE for slider sync
+    const hexToHue = (hex) => {
+        let r = 0, g = 0, b = 0;
+        if (hex.length === 4) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        } else if (hex.length === 7) {
+            r = parseInt(hex.substring(1, 3), 16);
+            g = parseInt(hex.substring(3, 5), 16);
+            b = parseInt(hex.substring(5, 7), 16);
+        }
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h;
+        if (max === min) h = 0;
+        else if (max === r) h = (g - b) / (max - min) + (g < b ? 6 : 0);
+        else if (max === g) h = (b - r) / (max - min) + 2;
+        else if (max === b) h = (r - g) / (max - min) + 4;
+        return Math.round(h * 60);
+    };
+
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
         updateBodyClass(newTheme, neonShape);
-        
+
     };
 
     const handleColorChange = (color) => {
@@ -118,7 +152,7 @@ export default function Settings({ user }) {
         document.body.style.setProperty('--accent', color);
         document.body.style.setProperty('--accent-hover', adjustColor(color, -20));
         document.body.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
-        
+
     };
 
     const updateNeonSetting = (key, value) => {
@@ -356,29 +390,26 @@ export default function Settings({ user }) {
                         </p>
                         <div className="color-scale-container">
                             <div className="flex-row flex-between" style={{ marginBottom: '10px' }}>
-                                <label style={{ margin: 0 }}>Curated Color Spectrum</label>
-                                <span className="badge" style={{ background: accentColor, color: '#fff', border: 'none' }}>
-                                    {predefinedColors.find(c => c.value.toLowerCase() === accentColor.toLowerCase())?.name || 'Custom'}
+                                <label style={{ margin: 0 }}>Infinite Color Spectrum</label>
+                                <span className="badge" style={{ background: accentColor, color: '#fff', border: 'none', fontFamily: 'monospace' }}>
+                                    {accentColor}
                                 </span>
                             </div>
 
                             <input
                                 type="range"
-                                className="color-scale-slider"
+                                className="color-scale-slider spectrum-slider"
                                 min="0"
-                                max={predefinedColors.length - 1}
-                                value={predefinedColors.findIndex(c => c.value.toLowerCase() === accentColor.toLowerCase()) === -1
-                                    ? 0 : predefinedColors.findIndex(c => c.value.toLowerCase() === accentColor.toLowerCase())}
-                                onChange={(e) => handleColorChange(predefinedColors[e.target.value].value)}
-                                style={{
-                                    background: `linear-gradient(to right, ${predefinedColors.map(c => c.value).join(', ')})`
-                                }}
+                                max="360"
+                                value={hexToHue(accentColor)}
+                                onChange={(e) => handleColorChange(hslToHex(parseInt(e.target.value), 70, 50))}
                             />
 
-                            <div className="flex-row flex-between" style={{ opacity: 0.5, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                <span>{predefinedColors[0].name}</span>
-                                <span>{predefinedColors[Math.floor(predefinedColors.length / 2)].name}</span>
-                                <span>{predefinedColors[predefinedColors.length - 1].name}</span>
+                            <div className="flex-row flex-between" style={{ opacity: 0.5, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '5px' }}>
+                                <span>Warm</span>
+                                <span>Neutral</span>
+                                <span>Cool</span>
+                                <span>Warm</span>
                             </div>
                         </div>
 

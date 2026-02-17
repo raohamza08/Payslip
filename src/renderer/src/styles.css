@@ -1632,9 +1632,15 @@ body.dark .icon-contrast:not(.no-invert) {
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.color-scale-slider:active::-webkit-slider-thumb {
-  transform: scale(1.2);
+.color-scale-slider.spectrum-slider {
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
+
+.spectrum-slider::-webkit-slider-thumb {
+  box-shadow: 0 0 15px var(--accent-glow), 0 0 0 4px var(--accent);
+  background: white;
+}
+
 
 /* Firefox */
 .color-scale-slider::-moz-range-track {
