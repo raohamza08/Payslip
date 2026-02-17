@@ -554,10 +554,26 @@ h3 {
 /* Glass Cards & Containers */
 /* Glass Cards - Nebula Styling */
 .card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
   box-shadow: var(--shadow);
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  color: var(--text-heading);
+  font-weight: 700;
 }
 
 .table-container {
@@ -565,6 +581,19 @@ h3 {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 1rem;
+  border-radius: var(--radius);
+}
+
+.table-container.card {
+  padding: 0;
+}
+
+.table-container.card .table thead th:first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.table-container.card .table thead th:last-child {
+  border-top-right-radius: var(--radius);
 }
 
 .table-container::-webkit-scrollbar {
@@ -1482,6 +1511,47 @@ body.dark .icon-contrast:not(.no-invert) {
   font-weight: 700;
   letter-spacing: -0.5px;
 }
+
+/* Typography Utilities */
+.text-sm {
+  font-size: 0.825rem !important;
+  line-height: 1.4;
+}
+
+.text-xs {
+  font-size: 0.75rem !important;
+}
+
+.text-light {
+  color: var(--text-light) !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.font-bold {
+  font-weight: 700 !important;
+}
+
+/* Layout Utilities */
+.grid-3>.card,
+.grid-2>.card {
+  height: 100%;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.w-full {
+  width: 100%;
+}
+
 
 .input-compact {
   padding: 6px 12px !important;
