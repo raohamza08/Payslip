@@ -356,47 +356,31 @@ export default function Settings({ user }) {
                         <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
                             Choose a color that represents your brand
                         </p>
-                        <div className="form-group">
-                            <label>Curated Color Palettes</label>
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))',
-                                gap: '12px',
-                                marginTop: '15px'
-                            }}>
-                                {predefinedColors.map(color => (
-                                    <div
-                                        key={color.value}
-                                        onClick={() => handleColorChange(color.value)}
-                                        title={color.name}
-                                        style={{
-                                            width: '45px',
-                                            height: '45px',
-                                            borderRadius: '12px',
-                                            background: color.value,
-                                            cursor: 'pointer',
-                                            border: accentColor === color.value ? '3px solid #fff' : '2px solid transparent',
-                                            boxShadow: accentColor === color.value
-                                                ? `0 0 15px ${color.value}88, inset 0 0 0 2px ${color.value}`
-                                                : '0 4px 6px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            transform: accentColor === color.value ? 'scale(1.15)' : 'scale(1)',
-                                            zIndex: accentColor === color.value ? 2 : 1
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (accentColor !== color.value) {
-                                                e.currentTarget.style.transform = 'scale(1.1)';
-                                                e.currentTarget.style.boxShadow = `0 8px 15px ${color.value}44`;
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (accentColor !== color.value) {
-                                                e.currentTarget.style.transform = 'scale(1)';
-                                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                                            }
-                                        }}
-                                    />
-                                ))}
+                        <div className="color-scale-container">
+                            <div className="flex-row flex-between" style={{ marginBottom: '10px' }}>
+                                <label style={{ margin: 0 }}>Curated Color Spectrum</label>
+                                <span className="badge" style={{ background: accentColor, color: '#fff', border: 'none' }}>
+                                    {predefinedColors.find(c => c.value.toLowerCase() === accentColor.toLowerCase())?.name || 'Custom'}
+                                </span>
+                            </div>
+
+                            <input
+                                type="range"
+                                className="color-scale-slider"
+                                min="0"
+                                max={predefinedColors.length - 1}
+                                value={predefinedColors.findIndex(c => c.value.toLowerCase() === accentColor.toLowerCase()) === -1
+                                    ? 0 : predefinedColors.findIndex(c => c.value.toLowerCase() === accentColor.toLowerCase())}
+                                onChange={(e) => handleColorChange(predefinedColors[e.target.value].value)}
+                                style={{
+                                    background: `linear-gradient(to right, ${predefinedColors.map(c => c.value).join(', ')})`
+                                }}
+                            />
+
+                            <div className="flex-row flex-between" style={{ opacity: 0.5, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                <span>{predefinedColors[0].name}</span>
+                                <span>{predefinedColors[Math.floor(predefinedColors.length / 2)].name}</span>
+                                <span>{predefinedColors[predefinedColors.length - 1].name}</span>
                             </div>
                         </div>
 
