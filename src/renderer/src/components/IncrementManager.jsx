@@ -35,6 +35,7 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
             });
 
             alert(`Increment Applied! New Base Salary: ${finalSalary.toLocaleString()}`);
+            setNewIncrement({ percentage: 10, reason: '', effective_date: new Date().toISOString().split('T')[0] });
             loadIncrements();
 
             // Notify parent component to update local state
