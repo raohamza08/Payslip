@@ -553,18 +553,27 @@ h3 {
 
 /* Glass Cards & Containers */
 /* Glass Cards - Nebula Styling */
-.card,
-.table-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
+.card {
   box-shadow: var(--shadow);
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--accent-glow);
+  border-radius: 10px;
 }
 
 .card:hover {
@@ -821,8 +830,8 @@ tr:last-child td {
 /* Mobile Responsive Fixes */
 @media (max-width: 768px) {
   .app-container {
-    padding: 0.75rem;
-    gap: 0.75rem;
+    padding: 0.5rem;
+    gap: 0.5rem;
   }
 
   .sidebar {
@@ -830,9 +839,11 @@ tr:last-child td {
     height: 100vh;
     left: 0;
     top: 0;
+    width: 280px;
     transform: translateX(-100%);
-    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.3);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
     border-radius: 0;
+    z-index: 1000;
   }
 
   .sidebar.open {
@@ -843,24 +854,136 @@ tr:last-child td {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
-  .top-bar {
-    padding: 0.75rem 1rem;
+  .main-content {
+    padding: 0.5rem 0;
   }
 
   .grid-2,
-  .grid-3 {
-    grid-template-columns: 1fr;
-    gap: 15px !important;
+  .grid-3,
+  .dash-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
   }
 
-  .card {
+  .card,
+  .table-container {
     padding: 1rem;
+    border-radius: 16px;
   }
 
-  .card h3 {
+  h1 {
+    font-size: 1.5rem !important;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    flex: 1;
+  }
+
+  .filter-bar {
+    padding: 1rem;
+    gap: 10px;
+  }
+
+  .filter-bar>* {
+    flex: 1 1 100%;
+  }
+
+  .tab-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 6px;
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .tab-nav::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+  }
+
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+
+  /* Specific fix for top-bar on mobile to prevent overlapping */
+  .top-bar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: 0.5rem 0.75rem;
+    gap: 12px;
+    min-height: 50px;
+    border-radius: 0 0 16px 16px;
+    margin: -0.5rem -0.5rem 1rem -0.5rem;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-bar-title {
+    display: none;
+    /* Already shown in the toolbar below */
+  }
+
+  .user-profile {
+    gap: 8px;
+  }
+
+  .user-info {
+    display: none;
+    /* Hide email on small screens */
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-box {
+    padding: 2rem;
+  }
+
+  .top-bar-title {
     font-size: 1.1rem;
+  }
+
+  .table-action-cell {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
   }
 }
 
@@ -1375,4 +1498,24 @@ body.dark .icon-contrast:not(.no-invert) {
 .table tbody td {
   padding: 12px 20px;
   vertical-align: middle;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fade-in 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .table thead th {
+    padding: 10px 15px;
+    font-size: 0.7rem;
+  }
+
+  .table tbody td {
+    padding: 10px 15px;
+  }
 }
