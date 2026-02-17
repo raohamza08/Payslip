@@ -1229,3 +1229,43 @@ option {
   color: var(--text-heading) !important;
   border: 1px solid var(--glass-border) !important;
 }
+/* Contrast & Accessibility Utilities */
+.icon-contrast {
+    transition: var(--transition);
+}
+
+body.dark .icon-contrast:not(.no-invert) {
+    filter: brightness(0) invert(1);
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-success {
+    background: rgba(110, 231, 183, 0.1);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+/* Ensure form controls are readable */
+.form-control:focus {
+    background: var(--card-bg);
+}
+
+/* Tab Active State Glow Fix */
+.tabs-header .active {
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+/* High Contrast mode for specific elements */
+.text-contrast {
+    color: var(--text-heading);
+}
+
+.text-sub-contrast {
+    color: var(--text-light);
+}

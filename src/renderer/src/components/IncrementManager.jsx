@@ -72,73 +72,123 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
 
     return (
         <div style={{ padding: '20px' }}>
-            <h3>Salary Management: {employee.name}</h3>
+            <h3 style={{ color: 'var(--text-heading)', marginBottom: '20px' }}>Salary Management: {employee.name}</h3>
 
-            <div className="card" style={{ background: '#f8f9fa', marginBottom: '20px' }}>
-                <h4>Add Increment</h4>
+            <div className="card" style={{ marginBottom: '20px', border: '1px solid var(--glass-border)' }}>
+                <h4 style={{ color: 'var(--text-heading)', marginBottom: '20px' }}>Add Increment</h4>
                 <form onSubmit={handleAdd}>
                     <div className="grid-2">
                         <div className="form-group">
-                            <label>Percentage (%)</label>
-                            <input type="number" step="0.1" value={newIncrement.percentage} onChange={e => handlePercentageChange(e.target.value)} className="form-control" />
+                            <label style={{ color: 'var(--text-light)' }}>Percentage (%)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                value={newIncrement.percentage}
+                                onChange={e => handlePercentageChange(e.target.value)}
+                                className="form-control"
+                                style={{ background: 'var(--glass-bg)', color: 'var(--text-heading)', border: '1px solid var(--border)' }}
+                            />
                         </div>
                         <div className="form-group">
-                            <label>New Monthly Salary</label>
-                            <input type="number" value={newIncrement.new_salary} onChange={e => handleNewSalaryChange(e.target.value)} className="form-control" />
+                            <label style={{ color: 'var(--text-light)' }}>New Monthly Salary</label>
+                            <input
+                                type="number"
+                                value={newIncrement.new_salary}
+                                onChange={e => handleNewSalaryChange(e.target.value)}
+                                className="form-control"
+                                style={{ background: 'var(--glass-bg)', color: 'var(--text-heading)', border: '1px solid var(--border)' }}
+                            />
                         </div>
                         <div className="form-group">
-                            <label>Effective Date</label>
-                            <input type="date" value={newIncrement.effective_date} onChange={e => setNewIncrement({ ...newIncrement, effective_date: e.target.value })} className="form-control" />
+                            <label style={{ color: 'var(--text-light)' }}>Effective Date</label>
+                            <input
+                                type="date"
+                                value={newIncrement.effective_date}
+                                onChange={e => setNewIncrement({ ...newIncrement, effective_date: e.target.value })}
+                                className="form-control"
+                                style={{ background: 'var(--glass-bg)', color: 'var(--text-heading)', border: '1px solid var(--border)' }}
+                            />
                         </div>
                     </div>
                     <div className="form-group">
-                        <label>Reason</label>
-                        <input value={newIncrement.reason} onChange={e => setNewIncrement({ ...newIncrement, reason: e.target.value })} className="form-control" placeholder="e.g. Annual Appraisal" />
+                        <label style={{ color: 'var(--text-light)' }}>Reason</label>
+                        <input
+                            value={newIncrement.reason}
+                            onChange={e => setNewIncrement({ ...newIncrement, reason: e.target.value })}
+                            className="form-control"
+                            placeholder="e.g. Annual Appraisal"
+                            style={{ background: 'var(--glass-bg)', color: 'var(--text-heading)', border: '1px solid var(--border)' }}
+                        />
                     </div>
 
-                    <div style={{ margin: '10px 0', padding: '10px', background: '#e0f2f1', borderRadius: '4px' }}>
-                        <strong>Preview:</strong>
-                        Current: {currentSalary.toLocaleString()} →
-                        <span style={{ color: 'green', fontWeight: 'bold' }}> New: {Number(newIncrement.new_salary).toLocaleString()} </span>
-                        ({newIncrement.percentage}% increase)
+                    <div style={{
+                        margin: '20px 0',
+                        padding: '15px',
+                        background: 'var(--item-hover)',
+                        borderRadius: '12px',
+                        border: '1px solid var(--glass-border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                    }}>
+                        <div style={{ fontSize: '1.2rem', opacity: 0.8 }}>💰</div>
+                        <div>
+                            <strong style={{ color: 'var(--text-heading)' }}>Preview: </strong>
+                            <span style={{ color: 'var(--text-light)' }}>{currentSalary.toLocaleString()}</span>
+                            <span style={{ margin: '0 10px', color: 'var(--accent)' }}>→</span>
+                            <span style={{ color: 'var(--success)', fontWeight: 'bold', fontSize: '1.1rem' }}> {Number(newIncrement.new_salary).toLocaleString()} </span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginLeft: '10px' }}>
+                                ({newIncrement.percentage}% increase)
+                            </span>
+                        </div>
                     </div>
 
-                    <button className="btn btn-primary" type="submit">
-                        <AddIcon /> Apply Increment
+                    <button className="btn btn-primary" type="submit" style={{ width: 'auto', padding: '12px 30px' }}>
+                        <AddIcon className="icon-contrast" /> Apply Increment
                     </button>
                 </form>
             </div>
 
-            <h4>Increment History</h4>
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Old Salary</th>
-                        <th>%</th>
-                        <th>New Salary</th>
-                        <th>Reason</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {increments.map(inc => (
-                        <tr key={inc.id || inc._id}>
-                            <td>{inc.effective_date}</td>
-                            <td>{Number(inc.old_salary || 0).toLocaleString()}</td>
-                            <td>
-                                {inc.increment_percentage ? (
-                                    <span className="badge badge-success">+{inc.increment_percentage}%</span>
-                                ) : (
-                                    <span style={{ color: 'green' }}>+{Number(inc.amount || 0).toLocaleString()}</span>
-                                )}
-                            </td>
-                            <td style={{ fontWeight: 'bold' }}>{Number(inc.new_salary || (inc.old_salary + inc.amount) || 0).toLocaleString()}</td>
-                            <td>{inc.description || inc.reason || '-'}</td>
+            <h4 style={{ color: 'var(--text-heading)', margin: '30px 0 15px' }}>Increment History</h4>
+            <div className="table-container" style={{ background: 'transparent', padding: 0 }}>
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th style={{ color: 'var(--text-light)', borderBottom: '2px solid var(--border)' }}>Date</th>
+                            <th style={{ color: 'var(--text-light)', borderBottom: '2px solid var(--border)' }}>Old Salary</th>
+                            <th style={{ color: 'var(--text-light)', borderBottom: '2px solid var(--border)' }}>%</th>
+                            <th style={{ color: 'var(--text-light)', borderBottom: '2px solid var(--border)' }}>New Salary</th>
+                            <th style={{ color: 'var(--text-light)', borderBottom: '2px solid var(--border)' }}>Reason</th>
                         </tr>
-                    ))}
-                    {increments.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No history found.</td></tr>}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {increments.map(inc => (
+                            <tr key={inc.id || inc._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <td style={{ color: 'var(--text)' }}>{inc.effective_date}</td>
+                                <td style={{ color: 'var(--text)' }}>{Number(inc.old_salary || 0).toLocaleString()}</td>
+                                <td>
+                                    {inc.increment_percentage ? (
+                                        <span className="badge badge-success" style={{ background: 'rgba(110, 231, 183, 0.1)', color: 'var(--success)', border: '1px solid var(--success)' }}>
+                                            +{inc.increment_percentage}%
+                                        </span>
+                                    ) : (
+                                        <span style={{ color: 'var(--success)' }}>+{Number(inc.amount || 0).toLocaleString()}</span>
+                                    )}
+                                </td>
+                                <td style={{ fontWeight: 'bold', color: 'var(--text-heading)' }}>{Number(inc.new_salary || (inc.old_salary + inc.amount) || 0).toLocaleString()}</td>
+                                <td style={{ color: 'var(--text-light)' }}>{inc.description || inc.reason || '-'}</td>
+                            </tr>
+                        ))}
+                        {increments.length === 0 && (
+                            <tr>
+                                <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)', opacity: 0.6 }}>
+                                    No increment history found for this employee.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
