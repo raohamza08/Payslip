@@ -116,7 +116,7 @@ export default function UserManagement() {
                             <th>Email</th>
                             <th>Role</th>
                             <th>Created</th>
-                            <th style={{ textAlign: 'right' }}>Actions</th>
+                            <th style={{ textAlign: 'right', paddingRight: '40px' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -124,42 +124,42 @@ export default function UserManagement() {
                             <tr key={user.id}>
                                 <td><strong>{user.email}</strong></td>
                                 <td>{getRoleBadge(user.role)}</td>
-                                <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                                <td style={{ textAlign: 'right' }}>
-                                    <button
-                                        className="btn btn-primary btn-sm"
-                                        style={{ marginRight: 5 }}
-                                        onClick={() => {
-                                            setEditingUser(user);
-                                            setResetType('permissions');
-                                        }}
-                                    >
-                                        <UserIcon />
-                                        Permissions
-                                    </button>
-                                    <button
-                                        className="btn btn-secondary btn-sm"
-                                        style={{ marginRight: 5 }}
-                                        onClick={() => {
-                                            setEditingUser(user);
-                                            setResetType('login');
-                                        }}
-                                    >
-                                        <LockIcon />
-                                        RLP
-                                    </button>
-                                    {(user.role === 'admin' || user.role === 'super_admin') && (
+                                <td className="table-number">{new Date(user.created_at).toLocaleDateString()}</td>
+                                <td style={{ paddingRight: '40px' }}>
+                                    <div className="table-action-cell">
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => {
+                                                setEditingUser(user);
+                                                setResetType('permissions');
+                                            }}
+                                        >
+                                            <UserIcon />
+                                            Permissions
+                                        </button>
                                         <button
                                             className="btn btn-secondary btn-sm"
                                             onClick={() => {
                                                 setEditingUser(user);
-                                                setResetType('master');
+                                                setResetType('login');
                                             }}
                                         >
                                             <LockIcon />
-                                            RMP
+                                            RLP
                                         </button>
-                                    )}
+                                        {(user.role === 'admin' || user.role === 'super_admin') && (
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => {
+                                                    setEditingUser(user);
+                                                    setResetType('master');
+                                                }}
+                                            >
+                                                <LockIcon />
+                                                RMP
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}

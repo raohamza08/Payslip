@@ -325,7 +325,7 @@ export default function Settings({ user }) {
                                     boxShadow: theme === 'light' ? `0 4px 15px ${accentColor}33` : 'none'
                                 }}
                             >
-                                <div style={{ fontSize: '18px' }}>☀️</div>
+
                                 <div style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Light</div>
                             </div>
                             <div
@@ -344,7 +344,7 @@ export default function Settings({ user }) {
                                     boxShadow: theme === 'dark' ? `0 4px 15px ${accentColor}33` : 'none'
                                 }}
                             >
-                                <div style={{ fontSize: '18px' }}>🌙</div>
+
                                 <div style={{ fontWeight: '700', fontSize: '14px' }}>Dark</div>
                             </div>
                         </div>
@@ -582,7 +582,7 @@ export default function Settings({ user }) {
                         border: '1px solid #ffc107',
                         color: '#856404'
                     }}>
-                        <strong>⚠️ Security Notice:</strong>
+                        <strong>Security Notice:</strong>
                         <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
                             There is no password recovery option. Please remember your new password carefully.
                         </p>
@@ -620,7 +620,7 @@ export default function Settings({ user }) {
                         }}
                             onClick={() => window.location.href = 'mailto:hamzabadar.euroshub@gmail.com?subject=Payslip Manager Support'}
                         >
-                            <div style={{ fontSize: '40px', marginBottom: '10px' }}>📧</div>
+                            <div style={{ fontSize: '40px', marginBottom: '10px' }}></div>
                             <h3 style={{ margin: '0 0 8px 0', color: 'white' }}>Email Support</h3>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
                                 raohamzabadar@euroshub.com
@@ -638,7 +638,7 @@ export default function Settings({ user }) {
                         }}
                             onClick={() => window.open('https://wa.me/923078445045', '_blank')}
                         >
-                            <div style={{ fontSize: '40px', marginBottom: '10px' }}>💬</div>
+                            <div style={{ fontSize: '40px', marginBottom: '10px' }}></div>
                             <h3 style={{ margin: '0 0 8px 0', color: 'white' }}>WhatsApp</h3>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
                                 Quick response via chat
@@ -653,7 +653,7 @@ export default function Settings({ user }) {
                         borderRadius: '10px',
                         border: '1px solid var(--border)'
                     }}>
-                        <h3 style={{ marginTop: 0 }}>📋 System Information</h3>
+                        <h3 style={{ marginTop: 0 }}> System Information</h3>
                         <div style={{ fontSize: '14px', color: 'var(--text-light)' }}>
                             <p><strong>Version:</strong> v3.9</p>
                             <p><strong>Database:</strong> Supabase (Global)</p>
@@ -869,7 +869,7 @@ export default function Settings({ user }) {
                                             fontSize: '16px'
                                         }}
                                     >
-                                        {showSmtpPassword ? '🙈' : '👁️'}
+                                        {showSmtpPassword ? '🙈' : '🙉'}
                                     </button>
                                 </div>
                                 <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
