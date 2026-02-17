@@ -34,10 +34,9 @@ export default function PayrollGrid({ onNavigate }) {
             await Promise.all(activeEmps.map(async (emp) => {
                 try {
                     const incs = await api.getIncrements(emp.id);
-                    // Filter for current year increments only? Or all? User likely wants recent ones.
-                    // Let's filter for current year to keep it relevant to the payslip
+                    // Filter for current year increments
                     const currentYear = new Date().getFullYear();
-                    incrementsMap[emp.id] = incs.filter(i => {
+                    incrementsMap[emp.id] = (incs || []).filter(i => {
                         const incDate = i.effective_date || i.date;
                         return incDate && new Date(incDate).getFullYear() === currentYear;
                     });
@@ -48,11 +47,12 @@ export default function PayrollGrid({ onNavigate }) {
             }));
 
             const data = {};
+            const now = new Date();
             activeEmps.forEach(emp => {
                 const def = defs[emp.id] || {};
                 let earnings = Array.isArray(def.earnings) ? [...def.earnings] : [];
 
-                // Ensure Basic Salary matches employee record (source of truth)
+                // Ensure Basic Salary matches employee record
                 const basicIndex = earnings.findIndex(e => e.name === 'Basic Salary');
                 if (basicIndex >= 0) {
                     earnings[basicIndex] = { ...earnings[basicIndex], amount: Number(emp.monthly_salary) || 0 };
@@ -61,11 +61,21 @@ export default function PayrollGrid({ onNavigate }) {
                 }
                 let deductions = Array.isArray(def.deductions) ? [...def.deductions] : [];
 
+                const myIncs = incrementsMap[emp.id] || [];
+                // Find if any increment is within the last 31 days
+                const hasRecent = myIncs.some(inc => {
+                    const d = new Date(inc.effective_date || inc.date);
+                    const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+                    return diffDays >= 0 && diffDays <= 31;
+                });
+
                 data[emp.id] = {
                     earnings,
                     deductions,
                     notes: def.notes || "",
-                    increments: incrementsMap[emp.id] || []
+                    increments: myIncs,
+                    showIncrements: hasRecent, // Default to true if recent, false otherwise
+                    isRecentEligible: hasRecent
                 };
             });
 
@@ -80,10 +90,10 @@ export default function PayrollGrid({ onNavigate }) {
 
     const handleSave = async () => {
         try {
-            // Don't save increments back to defaults as they are transactional
+            // Don't save transient UI fields back to defaults
             const defaultsToSave = {};
             Object.keys(gridData).forEach(id => {
-                const { increments, ...rest } = gridData[id];
+                const { increments, showIncrements, isRecentEligible, ...rest } = gridData[id];
                 defaultsToSave[id] = rest;
             });
             await api.savePayrollDefaults(defaultsToSave);
@@ -147,7 +157,7 @@ export default function PayrollGrid({ onNavigate }) {
             net_pay_words: numberToWords(net),
             currency: emp.currency || 'PKR',
             notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`,
-            increments: financials.increments || []
+            increments: financials.showIncrements ? (financials.increments || []) : []
         };
     };
 
@@ -318,10 +328,33 @@ export default function PayrollGrid({ onNavigate }) {
                                             />
                                         </td>
                                         <td className="text-center">
-                                            {data.increments && data.increments.length > 0 ? (
-                                                <span className="badge success">{data.increments.length} Active</span>
+                                            {data.isRecentEligible ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.showIncrements}
+                                                        onChange={e => {
+                                                            const val = e.target.checked;
+                                                            setGridData(prev => ({
+                                                                ...prev,
+                                                                [emp.id]: {
+                                                                    ...prev[emp.id],
+                                                                    showIncrements: val
+                                                                }
+                                                            }));
+                                                        }}
+                                                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                                    />
+                                                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: data.showIncrements ? 'var(--success)' : 'var(--text-light)' }}>
+                                                        {data.showIncrements ? 'ON' : 'OFF'}
+                                                    </span>
+                                                </div>
                                             ) : (
-                                                <span className="text-light">-</span>
+                                                data.increments && data.increments.length > 0 ? (
+                                                    <span className="badge" style={{ opacity: 0.5, border: '1px solid var(--border)' }}>{data.increments.length} Hist</span>
+                                                ) : (
+                                                    <span className="text-light">-</span>
+                                                )
                                             )}
                                         </td>
                                         <td className="text-right" style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1.1rem' }}>
