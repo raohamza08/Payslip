@@ -1591,7 +1591,7 @@ app.post('/api/performance', async (req, res) => {
         const { error } = await supabase.from('performance_reviews').insert(reviewData);
         if (error) throw error;
 
-        await logActivity(userEmail, 'ADD_PERFORMANCE_REVIEW', 'SUCCESS', `Review added for ${reviewData.employee_id}`, req);
+        await logActivity(userEmail, 'ADD_PERFORMANCE_REVIEW', 'SUCCESS', `Review added for ${reviewData.userEmail}`, req);
 
         // Notify Employee
         const { data: emp } = await supabase.from('employees').select('email').eq('id', reviewData.employee_id).single();
