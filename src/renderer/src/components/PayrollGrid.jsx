@@ -240,17 +240,17 @@ export default function PayrollGrid({ onNavigate }) {
             </div>
 
             {view === 'grid' && (
-                <div className="table-container">
+                <div className="table-container card" style={{ padding: 0 }}>
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Employee</th>
-                                <th>Basic Salary</th>
-                                <th className="text-center">Earnings</th>
-                                <th className="text-center">Deductions</th>
+                                <th style={{ paddingLeft: '25px' }}>Employee</th>
+                                <th style={{ textAlign: 'center', width: '160px' }}>Basic Salary</th>
+                                <th style={{ textAlign: 'center' }}>Earnings</th>
+                                <th style={{ textAlign: 'center' }}>Deductions</th>
                                 <th>Notes</th>
-                                <th className="text-center">Increments</th>
-                                <th className="text-right">Net Pay (Est)</th>
+                                <th style={{ textAlign: 'center', width: '120px' }}>Increments</th>
+                                <th style={{ textAlign: 'right', paddingRight: '25px' }}>Net Pay (Est)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -290,83 +290,97 @@ export default function PayrollGrid({ onNavigate }) {
 
                                 return (
                                     <tr key={emp.id}>
-                                        <td>
-                                            <strong>{emp.name}</strong><br />
-                                            <span className="text-sm text-light">{emp.job_title}</span>
+                                        <td style={{ paddingLeft: '25px' }}>
+                                            <div style={{ fontWeight: '800', color: 'var(--text-heading)', fontSize: '1rem' }}>{emp.name}</div>
+                                            <div className="text-light" style={{ fontSize: '0.8rem', marginTop: '2px' }}>{emp.job_title}</div>
                                         </td>
-                                        <td style={{ width: '140px' }}>
+                                        <td style={{ textAlign: 'center' }}>
                                             <input
                                                 type="number"
-                                                className="table-input"
+                                                className="input-compact"
                                                 value={data.earnings.find(e => e.name === 'Basic Salary')?.amount || 0}
                                                 onChange={e => changeBasic(e.target.value)}
-                                                style={{ padding: '8px' }}
+                                                style={{ width: '130px', margin: '0 auto', display: 'block' }}
                                             />
                                         </td>
-                                        <td className="text-center">
-                                            <div className="flex-row flex-center" style={{ gap: '10px' }}>
-                                                <span style={{ fontWeight: '700' }}>{gross.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')}>
-                                                    <EditIcon /> Edit
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                                                <span className="table-number" style={{ fontSize: '1.05rem' }}>{gross.toLocaleString()}</span>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')} style={{ padding: '6px 12px', minHeight: '32px' }}>
+                                                    Edit
                                                 </button>
                                             </div>
                                         </td>
-                                        <td className="text-center">
-                                            <div className="flex-row flex-center" style={{ gap: '10px' }}>
-                                                <span style={{ fontWeight: '700', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')}>
-                                                    <EditIcon /> Edit
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                                                <span className="table-number" style={{ fontSize: '1.05rem', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')} style={{ padding: '6px 12px', minHeight: '32px' }}>
+                                                    Edit
                                                 </button>
                                             </div>
                                         </td>
                                         <td>
                                             <textarea
+                                                className="input-compact"
                                                 value={data.notes || ''}
                                                 onChange={e => changeNotes(e.target.value)}
                                                 placeholder="..."
-                                                style={{ minHeight: '60px', padding: '8px', fontSize: '12px' }}
+                                                style={{ minHeight: '45px', width: '100%', resize: 'vertical' }}
                                             />
                                         </td>
-                                        <td className="text-center">
+                                        <td style={{ textAlign: 'center' }}>
                                             {data.isRecentEligible ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={data.showIncrements}
-                                                        onChange={e => {
-                                                            const val = e.target.checked;
-                                                            setGridData(prev => ({
-                                                                ...prev,
-                                                                [emp.id]: {
-                                                                    ...prev[emp.id],
-                                                                    showIncrements: val
-                                                                }
-                                                            }));
-                                                        }}
-                                                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                                                    />
-                                                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: data.showIncrements ? 'var(--success)' : 'var(--text-light)' }}>
-                                                        {data.showIncrements ? 'ON' : 'OFF'}
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                                                    <label className="theme-toggle-switch">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={data.showIncrements}
+                                                            onChange={e => {
+                                                                const val = e.target.checked;
+                                                                setGridData(prev => ({
+                                                                    ...prev,
+                                                                    [emp.id]: {
+                                                                        ...prev[emp.id],
+                                                                        showIncrements: val
+                                                                    }
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span className="toggle-slider"></span>
+                                                    </label>
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        fontWeight: '800',
+                                                        color: data.showIncrements ? 'var(--success)' : 'var(--text-light)',
+                                                        letterSpacing: '0.5px'
+                                                    }}>
+                                                        {data.showIncrements ? 'ACTIVE' : 'INACTIVE'}
                                                     </span>
                                                 </div>
                                             ) : (
                                                 data.increments && data.increments.length > 0 ? (
-                                                    <span className="badge" style={{ opacity: 0.5, border: '1px solid var(--border)' }}>{data.increments.length} Hist</span>
+                                                    <span className="badge" style={{ opacity: 0.6, background: 'var(--item-hover)', border: '1px solid var(--border)' }}>
+                                                        {data.increments.length} Records
+                                                    </span>
                                                 ) : (
-                                                    <span className="text-light">-</span>
+                                                    <span className="text-light" style={{ opacity: 0.4 }}>—</span>
                                                 )
                                             )}
                                         </td>
-                                        <td className="text-right" style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1.1rem' }}>
-                                            {net.toLocaleString()}
-                                            <button
-                                                className="btn btn-secondary btn-sm"
-                                                style={{ marginLeft: '10px', padding: '4px 8px' }}
-                                                onClick={() => handlePreview(emp)}
-                                                title="Preview Payslip"
-                                            >
-                                                <ViewIcon />
-                                            </button>
+                                        <td style={{ textAlign: 'right', paddingRight: '25px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '15px' }}>
+                                                <span className="table-number" style={{ color: 'var(--success)', fontSize: '1.2rem' }}>
+                                                    {net.toLocaleString()}
+                                                </span>
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    style={{ padding: '6px', minWidth: '36px', height: '36px', borderRadius: '10px' }}
+                                                    onClick={() => handlePreview(emp)}
+                                                    title="Preview Payslip"
+                                                >
+                                                    <ViewIcon style={{ width: 18, height: 18 }} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -377,22 +391,32 @@ export default function PayrollGrid({ onNavigate }) {
             )}
 
             {view === 'review' && (
-                <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
-                    <h2>Review Before Generation</h2>
-                    <p>Month: {month}</p>
+                <div style={{ flex: 1, overflow: 'auto' }} className="card">
+                    <h2 style={{ marginBottom: '20px' }}>Review Payroll: {new Date(month).toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
                     <table className="table">
-                        <thead><tr><th>Name</th><th>Gross</th><th>Deductions</th><th>Notes</th><th>Net Pay</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th style={{ paddingLeft: '20px' }}>Employee</th>
+                                <th style={{ textAlign: 'right' }}>Gross</th>
+                                <th style={{ textAlign: 'right' }}>Deductions</th>
+                                <th style={{ textAlign: 'right', paddingRight: '20px' }}>Net Pay</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {employees.map(emp => {
                                 const data = gridData[emp.id];
                                 const { gross, totalDed, net } = calculateNet(data);
                                 return (
                                     <tr key={emp.id}>
-                                        <td>{emp.name}</td>
-                                        <td>{gross.toLocaleString()}</td>
-                                        <td>{totalDed.toLocaleString()}</td>
-                                        <td style={{ fontSize: 10, color: '#666' }}>{data.notes}</td>
-                                        <td><strong>{net.toLocaleString()}</strong></td>
+                                        <td style={{ paddingLeft: '20px' }}>
+                                            <div style={{ fontWeight: '700' }}>{emp.name}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>{data.notes?.substring(0, 40)}{data.notes?.length > 40 ? '...' : ''}</div>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }} className="table-number">{gross.toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', color: 'var(--danger)' }} className="table-number">{totalDed.toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: '800', color: 'var(--success)', paddingRight: '20px' }} className="table-number">
+                                            {net.toLocaleString()}
+                                        </td>
                                     </tr>
                                 )
                             })}
@@ -455,15 +479,29 @@ export default function PayrollGrid({ onNavigate }) {
                 <div className="modal-overlay">
                     <div className="modal" style={{ minWidth: 500 }}>
                         <h3>Edit {editingCell.type === 'earnings' ? 'Earnings' : 'Deductions'}</h3>
-                        {modalData.map((item, i) => (
-                            <div key={i} className="flex-row" style={{ marginBottom: 10 }}>
-                                <input value={item.name} onChange={e => updateModalItem(i, 'name', e.target.value)} placeholder="Name" style={{ flex: 2, marginRight: 5 }} />
-                                <input type="number" value={item.amount} onChange={e => updateModalItem(i, 'amount', e.target.value)} placeholder="Amount" style={{ flex: 1, marginRight: 5 }} />
-                                <button className="btn btn-danger btn-sm" onClick={() => removeModalItem(i)}><DeleteIcon /></button>
-                            </div>
-                        ))}
-                        <button className="btn btn-secondary" onClick={addModalItem}>
-                            <AddIcon /> Add Item
+                        <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+                            {modalData.map((item, i) => (
+                                <div key={i} className="flex-row" style={{ marginBottom: 15, gap: '10px' }}>
+                                    <div style={{ flex: 2 }}>
+                                        <label style={{ fontSize: '10px', marginBottom: '4px' }}>Description</label>
+                                        <input value={item.name} onChange={e => updateModalItem(i, 'name', e.target.value)} placeholder="e.g. Bonus" className="input-compact" />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: '10px', marginBottom: '4px' }}>Amount</label>
+                                        <input type="number" value={item.amount} onChange={e => updateModalItem(i, 'amount', e.target.value)} placeholder="0" className="input-compact" />
+                                    </div>
+                                    <button
+                                        className="btn btn-danger"
+                                        onClick={() => removeModalItem(i)}
+                                        style={{ marginTop: '18px', padding: '0', width: '36px', height: '36px', minWidth: '36px', borderRadius: '10px' }}
+                                    >
+                                        <DeleteIcon style={{ width: 16, height: 16 }} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <button className="btn btn-secondary" onClick={addModalItem} style={{ width: '100%', marginTop: '10px' }}>
+                            <AddIcon /> Add New Field
                         </button>
                         <div className="flex-row flex-end" style={{ marginTop: 20 }}>
                             <button className="btn btn-secondary" onClick={() => setEditingCell(null)}>

@@ -1,4 +1,4 @@
-/* Google Fonts Import */
+﻿/* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Dynamic Theme System (Nebula Vision) */
@@ -1233,43 +1233,125 @@ option {
   color: var(--text-heading) !important;
   border: 1px solid var(--glass-border) !important;
 }
+
 /* Contrast & Accessibility Utilities */
 .icon-contrast {
-    transition: var(--transition);
+  transition: var(--transition);
 }
 
 body.dark .icon-contrast:not(.no-invert) {
-    filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1);
 }
 
 .badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .badge-success {
-    background: rgba(110, 231, 183, 0.1);
-    color: var(--success);
-    border: 1px solid var(--success);
+  background: rgba(110, 231, 183, 0.1);
+  color: var(--success);
+  border: 1px solid var(--success);
 }
 
 /* Ensure form controls are readable */
 .form-control:focus {
-    background: var(--card-bg);
+  background: var(--card-bg);
 }
 
 /* Tab Active State Glow Fix */
 .tabs-header .active {
-    box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 /* High Contrast mode for specific elements */
 .text-contrast {
-    color: var(--text-heading);
+  color: var(--text-heading);
 }
 
 .text-sub-contrast {
-    color: var(--text-light);
+  color: var(--text-light);
+}
+
+/* --- Professional Toggle Switch --- */
+.theme-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.theme-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--glass-border);
+  transition: .3s;
+  border-radius: 34px;
+  border: 1px solid var(--border);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle-switch input:checked+.toggle-slider {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.theme-toggle-switch input:focus+.toggle-slider {
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.theme-toggle-switch input:checked+.toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* --- Table Alignment Utilities --- */
+.table-action-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.table-number {
+  font-family: 'Inter', monospace;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.input-compact {
+  padding: 6px 12px !important;
+  font-size: 0.9rem !important;
+  border-radius: 10px !important;
+  text-align: inherit;
+}
+
+.table thead th {
+  padding: 15px 20px;
+  vertical-align: middle;
+}
+
+.table tbody td {
+  padding: 12px 20px;
+  vertical-align: middle;
 }
