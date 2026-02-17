@@ -3,6 +3,7 @@ import api from '../api';
 
 export default function PasswordConfirm({ onConfirm, onCancel, email, title = "Confirm Password", message = "Please enter your password to proceed." }) {
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e) => {
