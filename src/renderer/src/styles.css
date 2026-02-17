@@ -384,9 +384,8 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 .sidebar h2 {
@@ -504,8 +503,7 @@ h3 {
 
 .sidebar-footer {
   margin-top: auto;
-  padding-top: 15px;
-  border-top: 1px solid var(--border);
+  padding-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 5px;
