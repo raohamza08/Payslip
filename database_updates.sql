@@ -203,6 +203,9 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_increments_employee_id ON increments(employee_id);
 CREATE INDEX IF NOT EXISTS idx_increments_effective_date ON increments(effective_date DESC);
 
+-- Ensure 'date' column exists for backward compatibility
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS date DATE;
+
 -- Ensure Employees table has RLS enabled
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
 

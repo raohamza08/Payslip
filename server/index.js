@@ -729,8 +729,7 @@ app.post('/api/employees/:id/increments', async (req, res) => {
             old_salary: old_salary ? Number(old_salary) : null,
             new_salary: new_salary ? Number(new_salary) : null,
             description: reason || '',
-            effective_date,
-            date: effective_date // For compatibility with payslip display
+            effective_date
         };
 
         console.log('[INCREMENT] Inserting record into DB:', increment);
@@ -2447,8 +2446,8 @@ async function generatePDF(data) {
                                     widths: ['*', 'auto', 'auto'],
                                     body: [
                                         [{ text: 'Date', style: 'tableHeader' }, { text: 'Amount', style: 'tableHeader' }, { text: 'New Basic Salary', style: 'tableHeader' }],
-                                        ...data.increments.filter(inc => inc && inc.date).map(inc => [
-                                            { text: inc.date || '-', fontSize: 10 },
+                                        ...data.increments.filter(inc => inc && (inc.effective_date || inc.date)).map(inc => [
+                                            { text: inc.effective_date || inc.date || '-', fontSize: 10 },
                                             { text: (data.currency || 'USD') + ' ' + (Number(inc.amount) || 0).toFixed(2), fontSize: 10, alignment: 'right' },
                                             { text: (data.currency || 'USD') + ' ' + (Number(inc.new_salary) || 0).toFixed(2), fontSize: 10, alignment: 'right' }
                                         ])

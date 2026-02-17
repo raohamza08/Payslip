@@ -37,7 +37,10 @@ export default function PayrollGrid({ onNavigate }) {
                     // Filter for current year increments only? Or all? User likely wants recent ones.
                     // Let's filter for current year to keep it relevant to the payslip
                     const currentYear = new Date().getFullYear();
-                    incrementsMap[emp.id] = incs.filter(i => new Date(i.date).getFullYear() === currentYear);
+                    incrementsMap[emp.id] = incs.filter(i => {
+                        const incDate = i.effective_date || i.date;
+                        return incDate && new Date(incDate).getFullYear() === currentYear;
+                    });
                 } catch (e) {
                     console.warn(`Failed to fetch increments for ${emp.name}`, e);
                     incrementsMap[emp.id] = [];
