@@ -213,3 +213,21 @@ BEGIN
     END IF;
 END $$;
 
+-- 7. Employee Extensions (for extra fields)
+CREATE TABLE IF NOT EXISTS employee_extensions (
+    employee_id UUID PRIMARY KEY REFERENCES employees(id) ON DELETE CASCADE,
+    office_number TEXT,
+    shift_start TIME,
+    shift_end TIME,
+    shift_type TEXT DEFAULT 'Morning',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE employee_extensions ENABLE ROW LEVEL SECURITY;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'employee_extensions' AND policyname = 'Public Access') THEN
+        CREATE POLICY "Public Access" ON employee_extensions FOR ALL USING (true);
+    END IF;
+END $$;
+

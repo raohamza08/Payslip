@@ -524,29 +524,68 @@ app.get('/api/employees', async (req, res) => {
 
 app.post('/api/employees', async (req, res) => {
     try {
-        const emp = req.body;
+        const fullData = { ...req.body };
         const userEmail = req.headers['x-user-email'] || 'unknown';
 
         // Sanitize date fields: Postgres rejects empty strings for DATE
         const dateFields = ['joining_date', 'leaving_date', 'probation_end_date', 'dob'];
         dateFields.forEach(field => {
-            if (emp[field] === '') emp[field] = null;
+            if (fullData[field] === '') fullData[field] = null;
+        });
+
+        // 1. Separate Employees table fields from Extensions
+        const extensionFields = ['office_number', 'shift_start', 'shift_end', 'shift_type'];
+        const emp = {};
+        const ext = {};
+
+        // Also exclude UI fields
+        const excludeFields = ['_id', 'created_at', 'updated_at'];
+
+        Object.keys(fullData).forEach(key => {
+            if (excludeFields.includes(key)) return;
+            if (extensionFields.includes(key)) {
+                ext[key] = fullData[key];
+            } else {
+                emp[key] = fullData[key];
+            }
         });
 
         if (emp.id) {
-            const { error } = await supabase.from('employees').update(emp).eq('id', emp.id);
-            if (error) throw error;
+            // Update Employees
+            const { error: empError } = await supabase.from('employees').update(emp).eq('id', emp.id);
+            if (empError) {
+                console.error('[EMPLOYEES] Update error:', empError);
+                throw new Error(`Employee Update Failed: ${empError.message}`);
+            }
+
+            // Update/Insert Extensions
+            if (Object.keys(ext).length > 0) {
+                const { error: extError } = await supabase.from('employee_extensions').upsert({ employee_id: emp.id, ...ext });
+                if (extError) console.error('[EXTENSIONS] Update error:', extError);
+            }
+
             await logActivity(userEmail, 'UPDATE_EMPLOYEE', 'SUCCESS', `Updated employee: ${emp.name}`, req);
             res.json({ id: emp.id });
         } else {
+            // Create New
             emp.id = uuidv4();
-            const { error } = await supabase.from('employees').insert(emp);
-            if (error) throw error;
+            const { error: empError } = await supabase.from('employees').insert(emp);
+            if (empError) {
+                console.error('[EMPLOYEES] Insert error:', empError);
+                throw new Error(`Employee Creation Failed: ${empError.message}`);
+            }
+
+            // Create Extensions
+            if (Object.keys(ext).length > 0) {
+                await supabase.from('employee_extensions').insert({ employee_id: emp.id, ...ext });
+            }
+
             await logActivity(userEmail, 'CREATE_EMPLOYEE', 'SUCCESS', `Created employee: ${emp.name}`, req);
             res.json({ id: emp.id });
         }
     } catch (e) {
-        await logActivity(req.headers['x-user-email'] || 'unknown', req.body.id ? 'UPDATE_EMPLOYEE' : 'CREATE_EMPLOYEE', 'ERROR', `Failed to ${req.body.id ? 'update' : 'create'} employee ${req.body.name || req.body.id}: ${e.message}`, req);
+        console.error('[EMPLOYEES] Full Error:', e);
+        await logActivity(req.headers['x-user-email'] || 'unknown', req.body.id ? 'UPDATE_EMPLOYEE' : 'CREATE_EMPLOYEE', 'ERROR', `Failed to ${req.body.id ? 'update' : 'create'} employee: ${e.message}`, req);
         res.status(500).json({ error: e.message });
     }
 });
@@ -694,19 +733,20 @@ app.post('/api/employees/:id/increments', async (req, res) => {
             date: effective_date // For compatibility with payslip display
         };
 
-        console.log('[INCREMENT] Inserting record:', increment);
+        console.log('[INCREMENT] Inserting record into DB:', increment);
 
-        const { data, error } = await supabase.from('increments').insert(increment).select().single();
-        if (error) {
-            console.error('[INCREMENT] Database error:', error);
-            throw error;
+        const { data: insertedData, error: insertError } = await supabase.from('increments').insert(increment).select().single();
+        if (insertError) {
+            console.error('[INCREMENT] Insert Error:', insertError);
+            throw new Error(`Failed to save increment record: ${insertError.message}`);
         }
 
-        console.log('[INCREMENT] Successfully inserted:', data);
+        console.log('[INCREMENT] Successfully inserted. Result ID:', insertedData.id);
 
         // Update employee's monthly_salary if new_salary is provided
         if (new_salary) {
-            console.log('[INCREMENT] Updating employee salary to:', new_salary);
+            console.log(`[INCREMENT] Attempting update on employees table for ID: ${req.params.id} to salary: ${new_salary}`);
+
             const { data: updatedEmployee, error: updateError } = await supabase
                 .from('employees')
                 .update({ monthly_salary: Number(new_salary) })
@@ -714,13 +754,12 @@ app.post('/api/employees/:id/increments', async (req, res) => {
                 .select();
 
             if (updateError) {
-                console.error('[INCREMENT] Failed to update employee salary:', updateError);
-                // Don't throw - increment was saved, just log the warning
-                console.warn('[INCREMENT] Increment saved but employee salary update failed');
+                console.error('[INCREMENT] Critical Salary Update Failure:', updateError);
+                // We keep going but log this loudly
             } else if (!updatedEmployee || updatedEmployee.length === 0) {
-                console.warn(`[INCREMENT] Update executed but no employee updated for ID: ${req.params.id}. Possibly RLS or ID not found.`);
+                console.warn(`[INCREMENT] Salary update FAILED - NO ROWS AFFECTED. ID: ${req.params.id}`);
             } else {
-                console.log('[INCREMENT] Employee salary updated successfully. New salary:', updatedEmployee[0].monthly_salary);
+                console.log('[INCREMENT] Employee record updated. Confirmed new salary in DB:', updatedEmployee[0].monthly_salary);
             }
         }
 
@@ -732,8 +771,8 @@ app.post('/api/employees/:id/increments', async (req, res) => {
             req
         );
 
-        console.log('[INCREMENT] Complete!');
-        res.json(data);
+        console.log('[INCREMENT] Process Finished Successfully');
+        res.json(insertedData);
     } catch (e) {
         console.error('[INCREMENT] Error:', e);
         console.error('[INCREMENT] Stack:', e.stack);
