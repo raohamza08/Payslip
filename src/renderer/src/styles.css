@@ -1373,7 +1373,7 @@ tr:last-child td {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 180px;
+  min-height: 110px;
 }
 
 

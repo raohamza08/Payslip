@@ -58,7 +58,7 @@ export default function Discipline() {
             case 'Medium': return { bg: '#ffedd5', color: '#c2410c' };
             case 'High': return { bg: '#fee2e2', color: '#991b1b' };
             case 'Critical': return { bg: '#000', color: '#fff' };
-            default: return { bg: '#f3f4f6', color: '#4b5563' };
+            default: return { bg: 'var(--glass-bg)', color: 'var(--text-light)' };
         }
     };
 
@@ -164,7 +164,7 @@ export default function Discipline() {
 
                         <div className="form-group">
                             <label style={{ color: '#666', fontSize: '12px' }}>Incident / Reason</label>
-                            <div style={{ background: '#f9fafb', padding: '10px', borderRadius: '5px', border: '1px solid #eee' }}>
+                            <div style={{ background: 'var(--glass-bg)', padding: '10px', borderRadius: '5px', border: '1px solid var(--glass-border)' }}>
                                 {selectedWarning.reason}
                             </div>
                         </div>

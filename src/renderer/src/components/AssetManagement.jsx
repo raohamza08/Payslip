@@ -103,7 +103,7 @@ export default function AssetManagement() {
             case 'Assigned': return { bg: '#e0f2fe', color: '#0369a1' };
             case 'Maintenance': return { bg: '#fef9c3', color: '#854d0e' };
             case 'Broken': return { bg: '#fee2e2', color: '#991b1b' };
-            default: return { bg: '#f3f4f6', color: '#4b5563' };
+            default: return { bg: 'var(--glass-bg)', color: 'var(--text-light)' };
         }
     };
 

@@ -320,7 +320,7 @@ export default function LeaveManagement({ user }) {
                                         className="form-control"
                                         value={`${formData.days_count} day(s)`}
                                         readOnly
-                                        style={{ background: '#f3f4f6', fontWeight: 'bold' }}
+                                        style={{ background: 'var(--glass-bg)', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.8 }}
                                     />
                                 </div>
                                 <div className="form-group">
