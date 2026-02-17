@@ -538,8 +538,8 @@ app.post('/api/employees', async (req, res) => {
         const emp = {};
         const ext = {};
 
-        // Also exclude UI fields
-        const excludeFields = ['_id', 'created_at', 'updated_at'];
+        // Also exclude UI fields and nested objects that don't belong in the table
+        const excludeFields = ['_id', 'created_at', 'updated_at', 'increments'];
 
         Object.keys(fullData).forEach(key => {
             if (excludeFields.includes(key)) return;

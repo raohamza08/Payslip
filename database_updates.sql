@@ -203,8 +203,14 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_increments_employee_id ON increments(employee_id);
 CREATE INDEX IF NOT EXISTS idx_increments_effective_date ON increments(effective_date DESC);
 
--- Ensure 'date' column exists for backward compatibility
-ALTER TABLE increments ADD COLUMN IF NOT EXISTS date DATE;
+-- Ensure all columns exist in increments table (Safety checks for existing tables)
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS amount NUMERIC(10, 2);
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS increment_percentage NUMERIC(5, 2);
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS old_salary NUMERIC(10, 2);
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS new_salary NUMERIC(10, 2);
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS effective_date DATE;
+ALTER TABLE increments ADD COLUMN IF NOT EXISTS date DATE; -- For compatibility with older code
 
 -- Ensure Employees table has RLS enabled
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
