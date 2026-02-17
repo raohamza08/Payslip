@@ -511,10 +511,13 @@ app.get('/api/employees', async (req, res) => {
         const { data: extensions } = await supabase.from('employee_extensions').select('*');
         const extMap = (extensions || []).reduce((acc, ext) => ({ ...acc, [ext.employee_id]: ext }), {});
 
-        const mergedEmployees = (data || []).map(emp => ({
-            ...emp,
-            ...(extMap[emp.id] || {})
-        }));
+        const mergedEmployees = (data || []).map(emp => {
+            const { employee_id, ...extData } = (extMap[emp.id] || {});
+            return {
+                ...emp,
+                ...extData
+            };
+        });
         res.json(mergedEmployees);
     } catch (e) {
         console.error('[EMPLOYEES] Error:', e);

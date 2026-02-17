@@ -27,8 +27,11 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.saveEmployee(form);
-            onSave();
+            const savedId = await api.saveEmployee(form);
+            if (!form.id && savedId) {
+                setForm(prev => ({ ...prev, id: savedId }));
+            }
+            window.alert('Employee data updated successfully!');
         } catch (e) { alert(e.message); }
     };
 
@@ -51,7 +54,17 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
 
     return (
         <div className="view-container">
-            <h1 style={{ color: 'var(--text-heading)', marginBottom: '30px' }}>{form.id ? 'Edit Employee' : 'New Employee'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px' }}>
+                <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={onCancel}
+                    style={{ padding: '8px 12px', minWidth: 'auto', borderRadius: '10px' }}
+                >
+                    ← Back
+                </button>
+                <h1 style={{ color: 'var(--text-heading)', margin: 0 }}>{form.id ? 'Edit Employee' : 'New Employee'}</h1>
+            </div>
 
             <div style={{
                 display: 'flex',
@@ -144,7 +157,7 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
 
                         <div className="flex-row flex-end" style={{ marginTop: 20, gap: '15px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '25px' }}>
                             <button type="button" className="btn btn-secondary" onClick={onCancel}>
-                                <CancelIcon className="icon-contrast" /> Cancel
+                                <CancelIcon className="icon-contrast" /> Discard / Back
                             </button>
                             <button type="submit" className="btn btn-primary" style={{ minWidth: '160px' }}>
                                 <SaveIcon className="icon-contrast" /> Save Employee
