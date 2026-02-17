@@ -16,7 +16,8 @@ export default function PayslipGenerator({ onComplete, user }) {
         pay_frequency: 'Monthly',
         payment_method: '',
         transaction_ref: '',
-        notes: ''
+        notes: '',
+        showAttendance: true
     });
 
     const [earnings, setEarnings] = useState([{ name: 'Basic Salary', amount: 0 }]);
@@ -130,7 +131,7 @@ export default function PayslipGenerator({ onComplete, user }) {
             net_pay: net,
             net_pay_words: numToWords(net),
             currency: emp.currency,
-            attendance: attendanceStats // Include attendance in payload
+            attendance: data.showAttendance ? attendanceStats : null // Include attendance in payload based on toggle
         };
 
         try {
@@ -172,13 +173,28 @@ export default function PayslipGenerator({ onComplete, user }) {
                 </div>
 
                 {selectedEmp && (
-                    <div style={{ padding: '15px', background: '#e0f2fe', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem' }}>
-                        <strong> Attendance Summary for Period:</strong>
-                        <div className="flex-row" style={{ marginTop: '5px', gap: '20px' }}>
-                            <span>Total Days Marked: <strong>{attendanceStats.total}</strong></span>
-                            <span>Present: <strong style={{ color: 'green' }}>{attendanceStats.present}</strong></span>
-                            <span>Absent: <strong style={{ color: 'red' }}>{attendanceStats.absent}</strong></span>
-                            <span>Leaves: <strong style={{ color: 'orange' }}>{attendanceStats.leave}</strong></span>
+                    <div className="flex-row flex-between" style={{ padding: '15px', background: '#e0f2fe', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem', alignItems: 'flex-start' }}>
+                        <div>
+                            <strong> Attendance Summary for Period:</strong>
+                            <div className="flex-row" style={{ marginTop: '5px', gap: '20px' }}>
+                                <span>Total Days Marked: <strong>{attendanceStats.total}</strong></span>
+                                <span>Present: <strong style={{ color: 'green' }}>{attendanceStats.present}</strong></span>
+                                <span>Absent: <strong style={{ color: 'red' }}>{attendanceStats.absent}</strong></span>
+                                <span>Leaves: <strong style={{ color: 'orange' }}>{attendanceStats.leave}</strong></span>
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'center', background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                            <label className="theme-toggle-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={data.showAttendance}
+                                    onChange={e => setData({ ...data, showAttendance: e.target.checked })}
+                                />
+                                <span className="toggle-slider"></span>
+                            </label>
+                            <div style={{ fontSize: '10px', fontWeight: '800', marginTop: '5px', color: data.showAttendance ? 'var(--success)' : 'var(--text-light)' }}>
+                                {data.showAttendance ? 'INCLUDE' : 'EXCLUDE'}
+                            </div>
                         </div>
                     </div>
                 )}

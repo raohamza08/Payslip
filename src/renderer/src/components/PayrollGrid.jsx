@@ -74,8 +74,9 @@ export default function PayrollGrid({ onNavigate }) {
                     deductions,
                     notes: def.notes || "",
                     increments: myIncs,
-                    showIncrements: hasRecent, // Default to true if recent, false otherwise
-                    isRecentEligible: hasRecent
+                    showIncrements: hasRecent,
+                    isRecentEligible: hasRecent,
+                    showAttendance: true // Default to showing attendance
                 };
             });
 
@@ -137,11 +138,32 @@ export default function PayrollGrid({ onNavigate }) {
     };
 
 
-    const getPayload = (emp, financials) => {
+    const getPayload = async (emp, financials) => {
         const { gross, totalDed, net } = calculateNet(financials);
         const [year, mth] = month.split('-');
         const startDate = `${month}-01`;
         const endDate = new Date(year, mth, 0).toISOString().split('T')[0];
+
+        // Fetch attendance stats if toggled
+        let attendancePayload = null;
+        if (financials.showAttendance) {
+            try {
+                const allAtt = await api.getAttendance();
+                const filtered = allAtt.filter(a =>
+                    a.employee_id === emp.id &&
+                    a.date >= startDate &&
+                    a.date <= endDate
+                );
+                attendancePayload = {
+                    present: filtered.filter(a => a.status === 'Present').length,
+                    absent: filtered.filter(a => a.status === 'Absent').length,
+                    leave: filtered.filter(a => a.status === 'Leave').length,
+                    total: filtered.length
+                };
+            } catch (e) {
+                console.error("Attendance fetch failed for bulk", e);
+            }
+        }
 
         return {
             pay_period_start: startDate,
@@ -157,14 +179,15 @@ export default function PayrollGrid({ onNavigate }) {
             net_pay_words: numberToWords(net),
             currency: emp.currency || 'PKR',
             notes: financials.notes || `Salary for ${new Date(year, Number(mth) - 1).toLocaleString('default', { month: 'long' })} ${year}`,
-            increments: financials.showIncrements ? (financials.increments || []) : []
+            increments: financials.showIncrements ? (financials.increments || []) : [],
+            attendance: attendancePayload
         };
     };
 
     const handlePreview = async (emp) => {
         try {
             const financials = gridData[emp.id];
-            const payload = getPayload(emp, financials);
+            const payload = await getPayload(emp, financials);
             const url = await api.previewPayslip(payload, emp);
             window.open(url, '_blank');
         } catch (e) {
@@ -191,7 +214,8 @@ export default function PayrollGrid({ onNavigate }) {
             const financials = gridData[emp.id];
 
             try {
-                const payload = getPayload(emp, financials);
+                const financials = gridData[emp.id];
+                const payload = await getPayload(emp, financials);
 
                 // 1. Generate Payslip
 
@@ -249,6 +273,7 @@ export default function PayrollGrid({ onNavigate }) {
                                 <th style={{ textAlign: 'center' }}>Earnings</th>
                                 <th style={{ textAlign: 'center' }}>Deductions</th>
                                 <th>Notes</th>
+                                <th style={{ textAlign: 'center', width: '120px' }}>Attendance</th>
                                 <th style={{ textAlign: 'center', width: '120px' }}>Increments</th>
                                 <th style={{ textAlign: 'right', paddingRight: '25px' }}>Net Pay (Est)</th>
                             </tr>
@@ -331,6 +356,35 @@ export default function PayrollGrid({ onNavigate }) {
                                                 placeholder="..."
                                                 style={{ minHeight: '45px', width: '100%', resize: 'vertical' }}
                                             />
+                                        </td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                                                <label className="theme-toggle-switch">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.showAttendance}
+                                                        onChange={e => {
+                                                            const val = e.target.checked;
+                                                            setGridData(prev => ({
+                                                                ...prev,
+                                                                [emp.id]: {
+                                                                    ...prev[emp.id],
+                                                                    showAttendance: val
+                                                                }
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span className="toggle-slider"></span>
+                                                </label>
+                                                <span style={{
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    color: data.showAttendance ? 'var(--success)' : 'var(--text-light)',
+                                                    letterSpacing: '0.5px'
+                                                }}>
+                                                    {data.showAttendance ? 'INCLUDE' : 'EXCLUDE'}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td style={{ textAlign: 'center' }}>
                                             {data.isRecentEligible ? (
