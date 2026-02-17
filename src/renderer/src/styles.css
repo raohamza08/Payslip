@@ -1376,6 +1376,23 @@ tr:last-child td {
   min-height: 110px;
 }
 
+.metric-card {
+  padding: 1rem !important;
+  min-height: 100px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.metric-card h3 {
+  margin-bottom: 0.25rem !important;
+  font-size: 1rem !important;
+}
+
+.metric-card p {
+  margin: 5px 0 !important;
+}
+
 
 
 .dash-icon {

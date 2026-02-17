@@ -64,7 +64,7 @@ export default function EmployeePortal({ user }) {
 
             {activeTab === 'dashboard' && (
                 <div className="grid-3" style={{ gap: '20px' }}>
-                    <div className="card">
+                    <div className="card metric-card">
                         <h3>Attendance & Sitting</h3>
                         <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', margin: '15px 0' }}>
                             {profile.sitting_hours || '0.0'} hrs
@@ -72,7 +72,7 @@ export default function EmployeePortal({ user }) {
                         <p className="text-light text-sm">Total sitting hours this month</p>
                     </div>
 
-                    <div className="card">
+                    <div className="card metric-card">
                         <h3>Leave Balance</h3>
                         <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', margin: '15px 0' }}>
                             {leaves && leaves.filter(l => l.status === 'Approved').reduce((acc, l) => acc + (Number(l.days_count) || 0), 0)} / 26
@@ -80,7 +80,7 @@ export default function EmployeePortal({ user }) {
                         <p className="text-light text-sm">Days used this year</p>
                     </div>
 
-                    <div className="card">
+                    <div className="card metric-card">
                         <h3>KPI Rating</h3>
                         <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--accent)', margin: '15px 0' }}>
                             {recentPerformance ? `${recentPerformance.final_rating} / 5` : 'N/A'}
