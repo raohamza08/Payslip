@@ -7,6 +7,8 @@ export default function Setup({ onSetupComplete }) {
     const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
 
+    const [showPassword, setShowPassword] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -47,24 +49,47 @@ export default function Setup({ onSetupComplete }) {
                     </div>
                     <div className="form-group">
                         <label>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Min 8 characters"
-                            autoComplete="new-password"
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Min 8 characters"
+                                autoComplete="new-password"
+                                style={{ paddingRight: '40px' }}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '18px',
+                                    zIndex: 5
+                                }}
+                            >
+                                {showPassword ? '🙈' : '🙉'}
+                            </button>
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Confirm Password</label>
-                        <input
-                            type="password"
-                            value={confirm}
-                            onChange={(e) => setConfirm(e.target.value)}
-                            autoComplete="new-password"
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={confirm}
+                                onChange={(e) => setConfirm(e.target.value)}
+                                autoComplete="new-password"
+                                style={{ paddingRight: '40px' }}
+                                required
+                            />
+                        </div>
                     </div>
                     <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Create Account</button>
                     {error && <div className="error-msg">{error}</div>}

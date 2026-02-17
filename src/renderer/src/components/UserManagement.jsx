@@ -9,6 +9,7 @@ export default function UserManagement() {
     const [resetType, setResetType] = useState('master'); // 'master' or 'login'
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -200,25 +201,48 @@ export default function UserManagement() {
                                 <form onSubmit={handleResetPassword}>
                                     <div className="form-group">
                                         <label>New {resetType === 'master' ? 'Master' : 'Login'} Password</label>
-                                        <input
-                                            type="password"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Minimum 8 characters"
-                                            autoComplete="new-password"
-                                            required
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                placeholder="Minimum 8 characters"
+                                                autoComplete="new-password"
+                                                style={{ paddingRight: '40px' }}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '10px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    fontSize: '18px',
+                                                    zIndex: 5
+                                                }}
+                                            >
+                                                {showPassword ? '🙈' : '🙉'}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="form-group">
                                         <label>Confirm Password</label>
-                                        <input
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Re-type password"
-                                            autoComplete="new-password"
-                                            required
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="Re-type password"
+                                                autoComplete="new-password"
+                                                style={{ paddingRight: '40px' }}
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                     <div className="modal-actions">
                                         <button

@@ -26,6 +26,9 @@ export default function Login({ onLogin }) {
         }
     };
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showMaster, setShowMaster] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -65,6 +68,26 @@ export default function Login({ onLogin }) {
         }
     };
 
+    const ToggleBtn = ({ show, onToggle }) => (
+        <button
+            type="button"
+            onClick={onToggle}
+            style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '18px',
+                zIndex: 5
+            }}
+        >
+            {show ? '🙈' : '🙉'}
+        </button>
+    );
+
     return (
         <div className="auth-container">
             <div className="login-box">
@@ -90,14 +113,18 @@ export default function Login({ onLogin }) {
                     </div>
                     <div className="form-group">
                         <label>{isSignup ? 'Login Password' : 'Password'}</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            autoComplete={isSignup ? "new-password" : "current-password"}
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                autoComplete={isSignup ? "new-password" : "current-password"}
+                                style={{ paddingRight: '40px' }}
+                                required
+                            />
+                            <ToggleBtn show={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                        </div>
                         {isSignup && <small style={{ color: '#666', fontSize: '12px' }}>Used for logging into the system</small>}
                     </div>
 
@@ -105,26 +132,33 @@ export default function Login({ onLogin }) {
                         <>
                             <div className="form-group">
                                 <label>Master Password</label>
-                                <input
-                                    type="password"
-                                    value={masterPassword}
-                                    onChange={(e) => setMasterPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    autoComplete="new-password"
-                                    required
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showMaster ? "text" : "password"}
+                                        value={masterPassword}
+                                        onChange={(e) => setMasterPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        autoComplete="new-password"
+                                        style={{ paddingRight: '40px' }}
+                                        required
+                                    />
+                                    <ToggleBtn show={showMaster} onToggle={() => setShowMaster(!showMaster)} />
+                                </div>
                                 <small style={{ color: '#666', fontSize: '12px' }}>Used for accessing sensitive sections (min. 8 characters)</small>
                             </div>
                             <div className="form-group">
                                 <label>Confirm Master Password</label>
-                                <input
-                                    type="password"
-                                    value={confirmMasterPassword}
-                                    onChange={(e) => setConfirmMasterPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    autoComplete="new-password"
-                                    required
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showMaster ? "text" : "password"}
+                                        value={confirmMasterPassword}
+                                        onChange={(e) => setConfirmMasterPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        autoComplete="new-password"
+                                        style={{ paddingRight: '40px' }}
+                                        required
+                                    />
+                                </div>
                             </div>
                         </>
                     )}

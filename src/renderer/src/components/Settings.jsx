@@ -8,6 +8,7 @@ export default function Settings({ user }) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
 
     // PDF Settings State
@@ -109,7 +110,7 @@ export default function Settings({ user }) {
         localStorage.setItem('theme', newTheme);
         updateBodyClass(newTheme, neonShape);
         setMessage('Theme updated successfully!');
-        setTimeout(() => setMessage(''), 3000);
+        setTimeout(() => setMessage(''), 9000);
     };
 
     const handleColorChange = (color) => {
@@ -119,7 +120,7 @@ export default function Settings({ user }) {
         document.body.style.setProperty('--accent-hover', adjustColor(color, -20));
         document.body.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
         setMessage('Accent color updated!');
-        setTimeout(() => setMessage(''), 3000);
+        setTimeout(() => setMessage(''), 9000);
     };
 
     const updateNeonSetting = (key, value) => {
@@ -355,71 +356,120 @@ export default function Settings({ user }) {
                         <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
                             Choose a color that represents your brand
                         </p>
-                        <div className="form-group" style={{ maxWidth: '400px' }}>
-                            <label>Select Color</label>
-                            <div style={{ position: 'relative' }}>
-                                <select
-                                    value={accentColor}
-                                    onChange={(e) => handleColorChange(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px 45px 12px 45px',
-                                        fontSize: '15px',
-                                        border: '1px solid var(--glass-border)',
-                                        borderRadius: '10px',
-                                        background: 'var(--bg-top)',
-                                        color: 'var(--text-heading)',
-                                        cursor: 'pointer',
-                                        appearance: 'none',
-                                        fontWeight: '700',
-                                        boxShadow: 'var(--shadow)'
-                                    }}
-                                >
-                                    {predefinedColors.map(color => (
-                                        <option key={color.value} value={color.value} style={{ background: 'var(--bg-top)', color: 'var(--text-heading)' }}>
-                                            {color.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {/* Color preview swatch */}
-                                <div style={{
-                                    position: 'absolute',
-                                    left: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '4px',
-                                    background: accentColor,
-                                    border: '2px solid #fff',
-                                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
-                                    pointerEvents: 'none'
-                                }}></div>
-                                {/* Dropdown arrow */}
-                                <div style={{
-                                    position: 'absolute',
-                                    right: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    pointerEvents: 'none',
-                                    fontSize: '12px',
-                                    color: '#666'
-                                }}>▼</div>
+                        <div className="form-group">
+                            <label>Curated Color Palettes</label>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))',
+                                gap: '12px',
+                                marginTop: '15px'
+                            }}>
+                                {predefinedColors.map(color => (
+                                    <div
+                                        key={color.value}
+                                        onClick={() => handleColorChange(color.value)}
+                                        title={color.name}
+                                        style={{
+                                            width: '45px',
+                                            height: '45px',
+                                            borderRadius: '12px',
+                                            background: color.value,
+                                            cursor: 'pointer',
+                                            border: accentColor === color.value ? '3px solid #fff' : '2px solid transparent',
+                                            boxShadow: accentColor === color.value
+                                                ? `0 0 15px ${color.value}88, inset 0 0 0 2px ${color.value}`
+                                                : '0 4px 6px rgba(0,0,0,0.1)',
+                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            transform: accentColor === color.value ? 'scale(1.15)' : 'scale(1)',
+                                            zIndex: accentColor === color.value ? 2 : 1
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (accentColor !== color.value) {
+                                                e.currentTarget.style.transform = 'scale(1.1)';
+                                                e.currentTarget.style.boxShadow = `0 8px 15px ${color.value}44`;
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (accentColor !== color.value) {
+                                                e.currentTarget.style.transform = 'scale(1)';
+                                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                            }
+                                        }}
+                                    />
+                                ))}
                             </div>
                         </div>
+
+                        <div className="form-group" style={{ marginTop: '30px' }}>
+                            <label>Custom Brand Identity</label>
+                            <p style={{ color: 'var(--text-light)', fontSize: '12px', marginBottom: '10px', opacity: 0.7 }}>
+                                Inject your specific corporate hex code for a tailored experience.
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <div style={{
+                                    width: '42px',
+                                    height: '42px',
+                                    borderRadius: '10px',
+                                    background: accentColor,
+                                    border: '2px solid var(--glass-border)',
+                                    flexShrink: 0
+                                }} />
+                                <input
+                                    type="text"
+                                    value={accentColor}
+                                    onChange={(e) => handleColorChange(e.target.value)}
+                                    placeholder="#000000"
+                                    className="input-compact"
+                                    style={{
+                                        fontFamily: 'monospace',
+                                        fontSize: '14px',
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase'
+                                    }}
+                                />
+                                <input
+                                    type="color"
+                                    value={accentColor.startsWith('#') && accentColor.length === 7 ? accentColor : '#0FB8AF'}
+                                    onChange={(e) => handleColorChange(e.target.value)}
+                                    style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        padding: '0',
+                                        border: 'none',
+                                        background: 'none',
+                                        cursor: 'pointer',
+                                        borderRadius: '8px'
+                                    }}
+                                />
+                            </div>
+                        </div>
+
                         {/* Color preview card */}
                         <div style={{
-                            marginTop: '20px',
-                            padding: '20px',
-                            background: accentColor,
+                            marginTop: '30px',
+                            padding: '24px',
+                            background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}dd 100%)`,
                             color: '#fff',
-                            borderRadius: '12px',
+                            borderRadius: '16px',
                             textAlign: 'center',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            boxShadow: `0 12px 30px ${accentColor}44`,
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}>
-                            <h4 style={{ margin: '0 0 8px 0', color: 'white' }}>Preview</h4>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>
-                                This is how your accent color will look
+                            <div style={{
+                                position: 'absolute',
+                                top: '-20%',
+                                right: '-10%',
+                                width: '150px',
+                                height: '150px',
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '50%',
+                                filter: 'blur(30px)'
+                            }} />
+                            <h4 style={{ margin: '0 0 8px 0', color: 'white', position: 'relative', zIndex: 1, fontSize: '1.2rem' }}>Atmosphere Preview</h4>
+                            <p style={{ margin: 0, opacity: 0.9, fontSize: '14px', position: 'relative', zIndex: 1 }}>
+                                Current Theme: <strong>{accentColor.toUpperCase()}</strong>
                             </p>
                         </div>
                     </div>
@@ -538,35 +588,47 @@ export default function Settings({ user }) {
                     <form onSubmit={handlePasswordReset}>
                         <div className="form-group">
                             <label>Current Password</label>
-                            <input
-                                type="password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                placeholder="Enter current password"
-                                required
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    placeholder="Enter current password"
+                                    style={{ paddingRight: '40px' }}
+                                    required
+                                />
+                                <ToggleBtn show={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                            </div>
                         </div>
 
                         <div className="form-group">
                             <label>New Password</label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Minimum 8 characters"
-                                required
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="Minimum 8 characters"
+                                    style={{ paddingRight: '40px' }}
+                                    required
+                                />
+                                <ToggleBtn show={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                            </div>
                         </div>
 
                         <div className="form-group">
                             <label>Confirm New Password</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Re-enter new password"
-                                required
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="Re-enter new password"
+                                    style={{ paddingRight: '40px' }}
+                                    required
+                                />
+                                <ToggleBtn show={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                            </div>
                         </div>
 
                         <button type="submit" className="btn btn-primary">
