@@ -372,6 +372,13 @@ const api = {
         if (result.url && !silent) window.open(result.url, '_blank');
         return result;
     },
+    openPayslip: (pdfPathOrId) => {
+        if (!pdfPathOrId) return;
+        // Check if it looks like a UUID or a filename
+        // Filenames usually have .pdf or follow the Payslip_... pattern
+        const url = `${API_BASE}/payslips/${pdfPathOrId}/download?inline=true`;
+        window.open(url, '_blank');
+    },
     previewPayslip: async (data, employee) => {
         const payload = { ...data, employee };
         const res = await fetch(`${API_BASE}/payslip/preview`, {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api';
 import IncrementManager from './IncrementManager';
+import DocumentManager from './DocumentManager';
 import { SaveIcon, CancelIcon } from './Icons';
 
 export default function EmployeeForm({ employee, onSave, onCancel }) {
@@ -78,6 +79,7 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
                 <TabButton id="contact" label="Contact Details" />
                 <TabButton id="official" label="Employment & Official" />
                 <TabButton id="financial" label="Bank & Salary" />
+                {form.id && <TabButton id="documents" label="Documents" />}
                 {form.id && <TabButton id="increments" label="Increments History" />}
             </div>
 
@@ -87,6 +89,12 @@ export default function EmployeeForm({ employee, onSave, onCancel }) {
                         employee={form}
                         onClose={() => { }}
                         onUpdate={(updates) => setForm(prev => ({ ...prev, ...updates }))}
+                    />
+                ) : activeTab === 'documents' ? (
+                    <DocumentManager
+                        employee={form}
+                        onClose={() => setActiveTab('personal')}
+                        isEmbedded={true}
                     />
                 ) : (
                     <form onSubmit={handleSubmit} style={{ padding: '10px' }}>

@@ -109,7 +109,7 @@ export default function EmployeePortal({ user }) {
                                             <td>{ps.pay_period_start}</td>
                                             <td>{ps.issue_date}</td>
                                             <td><strong>{ps.net_pay.toLocaleString()}</strong></td>
-                                            <td><button className="btn btn-secondary btn-sm" onClick={() => api.openPayslip(ps.id)}>View PDF</button></td>
+                                            <td><button className="btn btn-secondary btn-sm" onClick={() => api.openPayslip(ps.pdf_path)}>View PDF</button></td>
                                         </tr>
                                     ))}
                                     {recentPayslips.length === 0 && <tr><td colSpan="4" className="text-center">No payslips found</td></tr>}
@@ -124,7 +124,7 @@ export default function EmployeePortal({ user }) {
                             {assets.slice(0, 3).map(a => (
                                 <div key={a.id} className="flex-row flex-between" style={{ padding: '8px', background: 'var(--bg)', borderRadius: '8px' }}>
                                     <span style={{ fontWeight: '600' }}>{a.name}</span>
-                                    <span className="text-light text-sm">{a.asset_tag}</span>
+                                    <span className="text-light text-sm">#{a.asset_tag || a.serial_number || 'N/A'}</span>
                                 </div>
                             ))}
                             {assets.length === 0 && <p className="text-light text-center">No assets assigned</p>}
@@ -146,7 +146,6 @@ export default function EmployeePortal({ user }) {
     );
 }
 
-// Internal sub-components for simplicity (in a real app, these would be separate files)
 function AttendanceModule({ employeeId }) {
     const [logs, setLogs] = useState([]);
     const [rawLogs, setRawLogs] = useState([]);
@@ -413,7 +412,7 @@ function AssetModule({ employeeId, employeeName }) {
                 {assets.map(a => (
                     <div key={a.id} className="card" style={{ padding: '15px', background: 'var(--item-hover)' }}>
                         <h4 style={{ color: 'var(--accent)' }}>{a.name}</h4>
-                        <p className="text-sm text-light">Tag: {a.asset_tag}</p>
+                        <p className="text-sm text-light">Tag: {a.asset_tag || 'N/A'} | S/N: {a.serial_number || 'N/A'}</p>
                         <hr style={{ margin: '15px 0', borderColor: 'var(--border)' }} />
                         <div style={{ fontSize: '13px' }}>
                             <p><strong>Issued To:</strong> {employeeName}</p>
