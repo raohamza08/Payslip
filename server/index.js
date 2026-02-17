@@ -1053,6 +1053,11 @@ app.post('/api/email/send', async (req, res) => {
         if (parseInt(smtpConfig.port) === 587) smtpConfig.secure = false;
         if (parseInt(smtpConfig.port) === 465) smtpConfig.secure = true;
 
+        // Common TLS fixes for Node environments
+        smtpConfig.tls = {
+            rejectUnauthorized: false
+        };
+
         const { payslipId } = req.body;
         const { data: payslip, error: pError } = await supabase.from('payslips').select('*').eq('id', payslipId).single();
         if (!payslip) {
@@ -1129,7 +1134,20 @@ app.post('/api/email/custom', async (req, res) => {
         if (!config || !config.smtp_settings || !config.smtp_settings.auth || !config.smtp_settings.auth.user) {
             throw new Error("SMTP Configuration missing.");
         }
-        const smtpConfig = config.smtp_settings;
+
+        const smtpConfig = { ...config.smtp_settings };
+
+        // Auto-fix common SSL misconfigurations based on port
+        if (parseInt(smtpConfig.port) === 587) smtpConfig.secure = false;
+        if (parseInt(smtpConfig.port) === 465) smtpConfig.secure = true;
+
+        // Common TLS fixes for Node environments
+        smtpConfig.tls = {
+            rejectUnauthorized: false
+        };
+
+        console.log(`[EMAIL] Attempting custom email to ${to} via ${smtpConfig.host}:${smtpConfig.port} (secure: ${smtpConfig.secure})`);
+
         const transporter = nodemailer.createTransport(smtpConfig);
         await transporter.sendMail({
             from: `"EurosHub" <${smtpConfig.auth.user}>`,
@@ -1137,11 +1155,16 @@ app.post('/api/email/custom', async (req, res) => {
             subject,
             html
         });
+
         await logActivity(userEmail, 'SEND_CUSTOM_EMAIL', 'SUCCESS', `Sent email to ${to}`, req);
         res.json({ success: true });
     } catch (e) {
-        console.error('[EMAIL] Error:', e);
-        res.status(500).json({ error: e.message });
+        console.error('[EMAIL] Detailed Error:', e);
+        let userMessage = e.message;
+        if (e.message.includes('wrong version number') || e.message.includes('SSL')) {
+            userMessage = `Connection Error: Check if port ${config.smtp_settings.port} requires "Use Secure Connection" to be ${config.smtp_settings.port === 465 ? 'Checked' : 'Unchecked'}. Error: ${e.message}`;
+        }
+        res.status(500).json({ error: userMessage });
     }
 });
 

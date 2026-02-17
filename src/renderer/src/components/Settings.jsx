@@ -879,15 +879,18 @@ export default function Settings({ user }) {
                         </div>
 
                         <div className="form-group">
-                            <label>
+                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                                 <input
                                     type="checkbox"
                                     checked={smtpSettings.secure}
                                     onChange={(e) => setSmtpSettings({ ...smtpSettings, secure: e.target.checked })}
-                                    style={{ marginRight: '10px' }}
+                                    style={{ marginRight: '10px', width: 'auto' }}
                                 />
                                 Use Secure Connection (SSL/TLS)
                             </label>
+                            <small style={{ display: 'block', marginTop: '5px', color: 'var(--text-light)', opacity: 0.8 }}>
+                                Typically <strong>Checked</strong> for Port 465, and <strong>Unchecked</strong> for Port 587.
+                            </small>
                         </div>
 
                         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>

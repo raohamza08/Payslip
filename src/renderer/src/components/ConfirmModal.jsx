@@ -30,22 +30,6 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
                 transform: 'translateY(0)',
                 animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }} onClick={e => e.stopPropagation()}>
-                <div style={{
-                    fontSize: '3.5rem',
-                    marginBottom: '25px',
-                    background: danger ? 'rgba(239, 68, 68, 0.1)' : 'var(--accent-glow)',
-                    width: '90px',
-                    height: '90px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 25px',
-                    color: danger ? '#EF4444' : 'var(--accent)',
-                    border: `1px solid ${danger ? '#EF4444' : 'var(--accent)'}`
-                }}>
-                    {danger ? <WarningIcon style={{ width: 45, height: 45 }} /> : <IdeaIcon style={{ width: 45, height: 45 }} />}
-                </div>
                 <h2 style={{ marginBottom: '15px', color: 'var(--text-heading)', fontWeight: '700' }}>{title}</h2>
                 <p style={{ color: 'var(--text-light)', lineHeight: '1.7', marginBottom: '35px', fontSize: '1.05rem' }}>{message}</p>
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
