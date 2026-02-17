@@ -864,6 +864,37 @@ app.post('/api/payslip/preview', async (req, res) => {
     }
 });
 
+app.delete('/api/payslips/:id', async (req, res) => {
+    const userEmail = req.headers['x-user-email'] || 'unknown';
+    try {
+        // 1. Get payslip record to find the filename
+        const { data: payslip, error: fetchError } = await supabase
+            .from('payslips')
+            .select('pdf_path, employee_id')
+            .eq('id', req.params.id)
+            .single();
+
+        if (fetchError || !payslip) throw new Error('Payslip not found');
+
+        // 2. Delete from Database
+        const { error: dbError } = await supabase.from('payslips').delete().eq('id', req.params.id);
+        if (dbError) throw dbError;
+
+        // 3. Delete from Storage
+        if (payslip.pdf_path) {
+            const { error: storageError } = await supabase.storage.from('payslips').remove([payslip.pdf_path]);
+            if (storageError) console.error('[STORAGE] Delete error:', storageError.message);
+        }
+
+        await logActivity(userEmail, 'DELETE_PAYSLIP', 'SUCCESS', `Deleted payslip ${req.params.id}`, req);
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[PAYSLIP] Delete Error:', e);
+        await logActivity(userEmail, 'DELETE_PAYSLIP', 'ERROR', `Failed to delete payslip ${req.params.id}: ${e.message}`, req);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/payslip/generate', async (req, res) => {
     const userEmail = req.headers['x-user-email'] || 'unknown';
     try {

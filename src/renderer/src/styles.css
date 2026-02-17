@@ -1,4 +1,4 @@
-﻿/* Google Fonts Import */
+/* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Dynamic Theme System (Nebula Vision) */
@@ -44,6 +44,8 @@ body {
   --shadow: 0 10px 30px rgba(100, 110, 140, 0.08);
   --shadow-lg: 0 20px 40px rgba(100, 110, 140, 0.12);
   --item-hover: rgba(0, 119, 255, 0.06);
+  --success: #059669;
+  --text-contrast: var(--text-heading);
 }
 
 /* Dark Mode: Cosmic Nebula */
@@ -61,6 +63,8 @@ body.dark {
   --shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 25px 60px rgba(0, 0, 0, 0.5);
   --item-hover: rgba(0, 117, 255, 0.1);
+  --success: #6EE7B7;
+  --text-contrast: #FFFFFF;
 }
 
 /* Global Select/Option Theme-aware fixes */

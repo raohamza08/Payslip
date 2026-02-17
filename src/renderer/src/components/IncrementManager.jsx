@@ -1,67 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { AddIcon } from './Icons';
-
-const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Confirm", cancelText = "Cancel" }) => {
-    if (!isOpen) return null;
-    return (
-        <div style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(10px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            animation: 'fadeIn 0.3s ease'
-        }}>
-            <div className="card" style={{
-                width: '100%',
-                maxHeight: '90vh',
-                maxWidth: '450px',
-                background: 'var(--bg-top)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: '24px',
-                padding: '30px',
-                textAlign: 'center',
-                boxShadow: 'var(--shadow-lg)',
-                transform: 'translateY(0)',
-                animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}>
-                <div style={{
-                    fontSize: '3rem',
-                    marginBottom: '20px',
-                    background: 'var(--accent-glow)',
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px',
-                    color: 'var(--accent)'
-                }}>
-                    💡
-                </div>
-                <h3 style={{ marginBottom: '15px', color: 'var(--text-heading)' }}>{title}</h3>
-                <p style={{ color: 'var(--text-light)', lineHeight: '1.6', marginBottom: '30px', fontSize: '1rem' }}>{message}</p>
-                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                    <button className="btn btn-secondary" onClick={onCancel} style={{ flex: 1, padding: '12px' }}>
-                        {cancelText}
-                    </button>
-                    <button className="btn btn-primary" onClick={onConfirm} style={{ flex: 1, padding: '12px' }}>
-                        {confirmText}
-                    </button>
-                </div>
-            </div>
-            <style>{`
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-            `}</style>
-        </div>
-    );
-};
+import ConfirmModal from './ConfirmModal';
 
 export default function IncrementManager({ employee, onClose, onUpdate }) {
     const [increments, setIncrements] = useState([]);

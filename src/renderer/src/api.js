@@ -357,6 +357,11 @@ const api = {
         const query = employeeId ? `?employee_id=${employeeId}` : '';
         return await api.fetchJson(`${API_BASE}/payslips${query}`);
     },
+    deletePayslip: async (id) => {
+        return await api.fetchJson(`${API_BASE}/payslips/${id}`, {
+            method: 'DELETE'
+        });
+    },
     generatePayslip: async (data, employee, silent = false) => {
         const payload = { ...data, employee };
         const result = await api.fetchJson(`${API_BASE}/payslip/generate`, {
