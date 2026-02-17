@@ -216,81 +216,82 @@ export default function App() {
                     <h2>EurosHub</h2>
                 </div>
 
-                <div className="nav-group-header" onClick={() => toggleGroup('portal')}>
-                    <span>USER PORTAL</span>
-                    <span className={`chevron ${expanded.portal ? 'open' : ''}`}>▼</span>
-                </div>
-                {expanded.portal && (
-                    <div className="nav-group-content">
-                        <NavItem id="portal" label="My Dashboard" />
-                        <NavItem id="my-leaves" label="My Leaves" />
-                        <NavItem id="my-performance" label="My Performance" />
-                        <NavItem id="my-payslips" label="My Payslips" />
+                <div className="sidebar-scroll">
+                    <div className="nav-group-header" onClick={() => toggleGroup('portal')}>
+                        <span>USER PORTAL</span>
+                        <span className={`chevron ${expanded.portal ? 'open' : ''}`}>▼</span>
                     </div>
-                )}
-
-                {(isSuperAdmin || user.role === 'admin' || (user.permissions && user.permissions.length > 0)) && (
-                    <>
-                        <div className="nav-group-header" onClick={() => toggleGroup('admin')}>
-                            <span>ADMINISTRATION</span>
-                            <span className={`chevron ${expanded.admin ? 'open' : ''}`}>▼</span>
+                    {expanded.portal && (
+                        <div className="nav-group-content">
+                            <NavItem id="portal" label="My Dashboard" />
+                            <NavItem id="my-leaves" label="My Leaves" />
+                            <NavItem id="my-performance" label="My Performance" />
+                            <NavItem id="my-payslips" label="My Payslips" />
                         </div>
-                        {expanded.admin && (
-                            <div className="nav-group-content">
-                                {!isEmployee && <NavItem id="dashboard" label="Analytics" />}
-                                {hasPermission('employees') && <NavItem id="employees" label="Employees" />}
-                                {hasPermission('payroll') && <NavItem id="payroll" label="Payroll Grid" />}
-                                {hasPermission('payroll') && <NavItem id="single-payslip" label="Single Payslip" />}
-                                {hasPermission('admin-leaves') && <NavItem id="admin-leaves" label="Leave Requests" />}
-                                {hasPermission('assets') && <NavItem id="assets" label="Asset Management" />}
-                            </div>
-                        )}
+                    )}
 
-                        <div className="nav-group-header" onClick={() => toggleGroup('ops')}>
-                            <span>OPERATIONS</span>
-                            <span className={`chevron ${expanded.ops ? 'open' : ''}`}>▼</span>
-                        </div>
-                        {expanded.ops && (
-                            <div className="nav-group-content">
-                                {hasPermission('attendance') && <NavItem id="attendance" label="Attendance" />}
-                                {hasPermission('reports') && <NavItem id="reports" label="Reports & KPIs" />}
-                                {hasPermission('expenses') && <NavItem id="expenses" label="Expenses" />}
-                                {hasPermission('performance') && <NavItem id="performance" label="KPIs & Reviews" />}
-                                {hasPermission('warnings') && <NavItem id="warnings" label="Discipline" />}
-                                {hasPermission('email') && <NavItem id="email" label="Broadcast Emails" />}
+                    {(isSuperAdmin || user.role === 'admin' || (user.permissions && user.permissions.length > 0)) && (
+                        <>
+                            <div className="nav-group-header" onClick={() => toggleGroup('admin')}>
+                                <span>ADMINISTRATION</span>
+                                <span className={`chevron ${expanded.admin ? 'open' : ''}`}>▼</span>
                             </div>
-                        )}
-
-                        {isSuperAdmin && (
-                            <>
-                                <div className="nav-group-header" onClick={() => toggleGroup('system')}>
-                                    <span>SYSTEM CONFIG</span>
-                                    <span className={`chevron ${expanded.system ? 'open' : ''}`}>▼</span>
+                            {expanded.admin && (
+                                <div className="nav-group-content">
+                                    {!isEmployee && <NavItem id="dashboard" label="Analytics" />}
+                                    {hasPermission('employees') && <NavItem id="employees" label="Employees" />}
+                                    {hasPermission('payroll') && <NavItem id="payroll" label="Payroll Grid" />}
+                                    {hasPermission('payroll') && <NavItem id="single-payslip" label="Single Payslip" />}
+                                    {hasPermission('admin-leaves') && <NavItem id="admin-leaves" label="Leave Requests" />}
+                                    {hasPermission('assets') && <NavItem id="assets" label="Asset Management" />}
                                 </div>
-                                {expanded.system && (
-                                    <div className="nav-group-content">
-                                        <NavItem id="user-management" label="User Management" />
-                                        <NavItem id="whitelist" label="Whitelist" />
-                                        <NavItem id="logs" label="Activity Logs" />
+                            )}
+
+                            <div className="nav-group-header" onClick={() => toggleGroup('ops')}>
+                                <span>OPERATIONS</span>
+                                <span className={`chevron ${expanded.ops ? 'open' : ''}`}>▼</span>
+                            </div>
+                            {expanded.ops && (
+                                <div className="nav-group-content">
+                                    {hasPermission('attendance') && <NavItem id="attendance" label="Attendance" />}
+                                    {hasPermission('reports') && <NavItem id="reports" label="Reports & KPIs" />}
+                                    {hasPermission('expenses') && <NavItem id="expenses" label="Expenses" />}
+                                    {hasPermission('performance') && <NavItem id="performance" label="KPIs & Reviews" />}
+                                    {hasPermission('warnings') && <NavItem id="warnings" label="Discipline" />}
+                                    {hasPermission('email') && <NavItem id="email" label="Broadcast Emails" />}
+                                </div>
+                            )}
+
+                            {isSuperAdmin && (
+                                <>
+                                    <div className="nav-group-header" onClick={() => toggleGroup('system')}>
+                                        <span>SYSTEM CONFIG</span>
+                                        <span className={`chevron ${expanded.system ? 'open' : ''}`}>▼</span>
                                     </div>
-                                )}
-                            </>
-                        )}
-                    </>
-                )}
+                                    {expanded.system && (
+                                        <div className="nav-group-content">
+                                            <NavItem id="user-management" label="User Management" />
+                                            <NavItem id="whitelist" label="Whitelist" />
+                                            <NavItem id="logs" label="Activity Logs" />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </>
+                    )}
+                </div>
 
-
-                <div className="spacer"></div>
-                <NavItem id="settings" label="Settings" />
-                <div className="nav-item logout" onClick={() => {
-                    setAuth(false);
-                    setUser(null);
-                    api.setUser(null);
-                    // Clear session from localStorage
-                    localStorage.removeItem('currentUser');
-                    localStorage.removeItem('currentView');
-                }}>
-                    Logout
+                <div className="sidebar-footer">
+                    <NavItem id="settings" label="Settings" />
+                    <div className="nav-item logout" onClick={() => {
+                        setAuth(false);
+                        setUser(null);
+                        api.setUser(null);
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('currentView');
+                    }}>
+                        Logout
+                    </div>
                 </div>
             </div>
 
