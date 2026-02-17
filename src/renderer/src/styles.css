@@ -488,17 +488,16 @@ h3 {
 .sidebar-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 5px;
   margin-bottom: 15px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: var(--accent-glow);
-  border-radius: 10px;
+  display: none;
 }
 
 .sidebar-footer {
