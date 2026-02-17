@@ -74,9 +74,9 @@ export default function PayrollGrid({ onNavigate }) {
                     deductions,
                     notes: def.notes || "",
                     increments: myIncs,
-                    showIncrements: hasRecent,
+                    showIncrements: def.showIncrements !== undefined ? def.showIncrements : hasRecent,
                     isRecentEligible: hasRecent,
-                    showAttendance: true // Default to showing attendance
+                    showAttendance: def.showAttendance !== undefined ? def.showAttendance : true
                 };
             });
 
@@ -94,7 +94,7 @@ export default function PayrollGrid({ onNavigate }) {
             // Don't save transient UI fields back to defaults
             const defaultsToSave = {};
             Object.keys(gridData).forEach(id => {
-                const { increments, showIncrements, isRecentEligible, ...rest } = gridData[id];
+                const { increments, isRecentEligible, ...rest } = gridData[id];
                 defaultsToSave[id] = rest;
             });
             await api.savePayrollDefaults(defaultsToSave);
@@ -214,7 +214,6 @@ export default function PayrollGrid({ onNavigate }) {
             const financials = gridData[emp.id];
 
             try {
-                const financials = gridData[emp.id];
                 const payload = await getPayload(emp, financials);
 
                 // 1. Generate Payslip
