@@ -305,16 +305,20 @@ export default function PayrollGrid({ onNavigate }) {
                                         </td>
                                         <td style={{ textAlign: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                                                <span className="table-number" style={{ fontSize: '1.05rem' }}>{gross.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')} style={{ padding: '6px 12px', minHeight: '32px' }}>
+                                                <div style={{ width: '85px', textAlign: 'right' }}>
+                                                    <span className="table-number" style={{ fontSize: '1.05rem' }}>{gross.toLocaleString()}</span>
+                                                </div>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'earnings')} style={{ padding: '6px 12px', minHeight: '32px', width: '60px' }}>
                                                     Edit
                                                 </button>
                                             </div>
                                         </td>
                                         <td style={{ textAlign: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                                                <span className="table-number" style={{ fontSize: '1.05rem', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')} style={{ padding: '6px 12px', minHeight: '32px' }}>
+                                                <div style={{ width: '85px', textAlign: 'right' }}>
+                                                    <span className="table-number" style={{ fontSize: '1.05rem', color: 'var(--danger)' }}>{totalDed.toLocaleString()}</span>
+                                                </div>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(emp.id, 'deductions')} style={{ padding: '6px 12px', minHeight: '32px', width: '60px' }}>
                                                     Edit
                                                 </button>
                                             </div>
@@ -369,9 +373,11 @@ export default function PayrollGrid({ onNavigate }) {
                                         </td>
                                         <td style={{ textAlign: 'right', paddingRight: '25px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '15px' }}>
-                                                <span className="table-number" style={{ color: 'var(--success)', fontSize: '1.2rem' }}>
-                                                    {net.toLocaleString()}
-                                                </span>
+                                                <div style={{ width: '100px', textAlign: 'right' }}>
+                                                    <span className="table-number" style={{ color: 'var(--success)', fontSize: '1.2rem' }}>
+                                                        {net.toLocaleString()}
+                                                    </span>
+                                                </div>
                                                 <button
                                                     className="btn btn-secondary btn-sm"
                                                     style={{ padding: '6px', minWidth: '36px', height: '36px', borderRadius: '10px' }}
