@@ -123,7 +123,7 @@ export default function EmployeePortal({ user }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' }}>
                             {assets.slice(0, 3).map(a => (
                                 <div key={a.id} className="flex-row flex-between" style={{ padding: '8px', background: 'var(--bg)', borderRadius: '8px' }}>
-                                    <span style={{ fontWeight: '600' }}>{a.name}</span>
+                                    <span style={{ fontWeight: '600' }}>{a.type || a.name}</span>
                                     <span className="text-light text-sm">#{a.asset_tag || a.serial_number || 'N/A'}</span>
                                 </div>
                             ))}
@@ -411,7 +411,7 @@ function AssetModule({ employeeId, employeeName }) {
             <div className="grid-3" style={{ marginTop: '20px', gap: '20px' }}>
                 {assets.map(a => (
                     <div key={a.id} className="card" style={{ padding: '15px', background: 'var(--item-hover)' }}>
-                        <h4 style={{ color: 'var(--accent)' }}>{a.name}</h4>
+                        <h4 style={{ color: 'var(--accent)' }}>{a.type || a.name}</h4>
                         <p className="text-sm text-light">Tag: {a.asset_tag || 'N/A'} | S/N: {a.serial_number || 'N/A'}</p>
                         <hr style={{ margin: '15px 0', borderColor: 'var(--border)' }} />
                         <div style={{ fontSize: '13px' }}>
@@ -646,8 +646,8 @@ function DocumentModule({ employeeId }) {
 
     return (
         <div className="view-container">
-            <div className="toolbar">
-                <h2>My Documents</h2>
+            <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px' }}>
+                <h2 style={{ marginBottom: 0 }}>My Documents</h2>
                 <p className="text-light">Access shared company policies and personal documents.</p>
             </div>
             <div className="grid-3" style={{ gap: '20px' }}>

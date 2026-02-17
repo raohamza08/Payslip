@@ -488,6 +488,7 @@ h3 {
 
 .spacer {
   flex: 1;
+  min-height: 20px;
 }
 
 .sidebar::-webkit-scrollbar {
