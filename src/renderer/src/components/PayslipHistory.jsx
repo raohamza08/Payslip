@@ -152,7 +152,7 @@ export default function PayslipHistory({ user }) {
 
             <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
                 <h1 style={{ color: 'var(--text-heading)', margin: 0 }}>Payslip History</h1>
-                <div className="flex-row" style={{ gap: '12px' }}>
+                <div className="flex-row" style={{ gap: '15px' }}>
                     {selectedIds.length > 0 && !bulkProgress.show && (
                         <>
                             <button className="btn btn-danger" onClick={handleDeleteSelected} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -209,7 +209,7 @@ export default function PayslipHistory({ user }) {
                             <th>Period</th>
                             <th>Net Pay</th>
                             <th>Status</th>
-                            <th style={{ textAlign: 'right' }}>Actions</th>
+                            <th style={{ textAlign: 'right', paddingRight: '25px' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -239,11 +239,13 @@ export default function PayslipHistory({ user }) {
                                         {p.email_sent_at ? 'Sent' : 'Draft'}
                                     </span>
                                 </td>
-                                <td>
-                                    <div className="flex-row" style={{ justifyContent: 'flex-end', gap: '8px' }}>
-                                        <button className="btn btn-secondary" onClick={() => handleOpen(p.id)} style={{ padding: '6px 12px', fontSize: '13px' }}>View PDF</button>
+                                <td style={{ paddingRight: '25px' }}>
+                                    <div className="flex-row" style={{ justifyContent: 'flex-end', gap: '15px' }}>
+                                        <button className="btn btn-secondary" onClick={() => handleOpen(p.id)} style={{ padding: '7px 0', fontSize: '12.5px', width: '90px', textAlign: 'center', minWidth: '90px' }}>
+                                            View PDF
+                                        </button>
                                         {(user?.role === 'super_admin' || user?.role === 'admin') && (
-                                            <button className="btn btn-primary" onClick={() => handleSend(p.id)} disabled={loading} style={{ padding: '6px 12px', fontSize: '13px' }}>
+                                            <button className="btn btn-primary" onClick={() => handleSend(p.id)} disabled={loading} style={{ padding: '7px 0', fontSize: '12.5px', width: '90px', textAlign: 'center', minWidth: '90px' }}>
                                                 {p.email_sent_at ? 'Resend' : 'Send'}
                                             </button>
                                         )}
