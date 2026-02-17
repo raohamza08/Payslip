@@ -2365,7 +2365,7 @@ async function generatePDF(data) {
                                     { columns: [{ width: 100, text: 'Payment Method:', bold: true, color: '#555' }, { text: data.payment_method || 'Bank Transfer', color: settings.textColor }], margin: [25, 0, 0, 5] },
                                     ...(data.employee.bank_name ? [{ columns: [{ width: 100, text: 'Bank:', bold: true, color: '#555' }, { text: data.employee.bank_name, color: settings.textColor }], margin: [25, 0, 0, 5] }] : []),
                                     ...(data.employee.account_number ? [{ columns: [{ width: 100, text: 'Account:', bold: true, color: '#555' }, { text: String(data.employee.account_number), color: settings.textColor, fontSize: 9 }], margin: [25, 0, 0, 5] }] : []),
-                                    { columns: [{ width: 100, text: 'Frequency:', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }], margin: [28, 0, 0, 5] }
+                                    { columns: [{ width: 100, text: 'Frequency:', bold: true, color: '#555' }, { text: data.pay_frequency || 'Monthly', color: settings.textColor }], margin: [25, 0, 0, 5] }
                                 ]
                             }
                         ],
