@@ -1,17 +1,19 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Confirm", cancelText = "Cancel", danger = false }) => {
     if (!isOpen) return null;
-    return (
+
+    const modalContent = (
         <div style={{
             position: 'fixed',
             inset: 0,
             background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 10000,
+            zIndex: 999999, /* High Z-index to stand above everything */
             animation: 'fadeIn 0.3s ease'
         }}>
             <div className="card" style={{
@@ -23,7 +25,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
                 borderRadius: '28px',
                 padding: '40px',
                 textAlign: 'center',
-                boxShadow: 'var(--shadow-lg), 0 0 50px rgba(0,0,0,0.3)',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
                 transform: 'translateY(0)',
                 animation: 'modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }} onClick={e => e.stopPropagation()}>
@@ -57,12 +59,16 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes modalSlideUp { 
-                    from { transform: translateY(40px) scale(0.95); opacity: 0; } 
+                    from { transform: translateY(60px) scale(0.92); opacity: 0; } 
                     to { transform: translateY(0) scale(1); opacity: 1; } 
                 }
             `}</style>
         </div>
     );
+
+    // Using Portal to make the modal render at the end of body, 
+    // ensuring it covers the whole screen regardless of parent styles.
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default ConfirmModal;
