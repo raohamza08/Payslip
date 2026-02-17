@@ -40,6 +40,16 @@ export default function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [pathname, setPathname] = useState(window.location.pathname.toLowerCase());
 
+    // Track expanded status for sidebar groups
+    const [expanded, setExpanded] = useState({
+        portal: true,
+        admin: true,
+        ops: true,
+        system: false
+    });
+
+    const toggleGroup = (group) => setExpanded(prev => ({ ...prev, [group]: !prev[group] }));
+
     useEffect(() => {
 
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -206,40 +216,69 @@ export default function App() {
                     <h2>EurosHub</h2>
                 </div>
 
-                <div className="nav-group">USER PORTAL</div>
-                <NavItem id="portal" label="My Dashboard" />
-                <NavItem id="my-leaves" label="My Leaves" />
-                <NavItem id="my-performance" label="My Performance" />
-                <NavItem id="my-payslips" label="My Payslips" />
+                <div className="nav-group-header" onClick={() => toggleGroup('portal')}>
+                    <span>USER PORTAL</span>
+                    <span className={`chevron ${expanded.portal ? 'open' : ''}`}>▼</span>
+                </div>
+                {expanded.portal && (
+                    <div className="nav-group-content">
+                        <NavItem id="portal" label="My Dashboard" />
+                        <NavItem id="my-leaves" label="My Leaves" />
+                        <NavItem id="my-performance" label="My Performance" />
+                        <NavItem id="my-payslips" label="My Payslips" />
+                    </div>
+                )}
 
                 {(isSuperAdmin || user.role === 'admin' || (user.permissions && user.permissions.length > 0)) && (
                     <>
-                        <div className="nav-group">ADMINISTRATION</div>
-                        {!isEmployee && <NavItem id="dashboard" label="Analytics" />}
-                        {hasPermission('employees') && <NavItem id="employees" label="Employees" />}
-                        {hasPermission('payroll') && <NavItem id="payroll" label="Payroll Grid" />}
-                        {hasPermission('payroll') && <NavItem id="single-payslip" label="Single Payslip" />}
-                        {hasPermission('admin-leaves') && <NavItem id="admin-leaves" label="Leave Requests" />}
-                        {hasPermission('assets') && <NavItem id="assets" label="Asset Management" />}
+                        <div className="nav-group-header" onClick={() => toggleGroup('admin')}>
+                            <span>ADMINISTRATION</span>
+                            <span className={`chevron ${expanded.admin ? 'open' : ''}`}>▼</span>
+                        </div>
+                        {expanded.admin && (
+                            <div className="nav-group-content">
+                                {!isEmployee && <NavItem id="dashboard" label="Analytics" />}
+                                {hasPermission('employees') && <NavItem id="employees" label="Employees" />}
+                                {hasPermission('payroll') && <NavItem id="payroll" label="Payroll Grid" />}
+                                {hasPermission('payroll') && <NavItem id="single-payslip" label="Single Payslip" />}
+                                {hasPermission('admin-leaves') && <NavItem id="admin-leaves" label="Leave Requests" />}
+                                {hasPermission('assets') && <NavItem id="assets" label="Asset Management" />}
+                            </div>
+                        )}
 
-                        <div className="nav-group">OPERATIONS</div>
-                        {hasPermission('attendance') && <NavItem id="attendance" label="Attendance" />}
-                        {hasPermission('reports') && <NavItem id="reports" label="Reports & KPIs" />}
-                        {hasPermission('expenses') && <NavItem id="expenses" label="Expenses" />}
-                        {hasPermission('performance') && <NavItem id="performance" label="KPIs & Reviews" />}
-                        {hasPermission('warnings') && <NavItem id="warnings" label="Discipline" />}
-                        {hasPermission('email') && <NavItem id="email" label="Broadcast Emails" />}
+                        <div className="nav-group-header" onClick={() => toggleGroup('ops')}>
+                            <span>OPERATIONS</span>
+                            <span className={`chevron ${expanded.ops ? 'open' : ''}`}>▼</span>
+                        </div>
+                        {expanded.ops && (
+                            <div className="nav-group-content">
+                                {hasPermission('attendance') && <NavItem id="attendance" label="Attendance" />}
+                                {hasPermission('reports') && <NavItem id="reports" label="Reports & KPIs" />}
+                                {hasPermission('expenses') && <NavItem id="expenses" label="Expenses" />}
+                                {hasPermission('performance') && <NavItem id="performance" label="KPIs & Reviews" />}
+                                {hasPermission('warnings') && <NavItem id="warnings" label="Discipline" />}
+                                {hasPermission('email') && <NavItem id="email" label="Broadcast Emails" />}
+                            </div>
+                        )}
 
                         {isSuperAdmin && (
                             <>
-                                <div className="nav-group">SYSTEM CONFIG</div>
-                                <NavItem id="user-management" label="User Management" />
-                                <NavItem id="whitelist" label="Whitelist" />
-                                <NavItem id="logs" label="Activity Logs" />
+                                <div className="nav-group-header" onClick={() => toggleGroup('system')}>
+                                    <span>SYSTEM CONFIG</span>
+                                    <span className={`chevron ${expanded.system ? 'open' : ''}`}>▼</span>
+                                </div>
+                                {expanded.system && (
+                                    <div className="nav-group-content">
+                                        <NavItem id="user-management" label="User Management" />
+                                        <NavItem id="whitelist" label="Whitelist" />
+                                        <NavItem id="logs" label="Activity Logs" />
+                                    </div>
+                                )}
                             </>
                         )}
                     </>
                 )}
+
 
                 <div className="spacer"></div>
                 <NavItem id="settings" label="Settings" />
