@@ -4,7 +4,13 @@ import { AddIcon } from './Icons';
 
 export default function IncrementManager({ employee, onClose, onUpdate }) {
     const [increments, setIncrements] = useState([]);
-    const [newIncrement, setNewIncrement] = useState({ percentage: 10, reason: '', effective_date: new Date().toISOString().split('T')[0] });
+    const currentSalary = Number(employee.monthly_salary) || 0;
+    const [newIncrement, setNewIncrement] = useState({
+        percentage: 10,
+        new_salary: Math.round(currentSalary * 1.1),
+        reason: '',
+        effective_date: new Date().toISOString().split('T')[0]
+    });
 
     useEffect(() => { if (employee?.id) loadIncrements(); }, [employee]);
 
@@ -15,18 +21,30 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
         } catch (e) { console.error(e); }
     };
 
+    const handlePercentageChange = (val) => {
+        const perc = Number(val);
+        const newSal = Math.round(currentSalary * (1 + perc / 100));
+        setNewIncrement({ ...newIncrement, percentage: val, new_salary: newSal });
+    };
+
+    const handleNewSalaryChange = (val) => {
+        const newSal = Number(val);
+        const perc = currentSalary > 0 ? ((newSal - currentSalary) / currentSalary) * 100 : 0;
+        setNewIncrement({ ...newIncrement, new_salary: val, percentage: perc.toFixed(2) });
+    };
+
     const handleAdd = async (e) => {
         e.preventDefault();
-        if (!confirm(`Are you sure you want to increase salary by ${newIncrement.percentage}%? This will update the employee's base salary.`)) return;
+        const perc = Number(newIncrement.percentage);
+        const finalSalary = Number(newIncrement.new_salary);
+        const incAmount = finalSalary - currentSalary;
+
+        if (!confirm(`Are you sure you want to update salary to ${finalSalary.toLocaleString()} (${perc}% increase)? This will update the employee's base salary.`)) return;
 
         try {
-            const currentSalary = Number(employee.monthly_salary);
-            const incAmount = currentSalary * (Number(newIncrement.percentage) / 100);
-            const finalSalary = currentSalary + incAmount;
-
             // Backend will automatically update the employee's monthly_salary
             await api.addIncrement(employee.id, {
-                increment_percentage: Number(newIncrement.percentage),
+                increment_percentage: perc,
                 effective_date: newIncrement.effective_date,
                 reason: newIncrement.reason,
                 old_salary: currentSalary,
@@ -35,7 +53,12 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
             });
 
             alert(`Increment Applied! New Base Salary: ${finalSalary.toLocaleString()}`);
-            setNewIncrement({ percentage: 10, reason: '', effective_date: new Date().toISOString().split('T')[0] });
+            setNewIncrement({
+                percentage: 10,
+                new_salary: Math.round(currentSalary * 1.1),
+                reason: '',
+                effective_date: new Date().toISOString().split('T')[0]
+            });
             loadIncrements();
 
             // Notify parent component to update local state
@@ -57,7 +80,11 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
                     <div className="grid-2">
                         <div className="form-group">
                             <label>Percentage (%)</label>
-                            <input type="number" step="0.1" value={newIncrement.percentage} onChange={e => setNewIncrement({ ...newIncrement, percentage: e.target.value })} className="form-control" />
+                            <input type="number" step="0.1" value={newIncrement.percentage} onChange={e => handlePercentageChange(e.target.value)} className="form-control" />
+                        </div>
+                        <div className="form-group">
+                            <label>New Monthly Salary</label>
+                            <input type="number" value={newIncrement.new_salary} onChange={e => handleNewSalaryChange(e.target.value)} className="form-control" />
                         </div>
                         <div className="form-group">
                             <label>Effective Date</label>
@@ -71,8 +98,9 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
 
                     <div style={{ margin: '10px 0', padding: '10px', background: '#e0f2f1', borderRadius: '4px' }}>
                         <strong>Preview:</strong>
-                        Current: {Number(employee.monthly_salary).toLocaleString()} →
-                        <span style={{ color: 'green', fontWeight: 'bold' }}> New: {(Number(employee.monthly_salary) * (1 + Number(newIncrement.percentage) / 100)).toLocaleString()}</span>
+                        Current: {currentSalary.toLocaleString()} →
+                        <span style={{ color: 'green', fontWeight: 'bold' }}> New: {Number(newIncrement.new_salary).toLocaleString()} </span>
+                        ({newIncrement.percentage}% increase)
                     </div>
 
                     <button className="btn btn-primary" type="submit">
