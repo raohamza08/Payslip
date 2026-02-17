@@ -42,9 +42,9 @@ export default function App() {
 
     // Track expanded status for sidebar groups
     const [expanded, setExpanded] = useState({
-        portal: true,
-        admin: true,
-        ops: true,
+        portal: false,
+        admin: false,
+        ops: false,
         system: false
     });
 
