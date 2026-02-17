@@ -109,8 +109,7 @@ export default function Settings({ user }) {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
         updateBodyClass(newTheme, neonShape);
-        setMessage('Theme updated successfully!');
-        setTimeout(() => setMessage(''), 9000);
+        
     };
 
     const handleColorChange = (color) => {
@@ -119,8 +118,7 @@ export default function Settings({ user }) {
         document.body.style.setProperty('--accent', color);
         document.body.style.setProperty('--accent-hover', adjustColor(color, -20));
         document.body.style.setProperty('--accent-glow', `${color}66`); // 40% opacity glow
-        setMessage('Accent color updated!');
-        setTimeout(() => setMessage(''), 9000);
+        
     };
 
     const updateNeonSetting = (key, value) => {
