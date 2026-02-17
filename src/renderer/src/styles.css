@@ -46,6 +46,7 @@ body {
   --item-hover: rgba(0, 119, 255, 0.06);
   --success: #059669;
   --text-contrast: var(--text-heading);
+  --calendar-filter: none;
 }
 
 /* Dark Mode: Cosmic Nebula */
@@ -65,6 +66,8 @@ body.dark {
   --item-hover: rgba(0, 117, 255, 0.1);
   --success: #6EE7B7;
   --text-contrast: #FFFFFF;
+  --calendar-filter: invert(1) brightness(1.5);
+  color-scheme: dark;
 }
 
 /* Global Select/Option Theme-aware fixes */
@@ -613,6 +616,24 @@ textarea {
   color: var(--text-heading);
   transition: var(--transition);
   backdrop-filter: blur(5px);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: var(--calendar-filter);
+  opacity: 0.7;
+  transition: var(--transition);
+}
+
+input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 input:focus,
