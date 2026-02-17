@@ -294,3 +294,28 @@ export const BellIcon = ({ className = "" }) => (
         <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="url(#bellGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
+
+export const IdeaIcon = ({ className = "" }) => (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="ideaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#D97706" />
+            </linearGradient>
+        </defs>
+        <path d="M9.663 17h4.674M12 3a7 7 0 0 1 7 7c0 2.503-1.314 4.708-3.295 5.954l-.405.247c-.508.311-.8.868-.8 1.464V19a2 2 0 1 1-4 0v-.335c0-.596-.292-1.153-.8-1.464l-.405-.247C7.314 15.708 6 13.503 6 10a7 7 0 0 1 7-7z" stroke="url(#ideaGradient)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+export const InfoIcon = ({ className = "" }) => (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="infoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3B82F6" />
+                <stop offset="100%" stopColor="#06B6D4" />
+            </linearGradient>
+        </defs>
+        <circle cx="12" cy="12" r="10" stroke="url(#infoGradient)" strokeWidth="1.5" />
+        <path d="M12 16v-4m0-4h.01" stroke="url(#infoGradient)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);

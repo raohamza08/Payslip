@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { IdeaIcon, WarningIcon } from './Icons';
 
 const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Confirm", cancelText = "Cancel", danger = false }) => {
     if (!isOpen) return null;
@@ -43,7 +44,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
                     color: danger ? '#EF4444' : 'var(--accent)',
                     border: `1px solid ${danger ? '#EF4444' : 'var(--accent)'}`
                 }}>
-
+                    {danger ? <WarningIcon style={{ width: 45, height: 45 }} /> : <IdeaIcon style={{ width: 45, height: 45 }} />}
                 </div>
                 <h2 style={{ marginBottom: '15px', color: 'var(--text-heading)', fontWeight: '700' }}>{title}</h2>
                 <p style={{ color: 'var(--text-light)', lineHeight: '1.7', marginBottom: '35px', fontSize: '1.05rem' }}>{message}</p>
@@ -66,8 +67,6 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
         </div>
     );
 
-    // Using Portal to make the modal render at the end of body, 
-    // ensuring it covers the whole screen regardless of parent styles.
     return ReactDOM.createPortal(modalContent, document.body);
 };
 
