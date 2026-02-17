@@ -131,7 +131,7 @@ export default function IncrementManager({ employee, onClose, onUpdate }) {
                         alignItems: 'center',
                         gap: '10px'
                     }}>
-                        <div style={{ fontSize: '1.2rem', opacity: 0.8 }}>💰</div>
+                        <div style={{ fontSize: '1.2rem', opacity: 0.8 }}></div>
                         <div>
                             <strong style={{ color: 'var(--text-heading)' }}>Preview: </strong>
                             <span style={{ color: 'var(--text-light)' }}>{currentSalary.toLocaleString()}</span>
