@@ -605,11 +605,8 @@ h3 {
   border-radius: 10px;
 }
 
-.card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent-glow);
-}
+
+
 
 .card::after {
   content: '';
@@ -1304,9 +1301,8 @@ tr:last-child td {
   white-space: nowrap;
 }
 
-.tab-btn:hover {
-  color: var(--text-heading);
-}
+/* Hover effects removed for static dashboard feel */
+
 
 
 
@@ -1342,11 +1338,7 @@ tr:last-child td {
   min-height: 180px;
 }
 
-.dash-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--accent);
-  box-shadow: var(--shadow-lg);
-}
+
 
 .dash-icon {
   font-size: 1.75rem;
