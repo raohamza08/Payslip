@@ -1203,7 +1203,10 @@ app.get('/api/payroll/defaults', async (req, res) => {
         data.forEach(row => {
             defaults[row.employee_id] = {
                 earnings: row.earnings || [],
-                deductions: row.deductions || []
+                deductions: row.deductions || [],
+                notes: row.notes || "",
+                showIncrements: row.show_increments,
+                showAttendance: row.show_attendance
             };
         });
         res.json(defaults);
@@ -1261,6 +1264,9 @@ app.post('/api/payroll/defaults', async (req, res) => {
                 employee_id: empId,
                 earnings: defs.earnings,
                 deductions: defs.deductions,
+                notes: defs.notes,
+                show_increments: defs.showIncrements,
+                show_attendance: defs.showAttendance,
                 updated_at: new Date()
             }, { onConflict: 'employee_id' });
 
