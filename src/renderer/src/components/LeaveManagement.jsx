@@ -20,16 +20,9 @@ export default function LeaveManagement({ user }) {
     });
 
     const leaveTypes = [
-        'Annual Leave',
         'Sick Leave',
         'Casual Leave',
-        'Unpaid Leave',
-        'Emergency Leave',
-        'Half Leave',
-        'Maternity Leave',
-        'Paternity Leave',
-        'Study Leave',
-        'Bereavement Leave'
+        'Half Leave'
     ];
 
     useEffect(() => {
